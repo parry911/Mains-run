@@ -1,0 +1,155 @@
+/* ---------- the clock: one rule, every start time ---------- */
+/* Fixed anchors: 3 pm shower and fruit, 7–9 dinner, log, lights out, and the 2:30 paper on test days.
+   Before them: Gurbani, then eat (+ newspaper on late days), then study blocks with a break every 2–2½ h. */
+const STUDY_ROLES={study:1,rev:1,eve:1};
+function buildDay(kind,s,o){
+  o=o||{};const sh=!!o.short,half=!!o.half&&kind==="essay";
+  const out=[];let bn=0;
+  const push=x=>{if(x.e!=null&&x.e-x.t<(x.k==="block"?20:5))return;if(x.k==="block"&&!x.name)x.name="Block "+(++bn);if(!x.id)x.id=(x.name||x.label).toLowerCase().replace(/[^a-z0-9]+/g,"-");const base=x.id;let n=2;while(out.some(y=>y.id===x.id))x.id=base+"-"+(n++);out.push(x)};
+  const br=(t,e,label,tick)=>push({k:"break",t,e,label,tick});
+  const blk=(t,e,x)=>push(Object.assign({k:"block",t,e,role:"study"},x||{}));
+  const stretch=(a,b,first)=>{const L=b-a;if(L<20)return;if(L<=150){blk(a,b,first);return}
+    const g=L>240?30:15,b1=Math.min(150,r15((L-g)*.6));blk(a,a+b1,first);br(a+b1,a+b1+g,g===30?"Rest, no phone":"Short break");blk(a+b1+g,b)};
+  const late=s>=RULES.late;
+  const PREP="essay prep",HALFH="includes 45 min essay prep";
+  let lights=1290,gdisp=false;
+  const gur=t=>br(t,t+30,"Gurbani");
+  /* Early start (before 5:00): 15 min to freshen up, then Gurbani. Returns when study begins. */
+  const earlyGur=()=>{if(s<300){br(s,s+15,"Freshen up");gur(s+15);return s+45}gur(s);return s+30};
+  const SNACK="Light snack: fruit, nuts, tea (not a meal)";
+  /* Morning for a normal or essay day that starts before the late-day line.
+     Up to 6:15: Gurbani, study to 8:45, walk, gym at 9:00.
+     6:16-7:00: Gurbani runs from the start to 7:00 at most, study to 9:00, gym at 9:05.
+     7:01 onward: Gurbani, study to 9:00, then a home workout; after a short night, newspaper, breakfast and sleep instead. */
+  const morningNL=hint=>{
+    const first=hint?{hint}:{};
+    if(s<300){const a=earlyGur();stretch(a,450,first);br(450,465,SNACK);blk(465,525);br(525,600,"Walk and gym","gym");return{}}
+    if(s<=375){gur(s);blk(s+30,525,first);br(525,600,"Walk and gym","gym");return{}}
+    if(s<=420){const gE=Math.min(s+30,420);let st;
+      if(gE-s>=10){br(s,gE,"Gurbani");st=gE}else{st=s+10;gdisp=true}
+      blk(st,540,first);br(540,545,"Quick change");br(545,600,"Gym","gym");return{}}
+    gur(s);blk(s+30,600,first);return sh?{}:{homeWO:true};
+  };
+  /* Morning of a late day: study until the 10:00 breakfast, breakfast, the newspaper on its own. Returns the clock after the newspaper. */
+  const morningLate=hint=>{
+    if(600-s>=30)blk(s,600,hint?hint():{});
+    const bS=Math.max(600,s);
+    blk(bS,bS+60,{role:"news",name:"Breakfast and newspaper"});
+    gdisp=true;return bS+60;
+  };
+  const eveStudy=a=>{if(gdisp){blk(a,1110);br(1110,1140,"Gurbani")}else if(1140-a>150){blk(a,a+90);br(a+90,a+105,"Short break");blk(a+105,1140)}else blk(a,1140)};
+  const closeNormal=()=>{
+    if(sh){br(1140,1260,"Dinner, walk, phone");br(1260,1275,"Log the day","log");lights=1290;return}
+    br(1140,1200,"Dinner, walk, phone");blk(1200,1300,{role:"eve",name:"Evening session"});br(1300,1310,"Log the day","log");lights=1320;
+  };
+  /* the paper and everything after it, for essay days and one-essay days */
+  const essayTail=(Pt)=>{
+    const dur=half?90:180;
+    blk(Pt,Pt+dur,{role:"paper",name:half?"The essay (one essay)":"The essay paper"});
+    const shd=Pt-870;
+    if(half){
+      br(Pt+dur,Pt+dur+60,"Fruit and break, no phone");
+      eveStudy(Pt+dur+60);closeNormal();return;
+    }
+    if(gdisp){br(1050+shd,1080+shd,"Break");br(1080+shd,1110+shd,"Gurbani")}
+    else br(1050+shd,1110+shd,"Break");
+    br(1110+shd,1170+shd,"Dinner");
+    if(sh){blk(1170+shd,1230,{role:"light",name:"Light block",hint:"CA notes only"});br(1230,1260,"Wind down");br(1260,1275,"Log the day","log");lights=1290}
+    else if(late){const end=s>=600?1320:1305;blk(1170+shd,end);br(1320,1335,"Log the day","log");lights=RULES.lateLights}
+    else{blk(1170+shd,1260);br(1260,1275,"Log the day","log");lights=1290}
+  };
+
+  if(kind==="gstest"){
+    let Pt=870;const rEnd=sh?720:750;
+    if(!late){
+      const gymOK=!!o.gym&&s<=375,mEnd=gymOK?525:570;
+      const a0=earlyGur();
+      if(s<300){
+        if(450-a0>150){const m=a0+r15((450-a0-15)/2);blk(a0,m,{role:"rev",name:"Revision 1"});br(m,m+15,"Short break");blk(m+15,450,{role:"rev",name:"Revision 2"})}
+        else blk(a0,450,{role:"rev",name:"Revision 2"});
+        br(450,465,SNACK);blk(465,mEnd,{role:"rev",name:"Revision 3"});
+      }else blk(a0,mEnd,{role:"rev",name:"Revision 1"});
+      if(gymOK)br(mEnd,600,"Walk and gym","gym");else br(570,600,"Break, slow walk");
+      blk(600,630,{role:"news",name:"Breakfast and newspaper"});
+      blk(630,rEnd,{role:"rev",name:s<300?"Revision 4":"Revision 2"});
+      if(sh){br(720,765,"Lunch and shower");br(765,855,"Sleep");br(855,870,"Desk ready")}
+      else br(750,870,"Lunch, shower, rest");
+    }else if(s<660){
+      /* late test day: breakfast stays at 10:00, revision to 1:30 with a 10-min break, sleep 1:30-2:30 */
+      gdisp=true;let rn=0;const rv=()=>({role:"rev",name:"Revision "+(++rn)});
+      if(600-s>=20)blk(s,600,rv());
+      const bS=Math.max(600,s);blk(bS,bS+30,{role:"news",name:"Breakfast and newspaper"});
+      const a=bS+30;
+      if(810-a>120){blk(a,720,rv());br(720,730,"Short break");blk(730,810,rv())}
+      else blk(a,810,rv());
+      br(810,870,"Sleep");
+    }else{
+      gdisp=true;
+      blk(s,s+30,{role:"news",name:"Breakfast and newspaper"});const a=s+30;
+      if(sh&&a<=765){if(765-a>=20)blk(a,765,{role:"rev",name:"Fixes and flagged notes"});br(765,855,"Sleep");br(855,870,"Desk ready")}
+      else if(!sh&&855-a>=20){blk(a,855,{role:"rev",name:"Fixes and flagged notes"});br(855,870,"Desk ready")}
+      else Pt=Math.max(870,a);
+    }
+    if(o.eve){
+      if(1050-Pt>=20)blk(Pt,1050,{role:"rev",name:"Revision before the paper"});
+      br(1050,1110,gdisp?"Gurbani and a light snack":"Light snack, no phone");
+      blk(1110,1290,{role:"paper",name:"The paper"});
+      br(1290,1320,"Dinner");
+      br(1320,1335,"Log the day","log");lights=1350;
+    }else{
+    blk(Pt,Pt+180,{role:"paper",name:"The paper"});
+    const shd=Pt-870;
+    if(gdisp){br(1050+shd,1080+shd,"Break");br(1080+shd,1110+shd,"Gurbani")}
+    else br(1050+shd,1110+shd,"Break, phone time");
+    blk(1110+shd,1170+shd,{role:"eve",name:"Evening block 1",hint:"CA or Law"});
+    br(1170+shd,1230+shd,"Dinner");
+    if(sh){blk(1230+shd,1290,{role:"eve",name:"Evening block 2",hint:"the next test"});br(1290,1305,"Log the day","log");lights=1320}
+    else{blk(1230+shd,1350,{role:"eve",name:"Evening block 2",hint:"the next test"});br(1350,1365,"Log the day","log");lights=1365}
+    }
+  }else if(kind==="essay"&&!half){
+    if(!late){
+      const m=morningNL(PREP);
+      if(m.newsDone)blk(630,735);
+      else{blk(600,660,{role:"news",name:"Breakfast and newspaper"});if(sh)blk(660,735);else blk(660,750)}
+      if(sh){br(735,765,"Lunch and shower");br(765,855,"Sleep")}else br(750,855,"Lunch, shower, rest");
+      br(855,870,"Desk ready");
+      essayTail(870);
+    }else{
+      let first=true;const hint=()=>{if(first){first=false;return{hint:PREP}}return{}};
+      let t=morningLate(hint),Pt=870;
+      const lEnd=sh?735:855;
+      if(lEnd-t>=20){if(sh)blk(t,lEnd,hint());else stretch(t,lEnd,hint())}
+      if(sh&&t<=735){br(735,765,"Lunch and shower");br(765,855,"Sleep");br(855,870,"Desk ready")}
+      else if(!sh&&t<=855)br(855,870,"Desk ready");
+      else Pt=Math.max(870,t);
+      essayTail(Pt);
+    }
+  }else if(kind==="essay"){
+    if(!late){
+      const m=morningNL();
+      if(m.newsDone)blk(630,660);else blk(600,660,{role:"news",name:"Breakfast and newspaper"});
+      if(sh){br(660,750,"Sleep");br(750,780,"Shower and reset");blk(780,870,{hint:HALFH})}
+      else{br(660,720,"Rest, no phone");blk(720,870,{hint:HALFH})}
+    }else{
+      let t=morningLate();
+      if(sh&&t<=750){br(t,t+90,"Sleep");t+=90;br(t,t+30,"Shower and reset");t+=30}
+      if(870-t>=20){if(sh||870-t<=150)blk(t,870,{hint:HALFH});else stretch(t,870,{hint:HALFH})}
+    }
+    essayTail(870);
+  }else if(!late){
+    const m=morningNL();
+    if(m.newsDone)blk(630,660);else blk(600,660,{role:"news",name:"Breakfast and newspaper"});
+    if(sh){br(660,750,"Sleep");blk(750,900)}else{br(660,720,"Rest, no phone");if(m.homeWO){blk(720,850);br(850,900,"Home workout","gym")}else{blk(720,810);br(810,825,"Short break");blk(825,900)}}
+    br(900,960,"Shower and fruit");eveStudy(960);closeNormal();
+  }else{
+    let t=morningLate();
+    if(sh&&t+90<=960){br(t,t+90,"Sleep");t+=90}
+    const sw=(!sh&&t<=780)?60:30;
+    if(t<900){const L=900-t;if(sh||L<=150)blk(t,900);else if(L<=240){blk(t,t+90);br(t+90,t+120,"Rest, no phone");blk(t+120,900)}else stretch(t,900)}
+    if(t<=900){br(900,900+sw,"Shower and fruit");blk(900+sw,1110)}else blk(t,1110);
+    if(t<=1110)br(1110,1140,"Gurbani");
+    closeNormal();
+  }
+  return{segs:out,lights,late};
+}
+

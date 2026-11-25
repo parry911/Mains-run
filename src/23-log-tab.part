@@ -1,0 +1,61 @@
+/* ---------- Log tab ---------- */
+let logDirty=false,writing=Promise.resolve(),asT=null;
+function logFieldFocused(){const a=document.activeElement,b=$("logpage");return !!(a&&b.contains(a)&&/^(INPUT|TEXTAREA)$/.test(a.tagName))}
+function autoSaveDay(){
+  clearTimeout(asT);const d=$("logpage").dataset.day;if(!canWrite||!logDirty||!d||!$("lgNote"))return;
+  logDirty=false;patchLog(d,{top3:[0,1,2].map(i=>$("lgTop"+i).value.trim()),note:$("lgNote").value.trim()});
+  const s=$("savedNote");if(s)s.textContent="Saved";
+}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")autoSaveDay()});
+window.addEventListener("pagehide",autoSaveDay);
+function renderLog(T){
+  const box=$("logpage");if(box.dataset.day===sel&&(logDirty||logFieldFocused()))return;
+  box.dataset.day=sel;box.textContent="";
+  const real=todayIST(),p=dayPlan(sel,T),l=logs[sel]||{},B=l.blocks||{};
+  box.append(el("div",{class:"dayhead"},el("div",{},el("div",{class:"label"},"Log"),el("h2",{},nice(sel))),dayNav(real)));
+  box.append(el("p",{class:"note",style:"margin:0 0 10px"},p.segs?(p.start.set?"Started "+hm(p.start.s)+(p.start.how==="set"?" (entered)":" (tapped)"):"No start recorded"):KIND_LABEL[p.kind]));
+  const recs=Object.entries(B).sort((a,b)=>(a[1].t??9999)-(b[1].t??9999)||(a[1].at||0)-(b[1].at||0));
+  if(recs.length)box.append(el("ul",{class:"loglist"},recs.map(([k,r])=>logLi(sel,k,r))));
+  else box.append(el("p",{class:"muted",style:"margin:0"},"Nothing logged yet."));
+  if(p.segs&&sel<=real&&(sel<real||p.start.set)){const mn=sel<real?1e9:nowMins();
+    const un=p.segs.filter(s=>s.k==="block"&&s.e<=mn&&!B[s.id]&&!(l.lost||{})[s.id]&&!(l.stopAt!=null&&s.t>=l.stopAt));
+    if(un.length)box.append(el("div",{class:"banner",style:"margin:12px 0 0"},el("span",{},un.length+(un.length===1?" block":" blocks")+" not logged"+(canWrite?". Tap to log:":": "+un.map(s=>s.name).join(", "))),canWrite?un.map(s=>el("button",{class:"mini",onclick:()=>openBlockLog(sel,s)},s.name+" · "+hmS(s.t))):null))}
+  const total=dayHours(sel),its=p.items.filter(i=>!i.upload),dn=its.filter(i=>itemDone(i,sel,T,l)).length;
+  box.append(el("div",{class:"total"},el("span",{},"Logged"),(bigDay(sel)?"🏆 ":"")+hrs(total||0)),el("p",{class:"note",style:"margin:2px 0 16px"},dn+" of "+its.length+" items on the work list done"+(p.segs?" · scheduled on the model day "+dur(p.schedMin):"")+(dayAdmin(sel)>0?" · admin "+hrs(dayAdmin(sel))+" not counted":"")));
+  const mark=()=>{logDirty=true;const s=$("savedNote");if(s)s.textContent="Saving…";clearTimeout(asT);asT=setTimeout(autoSaveDay,1200)};
+  const blur=()=>{clearTimeout(asT);asT=setTimeout(()=>{if(logDirty)autoSaveDay();else if(!logFieldFocused()&&TS)renderLog(TS)},400)};
+  const t3=[0,1,2].map(i=>el("input",{type:"text",id:"lgTop"+i,placeholder:"Tomorrow #"+(i+1),value:(l.top3||[])[i]||"",disabled:!canWrite,oninput:mark,onblur:blur}));
+  const note=el("textarea",{id:"lgNote",placeholder:"What got in the way, if anything",disabled:!canWrite,oninput:mark,onblur:blur});note.value=l.note||"";
+  box.append(el("div",{class:"log"},
+    el("span",{class:"label"},"Top 3 for tomorrow"),el("div",{class:"top3"},t3),
+    el("label",{class:"label",for:"lgNote"},"Note"),note,
+    el("div",{class:"row full"},canWrite?null:el("span",{class:"note"},"Read-only: only Perry logs here."),
+      el("button",{onclick:copySummary},"Copy summary for WhatsApp"),el("span",{class:"saved",id:"savedNote"},l.savedAt?"Saves as you type · last saved "+new Date(l.savedAt).toLocaleString("en-IN",{hour:"numeric",minute:"2-digit",day:"numeric",month:"short"}):canWrite?"Saves as you type":""))));
+  const sun=add(sel,(7-dow(sel))%7),wk=monSatHours(sun);
+  box.append(el("div",{class:"label",style:"margin-top:24px"},"This week, Mon–Sat"),el("p",{style:"margin:6px 0 0"},hrs(wk)+" of "+RULES.sundayH+" h. "+(wk>=RULES.sundayH?"Sunday "+short(sun)+" is a light day.":hrs(RULES.sundayH-wk)+" to go for a light Sunday on "+short(sun)+".")),
+    el("div",{class:"meter",role:"img","aria-label":Math.round(Math.min(1,wk/RULES.sundayH)*100)+"% of the light-Sunday target"},el("i",{style:"width:"+Math.round(Math.min(1,wk/RULES.sundayH)*100)+"%"})),
+    el("p",{class:"rwline"},"🏆 "+RULES.rewardH+"-hour days so far: "+bigDays()+(sel<=real&&!bigDay(sel)&&total?" · "+hrs(RULES.rewardH-total)+" to go "+(sel===real?"today":"on this day"):"")));
+  const hist=el("ul",{class:"hist"});
+  const hrows=[];for(let i=6;i>=0;i--){const d=add(clampDay(real),-i);if(d>=START)hrows.push([d,dayHours(d)])}
+  const hmax=Math.max(8,...hrows.map(r=>r[1]||0));
+  hrows.forEach(([d,h])=>hist.append(el("li",{onclick:()=>go(d,false)},el("span",{},nice(d)),el("span",{class:"hbar"},el("i",{style:"width:"+Math.round((h||0)/hmax*100)+"%"})),el("b",{},h!=null?(h>=RULES.rewardH?"🏆 ":"")+hrs(h):"—"))));
+  box.append(el("div",{class:"label",style:"margin-top:24px"},"Last seven days"),hist);
+}
+function saveDay(){if(!canWrite)return;clearTimeout(asT);logDirty=false;patchLog(sel,{top3:[0,1,2].map(i=>$("lgTop"+i).value.trim()),note:$("lgNote").value.trim()})}
+function copySummary(){
+  const T=TS,p=dayPlan(sel,T),l=logs[sel]||{},B=l.blocks||{};
+  const top=(logDirty?[0,1,2].map(i=>$("lgTop"+i).value.trim()):l.top3||[]).filter(Boolean),note=logDirty?$("lgNote").value.trim():l.note;
+  const recs=Object.values(B).sort((a,b)=>(a.t??9999)-(b.t??9999));
+  const its=p.items.filter(i=>!i.upload),dn=its.filter(i=>itemDone(i,sel,T,l)).length;
+  const tt=testOn(sel,T);const sun=add(sel,(7-dow(sel))%7);
+  const lines=[nice(sel)+(p.segs?(p.start.set?" · started "+hm(p.start.s):" · no start logged"):" · "+KIND_LABEL[p.kind])+" · "+hrs(dayHours(sel)||0)+" logged"];
+  recs.forEach(r=>lines.push("• "+(r.t!=null?hmS(r.t)+"–"+hmS(r.e)+" ":"")+r.name+": "+(r.what||"—")+" ("+hrs(r.hours||0)+(r.nostudy?", not study":"")+")"));
+  lines.push("Work list: "+dn+"/"+its.length+" done"+(tt?" · "+tt.name+(tt.written?" written":" NOT written"):""));
+  if(dow(sel)!==0)lines.push("Week so far: "+hrs(monSatHours(sun))+" of "+RULES.sundayH+" for a light Sunday");
+  if(top.length)lines.push("Tomorrow: "+top.map((x,i)=>(i+1)+") "+x).join(" "));
+  if(note)lines.push("Note: "+note);
+  const txt=lines.join("\n");
+  try{navigator.clipboard.writeText(txt).then(()=>sync("Summary copied. Send it before you sleep."),()=>fallback(txt))}catch(e){fallback(txt)}
+}
+function fallback(txt){const ta=el("textarea",{style:"position:fixed;opacity:0"});ta.value=txt;document.body.append(ta);ta.select();try{document.execCommand("copy");sync("Summary copied.")}catch(e){sync("Copy blocked by this browser.")}ta.remove()}
+

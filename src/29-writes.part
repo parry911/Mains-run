@@ -1,0 +1,7 @@
+/* ---------- writes ---------- */
+function savePlan(noRender){
+  saveLocal();if(!noRender)render();if(!calSelf)calSoon();
+  if(db){const snap=JSON.parse(JSON.stringify(plan));writing=writing.then(()=>db.doc("plan/state").set(snap)).catch(e=>{if(e&&e.code==="invalid_argument"){canWrite=false;render()}sync("Couldn't save to the shared store ("+(e&&e.code||"error")+"). Saved on this device.")})}
+}
+function setField(id,f,noRender){const o=Object.assign({},plan.tests[id]||{});Object.keys(f).forEach(k=>{if(f[k]==null)delete o[k];else o[k]=f[k]});plan.tests=Object.assign({},plan.tests,{[id]:o});savePlan(noRender)}
+

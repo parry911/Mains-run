@@ -1,0 +1,39 @@
+/* ---------- render ---------- */
+let TS=null;
+let rq=0;const dirty=new Set();
+function render(){if(rq)return;rq=setTimeout(()=>{rq=0;renderAll()},40)}
+function isShown(v){return view===v||(wideMQ.matches&&v==="today")}
+function drawView(v,T,real){switch(v){case"today":renderDay(T);break;case"log":renderLog(T);break;case"tests":renderTests(T,real);break;case"calendar":renderStrip(T,real);renderWeek(T,real);break;case"law":renderLaw(T,real);break;case"jobs":renderTasks(real);renderRules()}}
+function drawDirty(){if(!TS)return;const real=todayIST();[...dirty].forEach(v=>{if(isShown(v)){dirty.delete(v);drawView(v,TS,real)}})}
+function renderAll(){
+  clearTimeout(rq);rq=0;
+  RULES=Object.assign({},R0,plan.rules||{});
+  TS=tests();MEMO=new WeakMap();ALLOC=new WeakMap();
+  const T=TS,real=todayIST();
+  renderBand(T,real);renderNow();renderAlerts(T,real);
+  ["today","log","tests","calendar","law","jobs"].forEach(v=>{if(isShown(v)){dirty.delete(v);drawView(v,T,real)}else dirty.add(v)});
+}
+function same(a,b){if(a===b)return true;if(!a||!b||typeof a!=="object"||typeof b!=="object")return false;const ka=Object.keys(a),kb=Object.keys(b);return ka.length===kb.length&&ka.every(k=>same(a[k],b[k]))}
+function ringSvg(frac,color){
+  const r=17,c=2*Math.PI*r,f=Math.max(0,Math.min(1,frac||0));
+  const NS="http://www.w3.org/2000/svg",s=document.createElementNS(NS,"svg");s.setAttribute("width","44");s.setAttribute("height","44");s.setAttribute("viewBox","0 0 44 44");s.setAttribute("aria-hidden","true");
+  const mk=(st,da,off)=>{const k=document.createElementNS(NS,"circle");k.setAttribute("cx","22");k.setAttribute("cy","22");k.setAttribute("r",String(r));k.setAttribute("fill","none");k.setAttribute("stroke",st);k.setAttribute("stroke-width","5");if(da){k.setAttribute("stroke-dasharray",String(c));k.setAttribute("stroke-dashoffset",String(c*(1-f)));k.setAttribute("stroke-linecap","round");k.setAttribute("transform","rotate(-90 22 22)")}return k};
+  s.append(mk("var(--rule)"),mk(color,true));return s;
+}
+function avgHours(from,to){let s=0,n=0;for(let d=from;d<=to;d=add(d,1)){s+=dayHours(d)||0;n++}return n?s/n:null}
+const TARGET_H=10;
+function renderBand(T,today){
+  const band=$("band");band.textContent="";
+  const pend=T.filter(t=>!t.done&&!t.opt&&t.date>=today),n=pend[0];
+  const head=el("div",{},el("div",{class:"k"},nice(today)),el("h1",{},n?(n.name.split(" · ")[0]+" "+(()=>{const dd=diff(today,n.date);return dd===0?"today":dd===1?"tomorrow":"in "+dd+" days"})()):"All tests written"));
+  band.append(el("div",{class:"bd"},head,el("span",{class:"pre"},Math.max(0,diff(today,"2027-05-23"))+" days to prelims")));
+  const tp=today>=START&&today<=END?dayPlan(today,T):null;
+  const planned=tp&&tp.segs?tp.segs.filter(x=>x.k==="block"&&(STUDY_ROLES[x.role]||x.role==="paper"||x.role==="news")).reduce((s,x)=>s+x.e-x.t,0)/60:0;
+  const done=dayHours(today)||0;
+  const y=add(today,-1),all=y>=START?avgHours(START,y):null,wk=y>=START?avgHours(add(y,-6)<START?START:add(y,-6),y):null;
+  const r1=el("div",{class:"ring"},ringSvg(planned?done/planned:0,"var(--ok)"),el("div",{},el("b",{},hrs(done)),el("span",{},planned?"of "+dur(planned*60)+" today":"logged today")));
+  const trend=all!=null&&wk!=null?(wk>=all?"up":"down"):"";
+  const r2=el("div",{class:"ring"},ringSvg(all!=null?all/TARGET_H:0,"var(--accent)"),el("div",{},el("b",{},all!=null?(Math.round(all*10)/10)+" h":"–"),
+    el("span",{},"average a day, aim "+TARGET_H+" h"),wk!=null?el("span",{class:trend},"last 7 days "+(Math.round(wk*10)/10)+" h"):null));
+  band.append(el("div",{class:"rings"},r1,r2),el("div",{class:"hnow",id:"nowline"}));
+}

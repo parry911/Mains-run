@@ -1,0 +1,73 @@
+/* ---------- sheets ---------- */
+const SH=$("sheetOv"),SHB=$("sheetBody");
+function openSheet(nodes,label){SHB.textContent="";SHB.setAttribute("aria-label",label||"Sheet");nodes.forEach(n=>n&&SHB.append(n));SH.hidden=false;const f=SHB.querySelector("input[type=number],input[type=text],button.primary");if(f)setTimeout(()=>f.focus(),30)}
+function closeSheet(){SH.hidden=true;SHB.textContent="";SHB.classList.remove("reward")}
+SH.addEventListener("click",e=>{if(e.target===SH)closeSheet()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!SH.hidden)closeSheet()});
+function openBlockLog(d,seg){
+  if(!canWrite)return;
+  const T=TS,p=dayPlan(d,T),l=logs[d]||{},id=seg?seg.id:"x"+Date.now(),prev=(l.blocks||{})[id]||null;
+  if(seg&&seg.role==="paper")return openPaperLog(d,seg,T,prev);
+  const timed=seg&&seg.t!=null;
+  const others=Object.entries(l.blocks||{}).filter(x=>x[0]!==id).map(x=>x[1]);
+  const tClaim=(tid,n)=>others.some(b=>((b.topics||{})[tid]||[]).includes(n));
+  const iClaim=x=>others.some(b=>(b.items||[]).includes(x));
+  const mine=(tid,n)=>!!prev&&((prev.topics||{})[tid]||[]).includes(n);
+  const pre=new Set(prev?prev.items||[]:(seg&&seg.role==="news"?["news"]:seg&&seg.role==="light"?["ca"]:[]).concat((l.done||[]).filter(x=>!iClaim(x))));
+  const all0=todoRows(d,p,T,l);
+  const rows=all0.filter(r=>!(r.item&&(r.item.paper||r.item.upload||r.item.id==="gym"))).filter(r=>r.topic?!tClaim(r.topic[0],r.topic[1]):!iClaim(r.item.id));
+  (all0.ticked||[]).filter(x=>!tClaim(x[0],x[1])).reverse().forEach(x=>{const t=T.find(y=>y.id===x[0]);rows.unshift({label:"Topic "+x[1]+" · "+topicText(t,T,x[1]),done:true,topic:[x[0],x[1]]})});
+  p.items.filter(i=>i.prep).forEach(i=>{const t=T.find(x=>x.id===i.prep),tk=ticks(t.id),dr=drops(t.id),list=topicsFor(i,d,T);
+    t.topics.filter(n=>!tk[n]&&!dr[n]&&!list.includes(n)&&!rows.some(r=>r.topic&&r.topic[0]===t.id&&r.topic[1]===n)).slice(0,2).forEach(n=>rows.push({label:"Topic "+n+" · "+topicText(t,T,n)+" (ahead)",done:false,topic:[t.id,n]}))});
+  const ul=el("ul",{class:"todo"}),cbs=[];
+  rows.forEach((r,k)=>{const cid="lg-"+k,cb=el("input",{type:"checkbox",id:cid,checked:r.topic?r.done:pre.has(r.item.id)});cbs.push({cb,r});ul.append(el("li",{},cb,el("label",{for:cid},r.label)))});
+  const other=el("input",{type:"text",id:"lgOther",placeholder:"Anything else you did",value:prev?prev.text||"":""});
+  const nowM=nowMins(),isLive=timed&&d===todayIST()&&nowM>seg.t&&nowM<seg.e;
+  const preMin=timed?(isLive?Math.max(5,Math.round((nowM-seg.t)/5)*5):seg.e-seg.t):null;
+  const hrsIn=durIn(prev&&prev.hours!=null?prev.hours:(preMin!=null?preMin/60:null),timed?seg.e-seg.t:null,16);
+  const ns=el("input",{type:"checkbox",id:"lgNo",checked:!!(prev&&prev.nostudy)});
+  const save=el("button",{class:"primary",disabled:hrsIn.empty()},"Save");
+  hrsIn.on(()=>{save.disabled=hrsIn.empty()});
+  save.addEventListener("click",()=>{
+    const h=hrsIn.get();if(h==null)return;
+    const all=Object.assign({},plan.topics),tp={},its=[],what=[];let tch=false;
+    cbs.forEach(({cb,r})=>{if(r.topic){const[tid,n]=r.topic,m=Object.assign({},all[tid]);if(cb.checked){if(!m[n]){m[n]=d;tch=true}if(m[n]===d)(tp[tid]=tp[tid]||[]).push(n)}else if(m[n]===d&&mine(tid,n)){delete m[n];tch=true}all[tid]=m}
+      else if(cb.checked){its.push(r.item.id);what.push(r.label)}});
+    Object.keys(tp).forEach(tid=>{const t=T.find(x=>x.id===tid);what.unshift(t.name.split(" · ")[0]+" topics "+tp[tid].join(", "))});
+    if(other.value.trim())what.push(other.value.trim());
+    const rec={name:seg?seg.name:"Other study",t:timed?seg.t:null,e:timed?seg.e:null,items:its,topics:tp,text:other.value.trim(),hours:h,what:what.join(" · "),at:Date.now()};
+    if(ns.checked)rec.nostudy=true;
+    const blocks=Object.assign({},l.blocks,{[id]:rec});
+    const done=new Set(l.done||[]);(prev?prev.items||[]:[]).forEach(x=>{if(!its.includes(x)&&!Object.entries(blocks).some(([k,b])=>k!==id&&(b.items||[]).includes(x)))done.delete(x)});its.forEach(x=>done.add(x));
+    if(tch){plan.topics=all;savePlan(true)}
+    closeSheet();patchLog(d,{blocks,done:[...done]});
+  });
+  const btns=el("div",{class:"btns"});
+  if(prev)btns.append(el("button",{onclick:()=>{removeBlockLog(d,id);closeSheet()}},"Remove"));
+  btns.append(el("button",{onclick:closeSheet},"Cancel"),save);
+  openSheet([el("div",{},el("span",{class:"label"},timed?seg.name+" · "+hmS(seg.t)+"–"+hmS(seg.e):(seg?seg.name:"Other study")+" · "+nice(d)),el("h3",{},"What did you do?")),
+timed?el("div",{class:"row"},el("button",{class:"mini",onclick:()=>openSlotEdit(d,seg)},"Change this block's time or name")):null,
+    ul,el("div",{class:"field"},el("label",{class:"label",for:"lgOther"},"Something else"),other),
+    el("div",{class:"field"},el("label",{class:"label",for:"lgHrs"},"Time studied"),hrsIn.box,timed?el("span",{class:"note"},"Block is "+dur(seg.e-seg.t)+(isLive&&!prev?" · filled with the time so far":"")):null),
+    el("label",{class:"row",for:"lgNo",style:"gap:10px"},ns,el("span",{},"Not study (calls, errands, admin). Left out of today's hours and the week.")),btns],"What did you do?");
+  if(!hrsIn.empty())setTimeout(()=>save.focus(),40);
+}
+function openPaperLog(d,seg,T,prev){
+  const t=testOn(d,T);if(!t)return;
+  const hrsIn=durIn(prev?prev.hours:(t.half?1.5:3),null,6);
+  const btns=el("div",{class:"btns"});
+  if(prev||t.written)btns.append(el("button",{onclick:()=>{closeSheet();setField(t.id,{done:false,writtenOn:null},true);removeBlockLog(d,seg.id)}},"Not written"));
+  if(t.kind==="essay"&&!t.written&&!t.half)btns.append(el("button",{onclick:()=>{const h=hrsIn.get()||0;closeSheet();setField(t.id,{done:true,one:true,writtenOn:d},true);
+    const blocks=Object.assign({},(logs[d]||{}).blocks,{[seg.id]:{name:seg.name,t:seg.t,e:seg.e,items:["w-"+t.id],hours:h,what:"Wrote one essay of "+t.name,at:Date.now()}});patchLog(d,{blocks})}},"One essay only"));
+  btns.append(el("button",{onclick:closeSheet},"Cancel"),el("button",{class:"primary",onclick:()=>{const h=hrsIn.get()||0;closeSheet();setField(t.id,{done:true,one:t.half?true:null,writtenOn:d},true);
+    const blocks=Object.assign({},(logs[d]||{}).blocks,{[seg.id]:{name:seg.name,t:seg.t,e:seg.e,items:["w-"+t.id],hours:h,what:t.half?"Wrote one essay of "+t.name:"Wrote "+t.name,at:Date.now()}});patchLog(d,{blocks})}},"Written"));
+  openSheet([el("div",{},el("span",{class:"label"},seg.name+" · "+hmS(seg.t)+"–"+hmS(seg.e)),el("h3",{},"Did you write "+t.name+"?")),
+    el("p",{class:"note",style:"margin:0"},""),
+    el("div",{class:"field"},el("label",{class:"label",for:"lgHrs"},"Time"),hrsIn.box),btns],"Paper written");
+}
+function removeBlockLog(d,id){
+  const l=logs[d]||{},blocks=Object.assign({},l.blocks),prev=blocks[id];if(!prev)return;delete blocks[id];
+  const done=new Set(l.done||[]);(prev.items||[]).forEach(x=>{if(!Object.values(blocks).some(b=>(b.items||[]).includes(x)))done.delete(x)});
+  patchLog(d,{blocks,done:[...done]});
+}
+

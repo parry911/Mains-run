@@ -1,0 +1,11 @@
+/* ---------- writes from Today ---------- */
+function patchLog(d,patch){
+  const before=dayHours(d)||0;
+  const lg=Object.assign({},logs[d]||{});Object.keys(patch).forEach(k=>{if(patch[k]==null)delete lg[k];else lg[k]=patch[k]});
+  lg.savedAt=Date.now();logs[d]=lg;saveLocal();
+  if(db){const body=JSON.parse(JSON.stringify(lg));writing=writing.then(()=>db.doc("logs/"+d).set(body)).catch(e=>sync("Couldn't save ("+(e&&e.code||"error")+"). Kept on this device."))}
+  render();
+  const after=dayHours(d)||0;
+  const tier=[RULES.treatH,RULES.prizeH,RULES.rewardH].findIndex(H=>before<H&&after>=H);
+  if(tier>=0)setTimeout(()=>showReward(d,2-tier),120);
+}

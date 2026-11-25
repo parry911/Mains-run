@@ -1,0 +1,24 @@
+/* ---------- sync ---------- */
+function sync(msg){$("sync").textContent=msg}
+async function boot(){
+  loadLocal();render();
+  const c=window.claude;if(!c||!c.use){sync("Saving on this device only.");return}
+  sync("Connecting…");
+  const timer=setTimeout(()=>{if(!live)sync("Can't reach the shared store yet. Changes are kept on this device.")},10000);
+  try{
+    const [d,u]=await Promise.all([c.use("db"),c.use("user")]);
+    if(u){try{const own=await u.isOwner();if(own===false)canWrite=false}catch(e){}}
+    if(!d){clearTimeout(timer);sync(canWrite?"Saving on this device only.":"Read-only view.");render();return}
+    db=d;
+    db.doc("plan/state").onSnapshot(s=>{let ch=false;if(!s.exists&&!s.metadata.fromCache&&canWrite&&Object.values(plan).some(v=>v&&Object.keys(v).length))savePlan(true);if(s.exists){const nx=Object.assign({tests:{},tasks:{},days:{},topics:{},law:{},drop:{},rules:{}},s.data());if(!same(nx,plan)){plan=nx;ch=true}}if(!s.metadata.fromCache){live=true;clearTimeout(timer);calSoon(4000);sync(canWrite?"Synced across your devices.":"Read-only view of Perry's plan.")}if(ch){saveLocal();render()}},e=>{clearTimeout(timer);sync("Shared store unavailable ("+e.code+"). Using this device.")});
+    let pushed=false;
+    db.collection("logs").onSnapshot(q=>{const m={};let ch=false;
+      if(!pushed&&canWrite&&q.metadata&&q.metadata.fromCache===false){pushed=true;const have=new Set(q.docs.map(x=>x.id));Object.keys(logs).forEach(k=>{if(!have.has(k)){const body=JSON.parse(JSON.stringify(logs[k]));writing=writing.then(()=>db.doc("logs/"+k).set(body)).catch(()=>{})}})}
+      q.docs.forEach(x=>{const v=x.data();if(!same(logs[x.id],v)){m[x.id]=v;ch=true}});if(ch){logs=Object.assign({},logs,m);saveLocal();render()}},e=>{});
+  }catch(e){clearTimeout(timer);sync("Saving on this device only.")}
+}
+setView(wideMQ.matches?"log":"today");
+setInterval(()=>{renderNow();const fa=document.activeElement,typing=!!(fa&&$("day").contains(fa)&&/^(INPUT|SELECT|TEXTAREA)$/.test(fa.tagName)&&fa.type!=="checkbox");
+  if(isShown("today")&&sel===todayIST()&&!document.querySelector("details.chg[open]")&&SH.hidden&&!logDirty&&!typing){const y=window.scrollY;renderDay(TS);window.scrollTo(0,y)}},60000);
+boot();
+})();

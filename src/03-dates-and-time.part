@@ -1,0 +1,34 @@
+/* ---------- dates and time ---------- */
+const START="2026-11-09", END="2027-01-03", DAY=864e5;
+const P=s=>{const[a,b,c]=s.split("-").map(Number);return Date.UTC(a,b-1,c)};
+const F=t=>new Date(t).toISOString().slice(0,10);
+const add=(s,n)=>F(P(s)+n*DAY);
+const diff=(a,b)=>Math.round((P(b)-P(a))/DAY);
+const dow=s=>new Date(P(s)).getUTCDay();
+const WD=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], MO=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const nice=s=>{const d=new Date(P(s));return WD[d.getUTCDay()]+" "+d.getUTCDate()+" "+MO[d.getUTCMonth()]};
+const short=s=>{const d=new Date(P(s));return d.getUTCDate()+" "+MO[d.getUTCMonth()]};
+function todayIST(){return F(Date.now()+330*60000)}
+function nowMins(){const n=new Date(Date.now()+330*60000);return n.getUTCHours()*60+n.getUTCMinutes()}
+const clampDay=s=>s<START?START:s>END?END:s;
+const DAYS=[];for(let d=START;d<=END;d=add(d,1))DAYS.push(d);
+const r15=x=>Math.round(x/15)*15;
+const hm=m=>{m=Math.round(m);const h=Math.floor(m/60)%24,mm=m%60;return ((h+11)%12+1)+":"+String(mm).padStart(2,"0")+(h>=12?" pm":" am")};
+const hmS=m=>{m=Math.round(m);return ((Math.floor(m/60)%24+11)%12+1)+":"+String(m%60).padStart(2,"0")};
+const dur=m=>{m=Math.max(0,Math.round(m));const h=Math.floor(m/60),r=m%60;return (h?h+"h":"")+(h&&r?" ":"")+(r||!h?r+"m":"")};
+const hrs=h=>dur((+h||0)*60);
+/* hours + minutes entry: two whole-number boxes, read back as decimal hours */
+function durIn(val,phMin,maxH){
+  const has=val!=null&&val!=="";const tot=has?Math.round(+val*60):null;
+  const mk=(id,v,ph,max)=>el("input",{type:"number",id,inputmode:"numeric",pattern:"[0-9]*",min:"0",max,step:"1",value:v==null?"":v,placeholder:ph});
+  const h=mk("lgHrs",has?Math.floor(tot/60):null,phMin!=null?String(Math.floor(phMin/60)):"0",String(maxH));
+  const m=mk("lgMin",has?tot%60:null,phMin!=null?String(phMin%60):"0","59");
+  const box=el("div",{class:"durin"},h,el("span",{},"h"),m,el("span",{},"min"));
+  const empty=()=>h.value===""&&m.value==="";
+  const get=()=>{if(empty())return null;const a=Number(h.value||0),b=Number(m.value||0);if(isNaN(a)||isNaN(b)||a<0||b<0)return null;return a+b/60};
+  const on=f=>{h.addEventListener("input",f);m.addEventListener("input",f)};
+  return{box,get,empty,on};
+}
+const toTime=m=>String(Math.floor(m/60)%24).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+const fromTime=v=>{if(!v)return null;const[a,b]=v.split(":").map(Number);return isNaN(a)?null:a*60+(b||0)};
+

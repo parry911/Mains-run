@@ -1,0 +1,71 @@
+/* ---------- moving a test: one tap, the next sectionals shift with it ---------- */
+/* Moving a sectional later shifts every later pending sectional by the same days. Essays and the Delhi tests stay put. */
+function cascadeFor(T,id,nd,on){
+  const t=T.find(x=>x.id===id),list=[{id,from:t.date,to:nd,main:true}],stuck=[],delta=diff(t.date,nd);
+  if(!on||delta<=0||t.kind==="essay"||t.flt)return{list,stuck};
+  const movers=T.filter(x=>x.id!==id&&!x.done&&!x.opt&&!x.flt&&x.kind!=="essay"&&x.date>t.date).sort((a,b)=>a.date<b.date?-1:1);
+  const ids=new Set(movers.map(x=>x.id));ids.add(id);
+  const taken=new Set(T.filter(x=>!ids.has(x.id)&&!x.skipped).map(x=>x.date));
+  Object.keys(TRAVEL).forEach(d=>taken.add(d));taken.add(nd);
+  let prev=nd;
+  /* a later sectional moves only if it would now sit too close; spare days absorb the slip first */
+  movers.forEach(m=>{
+    const need=add(prev,m.gap||2);
+    if(m.date>=need){prev=m.date;return}
+    let d=need;
+    while(d<=GS1_CAP&&taken.has(d))d=add(d,1);
+    if(d>GS1_CAP){d=GS1_CAP;while(d>prev&&taken.has(d))d=add(d,-1);if(d<=prev){stuck.push(m);return}}
+    taken.add(d);prev=d;list.push({id:m.id,from:m.date,to:d});
+  });
+  return{list,stuck};
+}
+let mvId=null;
+const ov=$("overlay"),mvDate=$("mvDate"),mvGo=$("mvGo"),mvCasc=$("mvCasc");
+function openMove(id,suggest){
+  mvId=id;const T=tests(),t=T.find(x=>x.id===id),td=clampDay(todayIST());
+  $("mvTitle").textContent=t.name+" · "+nice(t.date);
+  mvDate.min=td;mvDate.max=t.kind==="essay"?END:GS1_CAP;
+  const first=t.date<td?td:add(t.date,1),chips=$("mvChips");chips.textContent="";chips.className="chips";
+  [0,1,2].forEach(i=>{const d=add(first,i);if(d<=mvDate.max)chips.append(el("button",{onclick:()=>{mvDate.value=d;updateMove()}},nice(d)))});
+  mvDate.value=suggest>mvDate.max?mvDate.max:suggest<td?td:suggest;
+  mvCasc.checked=true;
+  ov.hidden=false;updateMove();mvGo.focus();
+}
+function closeMove(){ov.hidden=true;mvId=null}
+function updateMove(){
+  if(!mvId)return;
+  const T=TS||tests(),t=T.find(x=>x.id===mvId),nd=mvDate.value,ul=$("mvArgs");ul.textContent="";
+  const canC=t.kind!=="essay"&&!t.flt&&nd>t.date;
+  $("mvCascRow").hidden=!canC;
+  if(!nd){mvGo.disabled=true;return}
+  const {list,stuck}=cascadeFor(T,mvId,nd,canC&&mvCasc.checked);
+  const A=(cls,kids)=>{const li=el("li",{class:cls||""});li.append(...kids.filter(Boolean));ul.append(li)};
+  const clash=T.find(x=>!x.skipped&&!list.some(c=>c.id===x.id)&&x.date===nd&&x.id!==mvId);
+  if(clash)A("bad",[el("b",{},clash.name.split(" · ")[0]+" is already on "+nice(nd)+". "),"Pick another day."]);
+  list.forEach(c=>{const x=T.find(y=>y.id===c.id);
+    A("",[el("b",{},x.name.split(" · ")[0]+": "),short(c.from)+" → "+nice(c.to),c.to>x.win&&c.to!==c.from?el("span",{class:"note"}," · past its submission window ("+short(x.win)+")"):null])});
+  stuck.forEach(m=>A("bad",[el("b",{},m.name.split(" · ")[0]+" has no room before Delhi. "),"It stays on "+nice(m.date)+"; skip it or move it yourself."]));
+  const T2=tests(Object.assign(JSON.parse(JSON.stringify(plan.tests||{})),Object.fromEntries(list.map(c=>[c.id,Object.assign({},(plan.tests||{})[c.id]||{},{date:c.to,pv:true})]))));
+  const g1=gs1Run(T,todayIST()),g2=gs1Run(T2,todayIST());
+  if(g1&&g2&&t.kind!=="essay")A(g2.tier==="ok"?"":"bad",[el("b",{},g2.n+(g2.n===1?" day":" days")+" for GS1 study "),g2.n!==g1.n?"(was "+g1.n+"). ":"",g2.tier==="ok"?"":"That's under the "+GS1_PLAN+" you planned, so there won't be much time for GS1."]);
+  mvGo.disabled=!!clash||nd===t.date;
+  mvGo.textContent=nd===t.date?"Move":"Move to "+short(nd)+(list.length>1?" + "+(list.length-1)+" more":"");
+  mvGo.dataset.sig=JSON.stringify(list);
+}
+mvDate.addEventListener("input",updateMove);mvCasc.addEventListener("change",updateMove);
+$("mvKeep").addEventListener("click",closeMove);
+ov.addEventListener("click",e=>{if(e.target===ov)closeMove()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!ov.hidden)closeMove()});
+$("mvSkip").addEventListener("click",()=>{const id=mvId,cur=TS.find(x=>x.id===id),o=Object.assign({},plan.tests[id]||{});
+  o.moves=(o.moves||[]).concat([{from:cur.date,to:"skipped",reason:"",at:Date.now()}]);o.skipped=true;plan.tests=Object.assign({},plan.tests,{[id]:o});closeMove();savePlan()});
+mvGo.addEventListener("click",()=>{
+  let list;try{list=JSON.parse(mvGo.dataset.sig||"[]")}catch(e){list=[]}
+  if(!list.length){closeMove();return}
+  const main=list.find(c=>c.main),mn=(TS.find(x=>x.id===main.id).name||"").split(" · ")[0],all=Object.assign({},plan.tests),at=Date.now();
+  list.forEach(c=>{const o=Object.assign({},all[c.id]||{});
+    o.moves=(o.moves||[]).concat([c.main?{from:c.from,to:c.to,reason:"",at}:{from:c.from,to:c.to,reason:"Shifted with "+mn+", "+short(c.from)+" → "+short(c.to),at,auto:true}]);
+    o.date=c.to;all[c.id]=o});
+  plan.tests=all;closeMove();savePlan();
+  sync(list.length>1?mn+" moved. Next: "+list.filter(c=>!c.main).map(c=>TS.find(x=>x.id===c.id).name.split(" · ")[0]+" → "+short(c.to)).join(", ")+".":mn+" moved to "+short(main.to)+".");
+});
+

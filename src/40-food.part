@@ -1,0 +1,37 @@
+/* ---------- food ---------- */
+async function food(){
+  $("sosTitle").textContent="Log food";$("sosClose").textContent="Back";$("sosIn").hidden=true;mode=null;
+  const b=$("sosBody");b.innerHTML="";
+  const p=document.createElement("p");p.className="note";p.style.margin="0";p.textContent="What did you eat, and roughly when? Type it, or use your keyboard's mic.";
+  const ta=document.createElement("textarea");ta.id="sosFood";ta.rows=3;ta.placeholder="e.g. 2 rotis, dal, salad · lunch";
+  const row=document.createElement("div");row.className="sos-in";
+  const mic=document.createElement("button");mic.type="button";mic.className="sos-mic";mic.id="sosFoodMic";mic.textContent="🎙";mic.hidden=!DICT;mic.addEventListener("click",micClick);
+  const sv=document.createElement("button");sv.type="button";sv.className="primary";sv.textContent="Save";
+  row.append(ta,mic,sv);
+  const msg=document.createElement("p");msg.className="note";msg.style.margin="0";
+  const h=document.createElement("span");h.className="label";h.textContent="Today";
+  const ul=document.createElement("ul");ul.className="sos-food";
+  b.append(p,row,msg,h,ul);
+  micTarget="sosFood";micBtn="sosFoodMic";
+  const d=today();let entries=[];
+  const paint=()=>{ul.innerHTML="";if(!entries.length){const li=document.createElement("li");li.className="note";li.textContent="Nothing logged yet.";ul.append(li);return}
+    entries.forEach(x=>{const li=document.createElement("li");const n=new Date(x.at+330*60000);li.innerHTML="<span class='note'>"+hm(n.getUTCHours()*60+n.getUTCMinutes())+"</span> · "+esc(x.text);ul.append(li)})};
+  if(DB){try{const s=await DB.doc("food/"+d).get();if(s&&s.exists)entries=(s.data().entries||[])}catch(e){}}
+  paint();
+  sv.addEventListener("click",async()=>{const t=ta.value.trim();if(!t)return;
+    if(!DB){msg.textContent="Can't reach your saved data from this view. Try in the Claude app.";return}
+    sv.disabled=true;const next=entries.concat([{at:Date.now(),text:t}]);
+    try{await DB.doc("food/"+d).set({date:d,entries:next});entries=next;ta.value="";msg.textContent="Saved.";paint()}
+    catch(e){msg.textContent="Didn't save. Try again."}finally{sv.disabled=false}});
+  setTimeout(()=>ta.focus(),50);
+}
+
+$("sosBtn").addEventListener("click",()=>{menu();show()});
+$("sosClose").addEventListener("click",()=>{if($("sosClose").textContent==="Back"){if(ctl){try{ctl.abort()}catch(e){}}menu()}else hide()});
+$("sosOv").addEventListener("click",e=>{if(e.target===$("sosOv"))hide()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("sosOv").hidden)hide()});
+$("sosSend").addEventListener("click",send);
+$("sosMic").addEventListener("click",micClick);
+$("sosText").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)){e.preventDefault();send()}});
+window.addEventListener("hashchange",readHash);setTimeout(readHash,0);
+})();

@@ -1,0 +1,4 @@
+/* ---------- rules (editable on the Rules tab) ---------- */
+const R0={late:480,lateLights:1350,afterTest:360,sundayH:54,essayEve:60,copy:45,ca:30,law:45,lawFrom:"2026-11-20",news:60,eveCA:30,topicMin:45,fltRevise:20,fltStudy:45,rewardH:10,prizeH:11,treatH:12,reward:"Your pick tonight, guilt-free: a film, a long call, or a proper treat."};
+let RULES=Object.assign({},R0);
+

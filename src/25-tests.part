@@ -1,0 +1,34 @@
+/* ---------- Tests ---------- */
+function renderTests(T,today){
+  const ul=$("tests");ul.textContent="";
+  renderGs1(T,today);
+  const moves=T.reduce((s,t)=>s+t.moves.filter(m=>!m.auto).length,0);
+  $("moveCount").textContent=T.filter(t=>t.written).length+"/"+T.filter(t=>!t.opt).length+" written · "+T.filter(t=>t.written&&t.date===t.orig).length+" on date · "+moves+(moves===1?" move":" moves");
+  T.forEach(t=>{
+    let pill;const acts=el("div",{class:"acts"}),B=(txt,fn,cls)=>canWrite?acts.append(el("button",{class:cls||"",onclick:fn},txt)):null;
+    const backBy=add(t.uploadedOn||t.date,17);
+    if(t.skipped){pill=el("span",{class:"pill moved"},t.opt?"Not doing it":"Skipped");acts.append(pill);B("Undo",()=>setField(t.id,{skipped:false}))}
+    else if(!t.written){
+      pill=t.opt?el("span",{class:"pill"},"Optional"):t.date<today?el("span",{class:"pill late"},"Missed"):t.date===today?el("span",{class:"pill today"},"Today"):t.date!==t.orig?el("span",{class:"pill moved"},"Moved"):el("span",{class:"pill"},diff(today,t.date)+"d");
+      acts.append(pill);
+      if(t.opt){B("Written",()=>setField(t.id,{done:true,writtenOn:todayIST()}));B("Not doing it",()=>setField(t.id,{skipped:true}))}
+      else{if(t.date<=today)B("Written",()=>setField(t.id,{done:true,writtenOn:todayIST()}));if(t.kind==="essay"&&t.date<=today)B("One essay",()=>setField(t.id,{done:true,one:true,writtenOn:todayIST()}));if(!t.flt)B("Move or skip",()=>openMove(t.id,add(t.date,1)<today?today:add(t.date,1)))}
+    }else if(!t.uploaded){pill=el("span",{class:"pill late"},t.kind==="essay"?"Send to SP":"Upload by "+short(t.win));acts.append(pill);B(t.kind==="essay"?"Sent":"Uploaded",()=>setField(t.id,{uploaded:true,uploadedOn:todayIST()}),"accent");B("Undo",()=>setField(t.id,{done:false,one:null}))}
+    else if(!t.back){pill=el("span",{class:"pill"},"Back ≈ "+short(backBy));acts.append(pill);B("Copy back",()=>setField(t.id,{back:true}))}
+    else{pill=el("span",{class:"pill done"},t.fix?"Reviewed":"Evaluated");acts.append(pill)}
+    const tk=ticks(t.id),dr=drops(t.id),act=t.topics.filter(n=>!dr[n]),tdone=act.filter(n=>tk[n]).length,drl=t.topics.filter(n=>dr[n]);
+    const meta=nice(t.date)+(t.date!==t.orig?" (was "+short(t.orig)+")":"")+(t.one?" · one essay only":t.half&&!t.written?" · one essay planned":"")+(t.written||t.kind==="essay"?"":" · submit by "+short(t.win)+(t.win<t.date?" (already past)":""));
+    const last=t.moves[t.moves.length-1];
+    ul.append(el("li",{class:"test"+(t.done&&(t.back||t.skipped)?" isdone":""),style:"--kc:"+KC(t.kind)},el("span",{class:"bar"}),
+      el("div",{style:"min-width:0"},el("div",{class:"nm"},t.name),el("div",{class:"meta"},meta),
+        t.topics.length&&!t.opt?el("div",{class:"tprog"},tdone+" of "+act.length+" topics ticked"+(t.flt?" · "+act.filter(n=>missedTopic(t,T,n)).length+" missed in sectionals":"")):null,
+        drl.length?el("div",{class:"tprog"},"Dropped: "+drl.join(", ")+" ",canWrite?el("button",{class:"mini",onclick:()=>{plan.drop=Object.assign({},plan.drop,{[t.id]:{}});savePlan()}},"Restore"):null):null,
+        last&&last.reason?el("div",{class:"meta"},(last.auto?"":"Reason: ")+last.reason):null,t.back?scoreRow(t):null),acts));
+  });
+}
+function scoreRow(t){
+  if(!canWrite)return t.marks||t.fix?el("div",{class:"meta"},(t.marks?"Marks "+t.marks:"")+(t.fix?" · Fix: "+t.fix:"")):null;
+  const m=el("input",{type:"text",id:"mk-"+t.id,placeholder:"Marks e.g. 92/250",value:t.marks}),f=el("input",{type:"text",id:"fx-"+t.id,placeholder:"One fix for next time",value:t.fix});
+  return el("div",{class:"score"},m,f,el("button",{onclick:()=>setField(t.id,{marks:m.value.trim(),fix:f.value.trim()})},"Save"));
+}
+

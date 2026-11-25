@@ -1,0 +1,16 @@
+/* ---------- alerts ---------- */
+function renderAlerts(T,today){
+  const box=$("alerts");box.textContent="";
+  T.filter(t=>!t.done&&!t.opt&&t.date<today).forEach(t=>{const sug=freeDay(T,today);
+    box.append(el("div",{class:"alert"},el("p",{},el("b",{},t.name+" was due "+nice(t.date)+". "),"Write it on "+nice(sug)+", the first day without another test, or skip it."),
+      el("div",{class:"row"},canWrite?el("button",{class:"accent",onclick:()=>openMove(t.id,sug)},"Reschedule or skip"):null,canWrite?el("button",{onclick:()=>setField(t.id,{done:true,writtenOn:todayIST()})},"I wrote it"):null)))});
+  const nx=T.filter(t=>!t.done&&!t.opt&&t.kind!=="essay"&&t.date>today).slice(0,2);
+  nx.forEach(t=>{const sf=shortfall(t,T);if(!sf)return;
+    box.append(el("div",{class:"alert"},el("p",{},el("b",{},t.name+": "+sf.k+(sf.k===1?" topic won't":" topics won't")+" get covered. "),
+      "About "+dur(sf.avail)+" of prep is left before "+short(t.date)+"; the "+sf.pend.length+" open topics need about "+dur(sf.need)+". Drop the least likely topics, or move the test."),
+      canWrite?el("div",{class:"row"},el("button",{class:"accent",onclick:()=>openDrop(t.id)},"Pick topics to drop"),t.flt?null:el("button",{onclick:()=>openMove(t.id,add(t.date,1))},"Move the test")):null))});
+  const g=gs1Run(T,today);
+  if(g&&g.tier!=="ok")box.append(el("div",{class:"alert"},el("p",{},el("b",{},g.n>0?"Only "+g.n+(g.n===1?" day":" days")+" for GS1 study. ":"No clear days for GS1 study. "),
+    g.last?g.last.name.split(" · ")[0]+" now ends the sectionals on "+nice(g.last.date)+"; GS1 in Delhi is on "+nice(g.f.date)+". You planned about "+GS1_PLAN+" days.":"")));
+}
+

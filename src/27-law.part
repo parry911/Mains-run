@@ -1,0 +1,23 @@
+/* ---------- Law ---------- */
+function renderLaw(T,today){
+  const box=$("lawcard");box.textContent="";const st=plan.law||{};
+  const left=lawLeft();let mins=0;for(let d=clampDay(today<START?START:today);d<=END;d=add(d,1))mins+=dayPlan(d,T).items.filter(i=>i.id==="law").reduce((s,i)=>s+i.min,0);
+  const per=left?Math.round(mins/left):0;
+  box.append(el("div",{class:"dayhead"},el("h2",{style:"font-size:20px"},"Law Optional pipeline"),el("span",{class:"label"},(LAW_TOTAL-left)+" of "+LAW_TOTAL+" topics done")),
+    el("p",{class:per&&per<30?"lawwarn":"muted",style:"margin:0 0 12px"},left?left+" topics left. At "+RULES.law+" min a day from "+short(RULES.lawFrom)+", that's about "+hrs(mins/60)+" of Law before 3 Jan: "+per+" min per topic.":"All done."));
+  const grid=el("div",{class:"lawgrid"});
+  LAW.forEach((g,i)=>{const n=g.items.filter((_,j)=>st[lawKey(i,j)]).length;
+    grid.append(el("div",{class:"lawsub"},el("div",{class:"row",style:"justify-content:space-between"},el("b",{},g.s),el("span",{class:"note"},n+"/"+g.items.length)),
+      el("div",{class:"meter"},el("i",{style:"width:"+Math.round(n/g.items.length*100)+"%"})),
+      el("ul",{},g.items.map((it,j)=>{const cid="lw-"+lawKey(i,j);return el("li",{},el("input",{type:"checkbox",id:cid,checked:!!st[lawKey(i,j)],disabled:!canWrite,onchange:e=>{plan.law=Object.assign({},plan.law,{[lawKey(i,j)]:e.target.checked});savePlan()}}),el("label",{for:cid},it))}))))});
+  box.append(grid);
+}
+function renderTasks(today){
+  const ul=$("tasks");ul.textContent="";const st=plan.tasks||{};let n=0;
+  TASKS.slice().sort((a,b)=>(!!st[a.id])-(!!st[b.id])||(a.due<b.due?-1:1)).forEach(k=>{const done=!!st[k.id];if(done)n++;const id="tk-"+k.id;
+    ul.append(el("li",{class:"task"+(done?" done":"")+(!done&&k.due<today?" overdue":"")},
+      el("input",{type:"checkbox",id,checked:done,disabled:!canWrite,onchange:e=>{plan.tasks=Object.assign({},plan.tasks,{[k.id]:e.target.checked});savePlan()}}),
+      el("label",{for:id},el("span",{class:"txt"},k.t)),el("span",{class:"due"},(!done&&k.due<today?"overdue · ":"")+short(k.due))))});
+  $("taskCount").textContent=n+" of "+TASKS.length+" done";
+}
+

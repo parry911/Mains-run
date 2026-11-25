@@ -1,0 +1,19 @@
+/* ---------- Today ---------- */
+function dayNav(today){
+  return el("div",{class:"navbtns"},
+    el("button",{"aria-label":"Previous day",disabled:sel<=START,onclick:()=>go(add(sel,-1),true)},"←"),
+    el("button",{onclick:()=>go(clampDay(today),true),disabled:sel===clampDay(today)},"Today"),
+    el("button",{"aria-label":"Next day",disabled:sel>=END,onclick:()=>go(add(sel,1),true)},"→"));
+}
+function shortKind(p,d){
+  switch(p.kind){
+    case "normal":return p.late?"Late day":"Normal day";
+    case "gstest":return "Test day · paper "+hmS((p.segs.find(s=>s.role==="paper")||{t:870}).t);
+    case "essay":return p.half?"Essay day · write it when you're ready":"Essay day · paper "+hmS((p.segs.find(s=>s.role==="paper")||{t:870}).t);
+    case "centre":return "Delhi test · centre's clock";
+    case "travel":return TRAVEL[d]||"Travel day";
+    case "wedding":return "Wedding day";
+    case "off":return "Off";
+    case "light":return "Light Sunday, earned";
+  }return "";
+}

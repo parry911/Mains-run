@@ -1,0 +1,14 @@
+/* ---------- tabs and navigation ---------- */
+let view="today";
+const wideMQ=window.matchMedia?matchMedia("(min-width:1024px)"):{matches:false,addEventListener(){}};
+function setView(v){
+  if(wideMQ.matches&&v==="today")v=view==="today"?"log":view;
+  view=v;
+  document.querySelectorAll("[data-view]").forEach(s=>{s.hidden=!(s.dataset.view===v||(wideMQ.matches&&s.dataset.view==="today"))});
+  document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.v===v)));
+  drawDirty();
+}
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>setView(b.dataset.v)));
+try{wideMQ.addEventListener("change",()=>setView(wideMQ.matches&&view==="today"?"log":view))}catch(e){}
+function go(d,stay){if(logDirty&&canWrite)saveDay();logDirty=false;sel=d;renderAll();if(!stay&&!wideMQ.matches){setView("today");window.scrollTo({top:document.querySelector(".tabs").offsetTop-8,behavior:"smooth"})}}
+

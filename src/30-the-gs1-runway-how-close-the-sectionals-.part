@@ -1,0 +1,24 @@
+/* ---------- the GS1 runway: how close the sectionals get to the Delhi GS1 test ---------- */
+const GS1_PLAN=7,GS1_CAP="2026-12-11";
+function gs1Run(T,today){
+  const f=T.find(x=>x.id==="F1");if(!f)return null;
+  const pend=T.filter(x=>!x.done&&!x.opt&&!x.flt&&x.kind!=="essay"),last=pend.length?pend[pend.length-1]:null;
+  const end=add(f.date,-2),td=clampDay(today);
+  const n=Math.max(0,last?diff(last.date,end):diff(td,end)+1);
+  const from=last?add(last.date,1):td;
+  const ess=T.filter(x=>!x.done&&!x.opt&&x.kind==="essay"&&x.date>=from&&x.date<=end);
+  const secs=T.filter(x=>!x.flt&&!x.opt&&x.kind!=="essay");
+  return{f,last,n,ess,tier:n>=GS1_PLAN?"ok":n>=GS1_PLAN-2?"tight":"short",secDone:secs.filter(x=>x.done).length,secTotal:secs.length};
+}
+function renderGs1(T,today){
+  const box=$("gs1run");if(!box)return;box.textContent="";
+  const g=gs1Run(T,today);if(!g)return;
+  box.append(el("div",{class:"run "+g.tier},
+    el("span",{class:"label"},"Sectionals to the GS1 test"),
+    el("b",{},g.last?"Last sectional: "+g.last.name.split(" · ")[0]+" · "+nice(g.last.date):"All sectionals written"),
+    el("p",{},g.secDone+" of "+g.secTotal+" sectionals done. GS1 full test in Delhi: "+nice(g.f.date)+"."),
+    el("p",{},el("b",{style:"font-size:15px"},g.n+(g.n===1?" day":" days")+" for GS1 study"),(g.tier==="ok"?" (you planned about "+GS1_PLAN+")":g.n>0?". You planned about "+GS1_PLAN+", so there isn't much time for GS1.":". There's no clear time for GS1 before Delhi."),
+      g.ess.length?" "+g.ess.map(x=>x.name.split(" · ")[0]+" on "+short(x.date)).join(" and ")+" falls in that window.":""),
+    el("div",{class:"meter",role:"img","aria-label":g.n+" of "+GS1_PLAN+" planned GS1 days"},el("i",{style:"width:"+Math.round(Math.min(1,g.n/GS1_PLAN)*100)+"%"}))));
+}
+

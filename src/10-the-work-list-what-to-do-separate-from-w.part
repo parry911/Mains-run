@@ -1,0 +1,91 @@
+/* ---------- the work list: what to do, separate from when ---------- */
+let MEMO=new WeakMap(),ALLOC=new WeakMap();
+function memoFor(T){let m=MEMO.get(T);if(!m){m={};MEMO.set(T,m)}return m}
+function dayPlan(d,T){
+  const m=memoFor(T);if(m[d])return m[d];
+  const kind=dayKind(d,T),st=startOf(d,T);
+  const timed=kind==="normal"||kind==="gstest"||kind==="essay";
+  const lg=logs[d]||{};
+  const short=!!(st.set&&lg.asleep!=null&&!lg.noNap&&sleepMins(lg.asleep,st.s)<360);
+  const et=kind==="essay"?testOn(d,T):null,half=!!(et&&et.half);
+  const gt=kind==="gstest"?testOn(d,T):null,eve=!!(gt&&gt.eve);
+  const cu=lg.custom||null;
+  const AI=aiLive(aiOf(lg),d,T);
+  const b=AI?{segs:aiSegs(AI),lights:AI.lights,late:false}:cu?customLive(buildCustom(cu),d,T):timed?buildDay(kind==="essay"&&half?"normal":kind,st.s,{short,half,eve,gym:!!lg.gym}):null;
+  const segs=b?(AI?b.segs:applySlots(b.segs,lg.slots)):null;
+  if(b){if(lg.lightsAt!=null)b.lights=lg.lightsAt;else if(segs.length){const last=Math.max(...segs.map(x=>x.e));if(last>b.lights)b.lights=last}}
+  const studyMin=segs?segs.filter(x=>x.k==="block"&&STUDY_ROLES[x.role]).reduce((s,x)=>s+x.e-x.t,0):UNTIMED[kind]||0;
+  const schedMin=segs?studyMin+segs.filter(x=>x.k==="block"&&x.role==="news").reduce((s,x)=>s+x.e-x.t,0):studyMin;
+  const p={d,kind,start:st,late:!!(b&&b.late),short,half,segs,lights:b?b.lights:null,studyMin,schedMin,custom:!!cu||!!AI};
+  m[d]=p;
+  p.items=workItems(d,T,p);
+  p.planned=p.items.reduce((s,i)=>s+(i.paper?0:i.min||0),0);
+  return p;
+}
+function copyDue(T){return T.filter(t=>t.back&&!t.fix&&!t.skipped).sort((a,b)=>a.date<b.date?-1:1)[0]||null}
+function workItems(d,T,p){
+  const out=[],I=o=>{out.push(Object.assign({pri:1,min:0,kind:"daily"},o))};
+  const kind=p.kind,segs=p.segs,tt=testOn(d,T);
+  const pending=T.filter(t=>!t.done&&!t.opt);
+  const nextGS=pending.filter(t=>t.kind!=="essay"&&t.date>d);
+  const blockMin=role=>segs?segs.filter(x=>x.k==="block"&&x.role===role).reduce((s,x)=>s+x.e-x.t,0):0;
+  const sunday=dow(d)===0;
+  if(kind==="off"||kind==="light")return out;
+  if(kind==="centre"){if(tt)I({id:"w-"+tt.id,title:"Write "+tt.name,detail:"At the centre. Follow its clock; attempt all 20.",min:180,pri:0,kind:tt.kind,paper:tt.id});return out}
+  if(kind==="gstest"&&tt){
+    I({id:"w-"+tt.id,title:"Write "+tt.name,detail:"Attempt all 20. Pens down at three hours.",min:180,pri:0,kind:tt.kind,paper:tt.id});
+    I({id:"rv-"+tt.id,title:"Revise for "+tt.name,detail:"Unticked topics first. Tick a topic once you've been through it.",min:blockMin("rev"),pri:0,kind:tt.kind,rev:tt.id});
+    I({id:"news",title:"Newspaper",min:blockMin("news")||RULES.news});
+    const ev=blockMin("eve");
+    if(ev>0){const cl=Math.min(RULES.eveCA,ev);I({id:"cl",title:"CA notes or Law Optional, your pick",detail:behindNote(d),min:cl,kind:"law"});
+      const nx=nextGS[0];if(nx&&ev-cl>=15)I({id:"p-"+nx.id,title:"Start "+nx.name,min:ev-cl,pri:0,kind:nx.kind,prep:nx.id})}
+    if(sunday)I({id:"review",title:"Sunday review",detail:"15 minutes on the Weeks tab",min:15,pri:2});
+    return out;
+  }
+  let cap=p.studyMin;
+  if(kind==="essay"&&tt&&tt.half){
+    I({id:"w-"+tt.id,title:"Write "+tt.name,detail:"One essay, 90 minutes, hard timer, whenever you're ready.",min:90,pri:0,kind:"essay",paper:tt.id});
+    I({id:"ep-"+tt.id,title:"Essay research",detail:"About 2 hours from your study blocks: pick the topic, research, outline.",min:120,pri:0,kind:"essay",essay:tt.id});
+    cap-=210;
+  }else if(kind==="essay"&&tt){
+    I({id:"w-"+tt.id,title:"Write "+tt.name,detail:"Two essays, equal time.",min:180,pri:0,kind:"essay",paper:tt.id});
+    const b1=segs.find(x=>x.k==="block"&&x.hint&&x.role==="study");const em=b1?b1.e-b1.t:60;
+    I({id:"ep-"+tt.id,title:"Essay prep for today's paper",detail:"Likely themes, two outlines, examples and quotes.",min:em,pri:0,kind:"essay",essay:tt.id});
+    cap-=em;
+  }
+  const away=kind==="travel"||kind==="wedding";
+  if(away){I({id:"news",title:"Newspaper",detail:kind==="travel"?"On the move":"",min:30});cap-=30}
+  else{
+    I({id:"news",title:"Newspaper",detail:"With breakfast",min:RULES.news});
+    const gs=segs&&segs.find(x=>x.tick==="gym");
+    if(gs)I({id:"gym",title:/home/i.test(gs.label)?"Home workout":"Gym",detail:"Skipped it? That hour is rest.",pri:2});
+  }
+  const eve=pending.find(t=>t.kind==="essay"&&t.date===add(d,1));
+  if(eve&&!eve.half&&!(tt&&tt.kind==="essay")){const m=Math.min(RULES.essayEve,Math.max(cap,0));if(m>0){I({id:"ep-"+eve.id,title:"Essay prep for tomorrow",detail:"Pick a likely theme, outline it, refresh examples.",min:m,pri:0,kind:"essay",essay:eve.id});cap-=m}}
+  if(!away){
+    const cb=copyDue(T);if(cb){I({id:"cr-"+cb.id,title:"Review the "+cb.name.split(" · ")[0]+" copy",detail:"Read the feedback, compare with the model answer, rewrite the weakest answer, then log marks and one fix.",min:RULES.copy,kind:cb.kind,copy:cb.id});cap-=RULES.copy}
+    if(d>=RULES.lawFrom){const nl=nextLaw();if(nl){I({id:"law",title:"Law Optional",detail:"Next: "+nl,min:RULES.law,kind:"law"});cap-=RULES.law}}
+    const caLight=false;
+    const cs=caStage();if(cs)I({id:"ca",title:"CA notes",detail:cs[1]+(caLight?" · goes in tonight's light block":""),min:RULES.ca,ca:cs[0]});
+    if(sunday){I({id:"review",title:"Sunday review",detail:"15 minutes on the Weeks tab",min:15,pri:2});cap-=15}
+  }
+  cap=Math.max(0,cap);
+  if(nextGS.length&&cap>=15){
+    const a=nextGS[0],b=nextGS[1];
+    const PR=(t,m,lab)=>I({id:"p-"+t.id,title:(lab||"Prep · ")+t.name,min:m,pri:0,kind:t.kind,prep:t.id});
+    if(b&&diff(a.date,b.date)<=2&&!away){const ma=r15(cap*.6);PR(a,ma);PR(b,cap-ma)}
+    else PR(a,cap,away?"Light revision · ":"Prep · ");
+  }
+  return out;
+}
+function behindNote(d){
+  let lawGap=0;
+  if(d>RULES.lawFrom&&RULES.lawFrom<END){const span=diff(RULES.lawFrom,END)+1,el=Math.min(span,diff(RULES.lawFrom,d));lawGap=Math.floor(LAW_TOTAL*el/span)-(LAW_TOTAL-lawLeft())}
+  const cs=caStage(),caLeft=cs?diff(d,cs[2]):99;
+  const caBad=cs&&caLeft<=5;
+  if(lawGap>=1&&caBad)return "Both are behind: Law by "+lawGap+(lawGap===1?" topic":" topics")+", CA "+cs[1].split(" (")[0]+" due "+short(cs[2])+".";
+  if(lawGap>=1)return "Law is further behind: "+lawGap+(lawGap===1?" topic":" topics")+" behind pace.";
+  if(caBad)return "CA is further behind: "+cs[1].split(" (")[0]+(caLeft<0?" was due ":" is due ")+short(cs[2])+".";
+  return "Neither is behind. Your pick.";
+}
+

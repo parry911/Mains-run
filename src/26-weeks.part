@@ -1,0 +1,30 @@
+/* ---------- Weeks ---------- */
+function renderStrip(T,today){
+  const box=$("strip");box.textContent="";
+  DAYS.forEach(d=>{
+    const p=dayPlan(d,T),t=testOn(d,T),opt=T.find(x=>x.date===d&&x.opt&&!x.skipped);
+    const nx=T.filter(x=>!x.done&&!x.opt&&x.kind!=="essay"&&x.date>d)[0];
+    const kind=t?t.kind:["travel","wedding","off","light"].includes(p.kind)?"rest":nx?nx.kind:"rest";
+    const x=t?t.name.split(" · ")[0]+(p.kind==="centre"?" Delhi":""):p.kind==="normal"?(SPARE[d]?"Spare":nx?KL(nx.kind)+" prep":"Prep"):KIND_LABEL[p.kind];
+    const h=dayHours(d);
+    box.append(el("button",{class:"cell"+(t?" has-test":"")+(d===sel?" sel":"")+(d<today?" past":"")+(d===today?" istoday":""),style:"--kc:"+KC(kind),onclick:()=>go(d),"aria-label":nice(d)+": "+x},
+      el("span",{class:"n"},new Date(P(d)).getUTCDate()+(new Date(P(d)).getUTCDate()===1||d===START?" "+MO[new Date(P(d)).getUTCMonth()]:"")),
+      el("span",{class:"x"},x),opt?el("span",{class:"x"},opt.name.split(" · ")[0]+" optional"):null,h!=null?el("span",{class:"x"},(h>=RULES.rewardH?"🏆 ":"")+hrs(h)+" logged"):null));
+  });
+}
+function renderWeek(T,today){
+  const box=$("week");box.textContent="";
+  const ref=clampDay(today<START?START:today),mon=add(ref,-((dow(ref)+6)%7)),sun=add(mon,6);
+  const wk=monSatHours(sun),wt=T.filter(t=>!t.opt&&t.orig>=mon&&t.orig<=sun),onTime=wt.filter(t=>t.written&&t.date===t.orig).length;
+  const mv=T.reduce((s,t)=>s+t.moves.filter(m=>!m.auto&&m.at>=P(mon)).length,0),pct=Math.min(100,Math.round(wk/RULES.sundayH*100));
+  let unl=0;for(let d=mon;d<today&&d<sun;d=add(d,1))if(dayHours(d)==null&&dayPlan(d,T).kind!=="off")unl++;
+  box.append(el("div",{class:"dayhead"},el("h2",{style:"font-size:20px"},"This week"),el("span",{class:"label"},short(mon)+" – "+short(sun))),
+    el("div",{class:"weekstats"},
+      el("div",{class:"stat"},el("span",{class:"label"},"Hours Mon–Sat"),el("b",{},hrs(wk).replace(" h","")+" / "+RULES.sundayH)),
+      el("div",{class:"stat"},el("span",{class:"label"},"Tests on date"),el("b",{},onTime+" / "+wt.length)),
+      el("div",{class:"stat"},el("span",{class:"label"},"Moves"),el("b",{style:mv?"color:var(--late)":""},mv))),
+    el("div",{class:"meter",role:"img","aria-label":pct+"% of the light-Sunday target"},el("i",{style:"width:"+pct+"%"})),
+    el("p",{class:"muted",style:"margin:12px 0 0;font-size:14px"},
+      (wk>=RULES.sundayH?"Light Sunday earned. ":hrs(RULES.sundayH-wk)+" more by Saturday earns a light Sunday. ")+(unl?unl+(unl===1?" day this week has":" days this week have")+" no hours logged; they count as zero.":"Sunday: 15-minute review here, then send the week to your brother.")));
+}
+

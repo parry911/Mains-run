@@ -1,0 +1,76 @@
+/* ---------- topics ---------- */
+function missedTopic(Ft,T,n){
+  const secs=T.filter(t=>!t.flt&&t.kind===Ft.kind);
+  if(Ft.kind==="gs1"&&n==="5")return !(secs.some(s=>ticks(s.id)["5a"])&&secs.some(s=>ticks(s.id)["5b"]));
+  return !secs.some(s=>s.topics.includes(n)&&ticks(s.id)[n]);
+}
+function topicMin(t,T,n){return t.flt?(missedTopic(t,T,n)?RULES.fltStudy:RULES.fltRevise):RULES.topicMin}
+function topicText(t,T,n){const b=(GS[t.kind]||{})[n]||"";return t.flt?(missedTopic(t,T,n)?"Study (missed earlier): ":"Revise: ")+b:b}
+function prepMin(d,tid,T){return dayPlan(d,T).items.filter(i=>i.prep===tid).reduce((s,i)=>s+i.min,0)}
+function allocate(t,T){
+  const today=clampDay(todayIST()),tk=ticks(t.id),dr=drops(t.id),out={};
+  const days=[];for(let d=today;d<t.date&&d<=END;d=add(d,1)){const m=prepMin(d,t.id,T);if(m>0)days.push([d,m])}
+  if(!days.length)return out;
+  const act=t.topics.filter(n=>!dr[n]);
+  const doneToday=act.filter(n=>tk[n]&&tk[n]>=today),pend=act.filter(n=>!tk[n]);
+  const W=n=>topicMin(t,T,n);
+  const totW=doneToday.concat(pend).reduce((s,n)=>s+W(n),0),totM=days.reduce((s,x)=>s+x[1],0);
+  if(days[0][0]===today){const allT=act.filter(n=>!tk[n]||tk[n]>=today),tg=totW*days[0][1]/totM;let w=0,k=0;
+    while(k<allT.length&&(days.length===1||w+W(allT[k])/2<=tg)){w+=W(allT[k]);k++}
+    Object.defineProperty(out,"_k",{value:k,enumerable:false})}
+  let accM=0,accW=0,idx=0;
+  days.forEach(([d,m],i)=>{accM+=m;const last=i===days.length-1,target=totW*accM/totM;const list=[];
+    if(d===today)doneToday.forEach(n=>{list.push(n);accW+=W(n)});
+    while(idx<pend.length&&(last||accW+W(pend[idx])/2<=target)){list.push(pend[idx]);accW+=W(pend[idx]);idx++}
+    out[d]=act.filter(n=>list.includes(n))});
+  return out;
+}
+function allocFor(t,T){let m=ALLOC.get(T);if(!m){m={};ALLOC.set(T,m)}if(!m[t.id])m[t.id]=allocate(t,T);return m[t.id]}
+function topicsFor(i,d,T){
+  const tid=i.prep||i.rev,t=T.find(x=>x.id===tid);if(!t)return[];
+  const tk=ticks(tid),dr=drops(tid);
+  if(i.rev)return t.topics.filter(n=>!dr[n]).sort((a,b)=>(!!tk[a])-(!!tk[b]));
+  if(d<clampDay(todayIST()))return t.topics.filter(n=>tk[n]===d);
+  return allocFor(t,T)[d]||[];
+}
+function itemDone(i,d,T,l){
+  if(i.paper){const t=T.find(x=>x.id===i.paper);return !!(t&&t.written)}
+  if(i.upload){const t=T.find(x=>x.id===i.upload);return !!(t&&t.uploaded)}
+  if(i.prep){const list=topicsFor(i,d,T),tk=ticks(i.prep);return list.length>0&&list.every(n=>tk[n])}
+  return ((l||{}).done||[]).includes(i.id);
+}
+function itemNeed(i,d,T,l){
+  if(itemDone(i,d,T,l))return 0;
+  if(i.prep){const list=topicsFor(i,d,T),tk=ticks(i.prep);const open=list.filter(n=>!tk[n]).length;return list.length?Math.round(i.min*open/list.length):i.min}
+  return i.min||0;
+}
+const RANK=i=>{const id=i.id;return id.startsWith("w-")?0:id.startsWith("rv-")?1:id.startsWith("up-")?2:id.startsWith("ep-")?3:id.startsWith("p-")?4:id.startsWith("cr-")?5:id==="law"||id==="cl"?6:id==="ca"?7:id==="news"?8:id==="review"?9:10};
+/* study minutes still available today, from now */
+function remaining(p,l,mins){
+  if(!p.segs)return 0;let rem=0;
+  p.segs.forEach(s=>{if(s.k!=="block"||!STUDY_ROLES[s.role])return;
+    if((l.lost||{})[s.id]||(l.blocks||{})[s.id])return;
+    const e=l.stopAt!=null?Math.min(s.e,l.stopAt):s.e,a=Math.max(s.t,mins);if(e>a)rem+=e-a});
+  return rem;
+}
+function fitItems(p,T,l,rem,d){
+  const list=p.items.filter(i=>!i.paper&&!i.upload&&i.id!=="gym"&&i.id!=="news"&&i.id!=="ca").sort((a,b)=>RANK(a)-RANK(b));
+  let left=rem,need=0;const map={};
+  list.forEach(i=>{const n=itemNeed(i,d,T,l);need+=n;if(n<=0)map[i.id]={state:"ok"};else if(n<=left){left-=n;map[i.id]={state:"ok"}}else if(left>=15){map[i.id]={state:"part"};left=0}else map[i.id]={state:"no"}});
+  return{map,need};
+}
+function moveNote(i){return i.prep?"its topics move to the next prep days":i.id==="law"?"the Law pace line updates":i.id.startsWith("cr-")?"it stays on the list tomorrow":i.id.startsWith("ep-")?"squeeze in 20 minutes of outlines":i.id.startsWith("rv-")?"read your fixes list instead":"back tomorrow"}
+/* the next test's prep: does it fit before the date? */
+function todayLeftFrac(T){const d=todayIST();const p=dayPlan(d,T);if(!p.segs||!p.start.set||!p.studyMin)return 1;return Math.min(1,remaining(p,logs[d]||{},nowMins())/p.studyMin)}
+function shortfall(t,T){
+  const today=clampDay(todayIST());if(t.date<=today)return null;
+  const tk=ticks(t.id),dr=drops(t.id);let avail=0;
+  for(let d=today;d<t.date;d=add(d,1)){let m=prepMin(d,t.id,T);if(d===todayIST())m=Math.round(m*todayLeftFrac(T));avail+=m}
+  const pend=t.topics.filter(n=>!tk[n]&&!dr[n]);if(!pend.length)return null;
+  const need=pend.reduce((s,n)=>s+topicMin(t,T,n),0);
+  if(need<=avail+15)return null;
+  let gap=need-avail,k=0;for(const n of pend.slice().reverse()){if(gap<=0)break;gap-=topicMin(t,T,n);k++}
+  return{need,avail,k,pend};
+}
+function prepHours(id,T,from){let s=0;for(let d=from;d<=END;d=add(d,1))s+=prepMin(d,id,T);return s/60}
+

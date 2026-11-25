@@ -1,0 +1,47 @@
+/* ---------- your own changes to a day's slots: times, names, break -> study ---------- */
+function applySlots(segs,ov){
+  if(!ov||!Object.keys(ov).length)return segs;
+  let out=segs.map(s=>{const o=ov[s.id];if(!o)return s;
+    const n=Object.assign({},s,{t:o.t,e:o.e,edited:true});
+    if(o.label){if(n.k==="break")n.label=o.label;else n.name=o.label}
+    if(o.study&&n.k==="break"){n.k="block";n.role="study";n.name=o.label||s.label;n.hint="";n.tick=null}
+    return n});
+  const ed=out.filter(x=>x.edited);
+  out=out.flatMap(x=>{if(x.edited)return[x];
+    let pc=[[x.t,x.e]];
+    ed.forEach(y=>{pc=pc.flatMap(([a,b])=>{if(y.e<=a||y.t>=b)return[[a,b]];const r=[];if(y.t>a)r.push([a,y.t]);if(y.e<b)r.push([y.e,b]);return r})});
+    pc=pc.filter(([a,b])=>b-a>=5).sort((p,q)=>(q[1]-q[0])-(p[1]-p[0]));
+    if(pc.length)return[Object.assign({},x,{t:pc[0][0],e:pc[0][1]})];
+    if(x.k==="break"&&x.e-x.t<=30){const at=Math.max(...ed.filter(y=>y.t<x.e&&y.e>x.t).map(y=>y.e));return[Object.assign({},x,{t:at,e:at+(x.e-x.t)})]}
+    return[]});
+  return out.sort((a,b)=>a.t-b.t);
+}
+function openSlotEdit(d,seg){
+  if(!canWrite)return;
+  const l=logs[d]||{},isL=seg.id==="__lights",ov=isL?null:(l.slots||{})[seg.id];
+  const nm=el("input",{type:"text",id:"slName",value:ov&&ov.label?ov.label:(seg.name||seg.label||"")});
+  const t0=el("input",{type:"time",id:"slFrom",value:toTime(seg.t),style:"width:auto"});
+  const t1=isL?null:el("input",{type:"time",id:"slTo",value:toTime(seg.e),style:"width:auto"});
+  const conv=seg.k==="break"||(ov&&ov.study);
+  const st=conv&&!isL?el("input",{type:"checkbox",id:"slStudy",checked:!!(ov&&ov.study)}):null;
+  const msg=el("p",{class:"note",style:"margin:0"});
+  const save=()=>{
+    const a=fromTime(t0.value);if(a==null){msg.textContent="Pick a time.";return}
+    if(isL){closeSheet();patchLog(d,{lightsAt:a});return}
+    let b=fromTime(t1.value);if(b==null){msg.textContent="Pick an end time.";return}
+    if(b<=a){msg.textContent="The end has to be after the start.";return}
+    const o={t:a,e:b};const lab=nm.value.trim();if(lab&&lab!==(seg.name||seg.label))o.label=lab;if(st&&st.checked)o.study=true;
+    closeSheet();patchLog(d,{slots:Object.assign({},l.slots,{[seg.id]:o})});
+  };
+  const reset=()=>{closeSheet();if(isL){patchLog(d,{lightsAt:null});return}const sl=Object.assign({},l.slots);delete sl[seg.id];patchLog(d,{slots:Object.keys(sl).length?sl:null})};
+  const btns=el("div",{class:"btns"});
+  if(isL?l.lightsAt!=null:ov)btns.append(el("button",{onclick:reset},"Back to plan"));
+  btns.append(el("button",{onclick:closeSheet},"Cancel"),el("button",{class:"primary",onclick:save},"Save"));
+  openSheet([el("div",{},el("span",{class:"label"},nice(d)),el("h3",{},isL?"Lights out":"Change this slot")),
+    isL?null:el("div",{class:"field"},el("label",{class:"label",for:"slName"},"Name"),nm),
+    el("div",{class:"row"},el("label",{class:"note",for:"slFrom"},isL?"At":"From"),t0,isL?null:el("label",{class:"note",for:"slTo"},"to"),t1),
+    st?el("label",{class:"row",for:"slStudy",style:"gap:10px"},st,el("span",{},"Use this time for study (it gets its own block to log)")):null,
+    el("p",{class:"note",style:"margin:0"},isL?"Only today changes.":"Only today changes. Anything this overlaps gets trimmed around it; the fixed times on other days stay as they are."),
+    msg,btns],"Change this slot");
+}
+

@@ -1,0 +1,21 @@
+/* ---------- a thought for the day, picked from how the last days went ---------- */
+const GB={
+ seed:{gm:"ਆਪੇ ਬੀਜਿ ਆਪੇ ਹੀ ਖਾਹੁ ॥",tr:"Aape beej aape hee khaahu",mn:"You sow, and you yourself eat what grows.",src:"Japji Sahib, Pauri 20"},
+ think:{gm:"ਸੋਚੈ ਸੋਚਿ ਨ ਹੋਵਈ ਜੇ ਸੋਚੀ ਲਖ ਵਾਰ ॥",tr:"Sochai soch na hovaee je sochee lakh vaar",mn:"Thinking does not get you there, even if you think a hundred thousand times.",src:"Japji Sahib, Pauri 1"},
+ mind:{gm:"ਮਨਿ ਜੀਤੈ ਜਗੁ ਜੀਤੁ ॥",tr:"Man jeetai jag jeet",mn:"Conquer the mind and you conquer the world.",src:"Japji Sahib, Pauri 28"},
+ living:{gm:"ਸਚਹੁ ਓਰੈ ਸਭੁ ਕੋ ਉਪਰਿ ਸਚੁ ਆਚਾਰੁ ॥",tr:"Sachahu orai sabh ko upar sach aachaar",mn:"Truth is above everything, but higher still is truthful living.",src:"Sri Raag, Ang 62"},
+ light:{gm:"ਮਨ ਤੂੰ ਜੋਤਿ ਸਰੂਪੁ ਹੈ ਆਪਣਾ ਮੂਲੁ ਪਛਾਣੁ ॥",tr:"Man toon jot saroop hai, aapnaa mool pachhaan",mn:"O mind, you are the embodiment of light; recognise your origin.",src:"Raag Aasa, Ang 441"},
+ effort:{gm:"ਘਾਲਿ ਖਾਇ ਕਿਛੁ ਹਥਹੁ ਦੇਇ ॥",tr:"Ghaal khaae kichh hathhu dey",mn:"One who earns by honest effort and gives some of it away.",src:"Sarang ki Vaar, Ang 1245"}};
+function patternFor(d){
+  const H=k=>dayHours(add(d,-k)),y=H(1),past=[1,2,3,4,5,6,7].map(H).filter(v=>v!=null);
+  const avg7=past.length?past.reduce((a,b)=>a+b,0)/past.length:null;
+  const since=Date.parse(d)-7*864e5;let moves=0;Object.values(plan.tests||{}).forEach(o=>(o.moves||[]).forEach(m=>{if(!m.auto&&m.at>=since)moves++}));
+  const starts=[1,2,3,4,5].map(k=>(logs[add(d,-k)]||{}).start).filter(v=>v!=null),late=starts.filter(s=>s>=540).length;
+  const r1=v=>Math.round(v*10)/10;
+  if(moves>=2)return{key:"think",gb:"think",pat:"You've moved tests "+moves+" times in the last week.",do:"Write the next paper on its date, ready or not. A rough copy still shows you what to fix.",tk:"gen"};
+  if(y!=null&&y<6&&avg7!=null)return{key:"seed",gb:"seed",pat:"Yesterday was light ("+r1(y)+" h). One day doesn't decide the run.",do:"Start the first block on time. That's the seed for today.",tk:"gen"};
+  if(starts.length>=3&&late>=3)return{key:"mind",gb:"mind",pat:late+" of your last "+starts.length+" days started after 9 am.",do:"Hold tonight's lights-out. Tomorrow's start is decided tonight.",tk:"gen"};
+  if(avg7!=null&&avg7>=9.5)return{key:"light",gb:"light",pat:"You've averaged "+r1(avg7)+" h over the last week.",do:"Keep this pace. Don't add hours, protect the ones you have.",tk:null};
+  if(avg7!=null&&avg7<8)return{key:"living",gb:"living",pat:"Last 7 days: "+r1(avg7)+" h a day, against a 10 h aim.",do:"The plan is the truth; living it is higher. Finish every block on today's timetable before adding anything.",tk:"gen"};
+  return{key:"effort",gb:"effort",pat:avg7!=null?"Last 7 days: "+r1(avg7)+" h a day.":"Early days of the run.",do:"Honest hours: tick only what you actually did.",tk:null};
+}

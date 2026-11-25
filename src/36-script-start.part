@@ -1,0 +1,25 @@
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const NAMES={ST4:"ST4 (GS3 topics 11–20)",ST2:"ST2 (GS2 second half)",ST5:"ST5 (GS4)",ST6:"ST6 (GS4)",E2:"Essay 2",E3:"Essay 3",E4:"Essay 4",E5:"Essay 5",F1:"GS1 full test in Delhi",F2:"GS2 full test in Delhi",F3:"GS3 full test in Delhi",F4:"GS4 full test in Delhi"};
+const BASE={ST4:"2026-11-19",ST2:"2026-11-25",ST5:"2026-12-01",ST6:"2026-12-04",E2:"2026-11-21",E3:"2026-12-08",E4:"2026-12-23",E5:"2026-12-30",F1:"2026-12-13",F2:"2026-12-20",F3:"2026-12-27",F4:"2027-01-03"};
+const REPLAN=Date.UTC(2026,10,15,21,5);
+const today=()=>new Date(Date.now()+330*60000).toISOString().slice(0,10);
+const addD=(s,n)=>new Date(Date.parse(s)+n*864e5).toISOString().slice(0,10);
+const dd=(a,b)=>Math.round((Date.parse(b)-Date.parse(a))/864e5);
+const hm=m=>{if(m==null)return "not logged";m=Math.round(m);const h=Math.floor(m/60)%24;return ((h+11)%12+1)+":"+String(m%60).padStart(2,"0")+(h>=12?" pm":" am")};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=s=>esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/(^|[^*])\*([^*\n]+)\*/g,"$1<i>$2</i>");
+
+let DB=null,SAMPLE=null,DICT=null,ready=false;
+(async()=>{const c=window.claude;if(!c||!c.use)return;
+  try{const [d,s,t]=await Promise.all([c.use("db"),c.use("sample"),c.use("dictation")]);DB=d;SAMPLE=s;DICT=t;
+    if(DICT){DICT.onFinal(({text})=>{const ta=$(micTarget);if(ta&&text){ta.value=(ta.value?ta.value.replace(/\s*$/," "):"")+text.trim()}});
+      DICT.onState(({state})=>{const b=$(micBtn);if(b){b.dataset.on=state==="listening"?"1":"0";b.textContent=state==="listening"?"■":"🎙"}})}
+  }catch(e){}ready=true;renderSpeed()})();
+let micTarget="sosText",micBtn="sosMic";
+function micClick(){if(!DICT)return;const b=$(micBtn);
+  if(b&&b.dataset.on==="1"){DICT.stop().catch(()=>{});return}
+  DICT.start().catch(e=>{if(e&&e.code==="not_granted"){DICT=null;document.querySelectorAll(".sos-mic").forEach(x=>x.hidden=true)}})}
+

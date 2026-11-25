@@ -1,0 +1,41 @@
+/* ---------- Google Calendar: test events follow the page ---------- */
+const GCAL0={ST4:"bnqcirongrdkmepbl1o0v8r658",ST2:"a6u43q81krjog6jjf03vfeiruc",ST5:"160jrjpph3di013ipmcqlukmlo",ST6:"oocvbdht58h3n860dg8j6149p8",E2:"hivdv1h1p0aninfc4nok1pmos4",E3:"si2879hc9cmmgpbjj3543o5oqs",F1:"1kilpv7qe3db1dvck27tng3f7s",F2:"l2678vatkhh0q6nvr0mp7u0jn4",E4:"rf10e5daf9ap31gu7uqtpqo5mk",F3:"5jt9p2lg808hj61de8g98k7pb4",E5:"ssqt53o3v88f0991o207qd3dh0",F4:"bflrvdrd41nki2839nv7hfi48g"};
+const GSIG0={ST4:"2026-11-23|a",ST2:"2026-11-25|a",ST5:"2026-12-01|a",ST6:"2026-12-04|a",E2:"2026-12-05",E3:"2026-12-08",F1:"2026-12-13",F2:"2026-12-20",E4:"2026-12-23",F3:"2026-12-27",E5:"2026-12-30",F4:"2027-01-03"};
+const GC="Google Calendar",PLAN_URL="https://claude.ai/artifact/SoUNgwpovKoWycJGTuXkBB";
+const calTimed=t=>t.kind!=="essay"&&!t.flt;
+const calSig=t=>t.skipped?"skip":t.date+(calTimed(t)?"|"+(t.eve?"e":"a"):"");
+function calRec(id){const g=(plan.gcal||{})[id];return g?g:{ev:GCAL0[id]||null,sig:GSIG0[id]||null}}
+function calTimes(t){if(calTimed(t)){const a=t.eve?"18:30":"14:30",b=t.eve?"21:30":"17:30";return{startTime:t.date+"T"+a+":00",endTime:t.date+"T"+b+":00"}}return{allDay:true,startTime:t.date+"T00:00:00",endTime:add(t.date,1)+"T00:00:00"}}
+function calNew(t){
+  const desc=calTimed(t)?"GS test day. Copy must reach ForumIAS by "+short(t.win)+".":t.delhi?"Centre test. Check reporting time.":t.half?"One essay: about 2 h of research from your study blocks, then 90 minutes. Send to Professor SP.":"Essay paper: two essays, 3 hours.";
+  const o=Object.assign({summary:t.name,description:desc+"\n\nSynced from your plan: "+PLAN_URL,notificationLevel:"NONE"},calTimes(t));
+  if(t.delhi)o.location="Delhi";
+  if(calTimed(t))o.overrideReminders=[{method:"popup",minutes:120},{method:"popup",minutes:1050}];
+  else if(t.delhi)o.overrideReminders=[{method:"popup",minutes:180}];
+  else o.useDefaultReminders=false;
+  return o;
+}
+let calBusy=false,calTimer=0,calSelf=false;
+function calSoon(ms){if(!canWrite||!window.claude||!window.claude.use)return;clearTimeout(calTimer);calTimer=setTimeout(calSync,ms||1500)}
+function calDiff(){return tests().filter(t=>{const r=calRec(t.id);if(calSig(t)===r.sig)return false;return !!r.ev||!t.done})}
+async function calSync(){
+  if(calBusy){calSoon(3000);return}
+  const todo=calDiff();if(!todo.length)return;
+  calBusy=true;
+  let mcp=null;try{mcp=await window.claude.use("mcp")}catch(e){}
+  if(!mcp){calBusy=false;return}
+  const upd={},names=[];let err=null;
+  for(const t of todo){const r=calRec(t.id),s=calSig(t);
+    try{
+      if(t.skipped){if(r.ev){try{await mcp.callTool(GC,"delete_event",{eventId:r.ev,notificationLevel:"NONE"})}catch(e){if(!e||e.code!=="tool_error")throw e}}upd[t.id]={ev:null,sig:s};names.push(t.name.split(" · ")[0]+" removed");continue}
+      if(r.ev){try{await mcp.callTool(GC,"update_event",Object.assign({eventId:r.ev,notificationLevel:"NONE"},calTimes(t)));upd[t.id]={ev:r.ev,sig:s};names.push(t.name.split(" · ")[0]+" → "+short(t.date));continue}catch(e){if(!e||e.code!=="tool_error")throw e}}
+      const res=await mcp.callTool(GC,"create_event",calNew(t));
+      upd[t.id]={ev:(res&&res.payload&&res.payload.id)||null,sig:s};names.push(t.name.split(" · ")[0]+" → "+short(t.date));
+    }catch(e){err=e;break}
+  }
+  calBusy=false;
+  if(Object.keys(upd).length){plan.gcal=Object.assign({},plan.gcal,upd);calSelf=true;savePlan(true);calSelf=false}
+  if(err){const c=err.code;sync(c==="needs_reauth"?"Google Calendar needs reconnecting (claude.ai Settings → Connectors). Your plan is saved.":c==="server_not_connected"?"Google Calendar isn't connected, so the calendar wasn't updated. Your plan is saved.":c==="approval_required"||c==="not_in_manifest"?"Calendar not updated: allow Google Calendar for this page when it asks, then move the test again.":"Couldn't update Google Calendar just now. It tries again on your next change.")}
+  else if(names.length)sync("Google Calendar updated: "+names.join(", ")+".");
+}
+

@@ -1,0 +1,30 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
+#day{font-family:var(--body)}
+#day h2{font:700 24px/1.2 var(--body);letter-spacing:-.01em;font-stretch:100%}
+#day h3{font:600 17px/1.3 var(--body);font-stretch:100%;letter-spacing:0}
+#day .label{font:500 13px/1.3 var(--body);letter-spacing:0;text-transform:none;color:var(--muted)}
+#day button{font:600 14px/1 var(--body);letter-spacing:0;text-transform:none;border-radius:10px;border:1px solid var(--rule);padding:9px 13px}
+#day button.primary,#day button.accent{background:var(--ink);color:var(--page);border-color:var(--ink)}
+#day button.mini{font-size:13px;padding:7px 11px}
+#day .chips{gap:8px}
+#day .chips button{font-weight:500}
+#day .chips button.primary{background:color-mix(in srgb,var(--accent) 22%,var(--page));color:var(--ink);border-color:color-mix(in srgb,var(--accent) 65%,var(--page))}
+#day .work{background:var(--page);border:1px solid var(--rule);border-radius:14px}
+#day .plan{border:1px solid var(--rule);border-radius:14px;padding:12px 14px}
+#day .plan .section-h{margin:2px 0 6px}
+#day .sumline{font-size:13.5px;color:var(--muted)}
+#day .sumline b{color:var(--ink);font-weight:600}
+#day .tt{border-top:0}
+#day .tt li{grid-template-columns:48px minmax(0,1fr) auto;padding:10px 6px;border-bottom:1px solid var(--rule);min-height:46px}
+#day .tt li:last-child{border-bottom:0}
+#day .tt .tm{font:500 13px/1.3 var(--body);font-variant-numeric:tabular-nums}
+#day .tt li.bl .nm{font-size:15.5px}
+#day .tt li.bl .nm b{font-weight:600}
+#day .tt li.br .nm{font-size:14.5px;color:var(--muted)}
+#day .tt li.live{box-shadow:none;background:color-mix(in srgb,var(--accent) 14%,var(--page));border-radius:8px}
+#day .tt input[type=checkbox]{width:22px;height:22px;border:1.5px solid var(--muted);background:transparent}
+#day .tt input[type=checkbox]:checked{background:var(--ok) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'><path d='M5 12.5l4.5 4.5L19 7.5'/></svg>") center/14px no-repeat;border-color:var(--ok);box-shadow:none}
+#day input[type=text],#day textarea,#day input[type=time],#day input[type=number]{border-radius:10px;border:1px solid var(--rule)}
+</style></head><body>
+<title>Mains Run to 3 Jan</title>
+<meta name="claude:viewport-fit-sides" content="cover">

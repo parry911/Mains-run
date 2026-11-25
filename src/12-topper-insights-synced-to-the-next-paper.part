@@ -1,0 +1,49 @@
+/* ---------- topper insights, synced to the next paper ---------- */
+const SRC={
+  anuGS:"https://forumias.com/blog/?p=23056",
+  anuEs:"https://www.insightsonindia.com/2018/06/08/anudeep-durishettyessay-strategy-upsc-civil-services-exam-topper-all-india-rank-1-cse-2017/",
+  adi:"https://www.visionias.in/blog/ethics/toppers-ethics-answer-writing-by-aditya-srivastava-air-1-upsc-2023",
+  ish:"https://visionias.in/blog/toppers-strategy/approach-for-excellence-in-upsc-mains-from-ishita-kishores-answer-scripts",
+  sha:"https://vajiramandravi.com/upsc-exam/shakti-dubey-upsc-air-1-2024/"};
+const AD="Anudeep Durishetty, AIR 1 (2017)",AS="Aditya Srivastava, AIR 1 (2023)",IK="Ishita Kishore, AIR 1 (2022)",SD="Shakti Dubey, AIR 1 (2024)";
+const INS=[
+ {k:"gs2",w:AD,s:"anuGS",tip:"He opened polity answers with the relevant Article where one applies, such as Article 153 for Governors.",do:"For each GS2 topic you revise today, write the one Article that should open it. You know these cold; most candidates don't. That is your edge."},
+ {k:"gs2",w:AD,s:"anuGS",tip:"He closed answers with a commission's view: Punchhi on Centre–State relations, the Law Commission on the death penalty, NCRWC on the Constitution.",do:"Build a list of ten commission or committee closers for GS2."},
+ {k:"gs2",w:AD,s:"anuGS",tip:"He used Supreme Court judgments as value addition, for example Shreya Singhal for free speech.",do:"Attach one landmark case to every GS2 topic. Your Law Optional notes already hold them; reuse, don't relearn."},
+ {k:"gs2",w:IK,s:"ish",tip:"Her GS2 answers cited precise 2nd ARC and committee details and tied theory to how it works on the ground.",do:"Pick five 2nd ARC recommendations you can cite accurately, and one real example for each."},
+ {k:"gs2",w:AD,s:"anuGS",tip:"On debatable questions he wrote both sides under subheadings, even when not asked, then gave a balanced view.",do:"In today's practice, use two subheadings on any 'critically examine' question."},
+ {k:"gs3",w:AD,s:"anuGS",tip:"He backed points with recent data from credible bodies such as UNICEF, Lancet or Transparency International.",do:"Note one statistic with source and year for every GS3 topic you revise today."},
+ {k:"gs3",w:IK,s:"ish",tip:"Her GS3 answers paired the fundamental concept with the current development and applied economic concepts directly.",do:"For each topic: one concept line plus one 2026 development. Two lines, not a paragraph."},
+ {k:"gs3",w:AD,s:"anuGS",tip:"He drew simple, accurate diagrams where they fit, such as river linking or the Chabahar route, and valued accuracy over art.",do:"Practise three GS3 flowcharts or diagrams today, two minutes each."},
+ {k:"gs1",w:AD,s:"anuGS",tip:"He practised drawing and labelling the India map until it took under 60 seconds.",do:"Time yourself drawing India three times today."},
+ {k:"gs1",w:IK,s:"ish",tip:"Her history answers tracked timelines, and her freedom-struggle answers compared ideological positions.",do:"Make one timeline and one comparison table from today's GS1 topic."},
+ {k:"gs1",w:IK,s:"ish",tip:"Her society answers used sociological concepts, linked them to each other, and cited the latest data.",do:"List five sociological concepts you can drop into society answers, each with one data point."},
+ {k:"gs1",w:AD,s:"anuGS",tip:"For art and culture he kept drawings simple, for example triangles for figures in Warli art.",do:"Sketch two quick art-form diagrams you could use in an answer."},
+ {k:"gs4",w:AD,s:"anuGS",tip:"In GS4 he aimed for at least 80 marks of questions per hour, gave both sections equal time, and started from Q1, not the case studies.",do:"In practice today, check the clock at each hour mark: 80 marks done?"},
+ {k:"gs4",w:AS,s:"adi",tip:"His case studies opened with the ethical context, then listed stakeholders, then named the issues, such as constitutional morality or Article 21.",do:"Write the stakeholder grid for two case studies today, five minutes each."},
+ {k:"gs4",w:AS,s:"adi",tip:"On quote questions he supported the core idea, then raised counter-arguments and practical limits.",do:"Do one quote answer today in exactly that order."},
+ {k:"gs4",w:AS,s:"adi",tip:"He paired each problem with a real reform or administrator example, such as Kiran Bedi's prison reforms.",do:"Collect ten administrator examples you can reuse across answers."},
+ {k:"gs4",w:AS,s:"adi",tip:"He used thinkers (Kant, Aristotle, the Buddha) and exact terms like crisis of conscience and constitutional morality.",do:"Make a one-page keyword and thinker sheet. Read it the morning of every GS4 test."},
+ {k:"gs4",w:AD,s:"anuGS",tip:"For ethics answers he used a clear definition plus a real example, often from his own experience.",do:"Your court practice is a case-study bank nobody else has. Write down three real dilemmas you have seen."},
+ {k:"essay",w:AD,s:"anuEs",tip:"He said topic choice doesn't change marks, so skip abstract topics you are uncomfortable with. He once misread a term in the topic and scored 112.",do:"Before choosing tomorrow, underline every key term in each topic and define it in one line."},
+ {k:"essay",w:AD,s:"anuEs",tip:"He opened with an anecdote, character or quote, not a dictionary definition, and returned to that character in the conclusion.",do:"Prepare two openings for likely themes, each with a character you can bring back at the end."},
+ {k:"essay",w:AD,s:"anuEs",tip:"Each paragraph carried one argument, backed by an example, statistic, report or constitutional provision, with a link to the next.",do:"Outline tomorrow's essay as one-line arguments, each with its backing."},
+ {k:"essay",w:AD,s:"anuEs",tip:"He gave both essays equal time and didn't rush the second.",do:"Set a hard timer for the halfway point tomorrow."},
+ {k:"gen",w:AD,s:"anuGS",tip:"He said never skip a mock; if you are behind, postpone it a day or two at most.",do:"If you're tempted to move a test this week, this is the argument against it."},
+ {k:"gen",w:AD,s:"anuGS",tip:"On a question he didn't know, he wrote generic but relevant points instead of leaving it, and reckoned it earned 2–3 marks.",do:"Rule for every test: all 20 questions attempted."},
+ {k:"gen",w:AD,s:"anuGS",tip:"He held mocks to strict time limits; taking an extra 10–15 minutes only hurts your own preparation.",do:"Pens down at exactly three hours in your next test."},
+ {k:"gen",w:AD,s:"anuGS",tip:"He started with imperfect answers and improved them, rather than waiting until he felt ready.",do:"Today, write one answer badly rather than none."},
+ {k:"gen",w:SD,s:"sha",tip:"She cleared mains in her fourth attempt but missed the final list, then topped in her fifth.",do:"A missed list is a data point, not a verdict. Use today's hours."}
+];
+
+function insightFor(d,p,T){
+  const tt=testOn(d,T),nx=T.filter(t=>!t.done&&!t.opt&&t.kind!=="essay"&&t.date>d)[0],eve=T.find(t=>!t.done&&t.kind==="essay"&&t.date===add(d,1));
+  let k=tt?tt.kind:eve?"essay":nx?nx.kind:"gen";const i=DAYS.indexOf(d);
+  if(p.kind==="light"||p.kind==="off"||p.kind==="travel"||i%4===3)k="gen";
+  const pool=INS.filter(x=>x.k===k);return pool[(i>=0?i:0)%pool.length];
+}
+const KC=k=>({gs1:"var(--gs1)",gs2:"var(--gs2)",gs3:"var(--gs3)",gs4:"var(--gs4)",essay:"var(--essay)",law:"var(--law)"}[k]||"var(--muted)");
+const KL=k=>({gs1:"GS1",gs2:"GS2",gs3:"GS3",gs4:"GS4",essay:"Essay",law:"Law"}[k]||"");
+function el(tag,attrs,...kids){const e=document.createElement(tag);for(const k in attrs||{}){if(k==="class")e.className=attrs[k];else if(k==="style")e.style.cssText=attrs[k];else if(k.startsWith("on"))e.addEventListener(k.slice(2),attrs[k]);else if(attrs[k]!==false&&attrs[k]!=null)e.setAttribute(k,attrs[k]===true?"":attrs[k])}kids.flat().forEach(c=>{if(c==null||c===false)return;e.append(c.nodeType?c:document.createTextNode(String(c)))});return e}
+function freeDay(T,from){for(let d=from;d<=END;d=add(d,1)){if(!TRAVEL[d]&&!T.some(t=>t.date===d&&!t.done))return d}return from}
+

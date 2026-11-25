@@ -1,0 +1,50 @@
+/* ---------- Rules ---------- */
+const RULE_FIELDS=[
+ ["sundayH","num","Hours logged Mon–Sat to earn a light Sunday"],
+ ["copy","num","Copy review when a checked copy comes back (min)"],
+ ["ca","num","CA notes each day (min)"],
+ ["law","num","Law Optional each day (min)"],
+ ["lawFrom","date","Law Optional starts on"],
+ ["topicMin","num","Sectional test: time per topic, used to warn when prep won't fit (min)"],
+ ["fltRevise","num","Full test: revising a topic you covered in a sectional (min)"],
+ ["fltStudy","num","Full test: studying a topic you missed (min)"],
+ ["rewardH","num","Study hours in a day that earn the trophy"],
+ ["prizeH","num","Study hours in a day that win the prize (animated trophy, confetti)"],
+ ["treatH","num","Study hours in a day that earn the treat"],
+ ["reward","text","The treat"]];
+let pvKind="normal",pvStart=300,pvShort=false,rulesDirty=false;
+function renderRules(){
+  const box=$("rulespage");if(rulesDirty)return;box.textContent="";
+  box.append(el("div",{class:"pagehead"},el("h2",{},"Day rules"),el("span",{class:"label"},"The planner follows these")));
+  const bk=el("textarea",{id:"bookTxt",rows:"16",disabled:!canWrite,"aria-label":"Day rules",oninput:()=>{rulesDirty=true}});bk.value=bookText();
+  box.append(el("p",{class:"note",style:"margin:0 0 8px"},"Plain words. Edit a line and save; every new plan and change uses the latest version."),bk);
+  if(canWrite)box.append(el("div",{class:"row",style:"margin:10px 0 28px"},el("button",{class:"primary",onclick:()=>{const v=bk.value.trim();plan.book=v&&v!==BOOK0.trim()?v:null;if(!plan.book)delete plan.book;rulesDirty=false;savePlan()}},"Save day rules"),el("button",{onclick:()=>{delete plan.book;rulesDirty=false;savePlan()}},"Back to original")));
+  box.append(el("div",{class:"pagehead"},el("h2",{},"Numbers"),el("span",{class:"label"},"Rewards and pacing")));
+  const form=el("div",{class:"rform"}),inputs={};
+  RULE_FIELDS.forEach(([k,type,lab])=>{const id="rl-"+k,v=RULES[k];
+    const inp=el("input",{id,style:type==="text"?"grid-column:1/-1;max-width:none":null,type:type==="num"?"number":type,min:type==="num"?"0":null,step:type==="num"?"5":null,value:type==="time"?toTime(v):v,disabled:!canWrite,oninput:()=>{rulesDirty=true}});
+    if(k==="sundayH"||k==="rewardH"||k==="prizeH"||k==="treatH")inp.step="1";inputs[k]=[inp,type];
+    form.append(el("label",{for:id,class:RULES[k]!==R0[k]?"changed":""},lab),inp)});
+  box.append(form);
+  if(canWrite)box.append(el("div",{class:"row",style:"margin-top:14px"},
+    el("button",{class:"primary",onclick:()=>{const r={};Object.entries(inputs).forEach(([k,[inp,type]])=>{let v=type==="time"?fromTime(inp.value):type==="num"?Number(inp.value):inp.value;if(v==null||v===""||(type==="num"&&isNaN(v)))return;if(v!==R0[k])r[k]=v});plan.rules=r;rulesDirty=false;savePlan()}},"Save rules"),
+    el("button",{onclick:()=>{plan.rules={};rulesDirty=false;savePlan()}},"Back to defaults")));
+  box.append(el("div",{class:"row",style:"margin-top:14px"},el("span",{class:"note"},"Preview the reward:"),
+    [0,1,2].map(t=>el("button",{class:"mini",onclick:()=>showReward(todayIST(),t,true)},hrs([RULES.rewardH,RULES.prizeH,RULES.treatH][t])))));
+  // preview any start time
+  const kSel=el("select",{id:"pvKind","aria-label":"Kind of day"},[["normal","Normal or essay day"],["gstest","GS test day"],["gseve","GS test, paper at 6:30"]].map(([k,t])=>el("option",{value:k,selected:k===pvKind},t)));
+  const sSel=el("select",{id:"pvSleep","aria-label":"Night before"},[["rested","Slept enough"],["short","Short night (under 6 h)"]].map(([k,t])=>el("option",{value:k,selected:(k==="short")===pvShort},t)));
+  const tIn=el("input",{type:"time",id:"pvStart","aria-label":"Start time",value:toTime(pvStart)});
+  const out=el("div");
+  const draw=()=>{out.textContent="";const b=buildDay(pvKind==="gseve"?"gstest":pvKind,pvStart,{short:pvShort,eve:pvKind==="gseve"});
+    const sm=b.segs.filter(x=>x.k==="block"&&STUDY_ROLES[x.role]).reduce((s,x)=>s+x.e-x.t,0),nw=b.segs.filter(x=>x.role==="news").reduce((s,x)=>s+x.e-x.t,0);
+    const hasEve=b.segs.some(x=>x.k==="block"&&x.t>=1140),ul=el("ul",{class:"tt"});
+    b.segs.forEach(s=>{if(s.k==="break"){ul.append(el("li",{class:"br"},el("span",{class:"tm"},hmS(s.t)),el("span",{class:"nm"},s.label),el("span")));
+        if(!hasEve&&/^Dinner/.test(s.label)&&s.t<1260)ul.append(el("li",{class:"bl"},el("span",{class:"tm"},"After 7"),el("span",{class:"nm"},el("b",{},"Extra study"),el("span",{class:"hint"}," · optional")),el("span")));return}
+      ul.append(el("li",{class:"bl"},el("span",{class:"tm"},hmS(s.t)),el("span",{class:"nm"},el("b",{},s.name),el("span",{class:"hint"},(s.hint?" · "+s.hint:"")+" · "+dur(s.e-s.t))),el("span")))});
+    ul.append(el("li",{class:"br"},el("span",{class:"tm"},hmS(b.lights)),el("span",{class:"nm"},"Lights out"),el("span")));
+    out.append(el("p",{class:"note",style:"margin:10px 0 8px"},(b.late?"Late day · ":"")+"Study "+dur(sm)+(nw?" + newspaper "+dur(nw):"")+" · lights out "+hm(b.lights)),ul)};
+  kSel.addEventListener("change",()=>{pvKind=kSel.value;draw()});sSel.addEventListener("change",()=>{pvShort=sSel.value==="short";draw()});tIn.addEventListener("input",()=>{const v=fromTime(tIn.value);if(v!=null){pvStart=v;draw()}});
+
+}
+

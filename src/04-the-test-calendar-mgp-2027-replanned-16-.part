@@ -1,0 +1,60 @@
+/* ---------- the test calendar (MGP+ 2027, replanned 16 Nov with spare days) ---------- */
+/* window = MGP release + 21 days. gap = fewest days after the previous sectional this test needs (for the cascade). */
+const BASE=[
+ {id:"E1",name:"Essay 1",kind:"essay",date:"2026-11-10"},
+ {id:"ST3",name:"ST3 · GS3 topics 1–10",kind:"gs3",date:"2026-11-16",window:"2026-12-04"},
+ {id:"ST4",name:"ST4 · GS3 topics 11–20",kind:"gs3",date:"2026-11-19",window:"2026-12-07",gap:3},
+ {id:"E2",name:"Essay 2",kind:"essay",date:"2026-11-21",half:true},
+ {id:"ST2",name:"ST2 · GS2 second half",kind:"gs2",date:"2026-11-25",window:"2026-11-27",gap:3},
+  {id:"ST5",name:"ST5 · GS4 topics 1, 2, 4, 5",kind:"gs4",date:"2026-12-01",window:"2026-12-12",gap:3},
+ {id:"ST6",name:"ST6 · GS4 topics 3, 6, 7",kind:"gs4",date:"2026-12-04",window:"2026-12-16",gap:3},
+ {id:"E3",name:"Essay 3",kind:"essay",date:"2026-12-08",half:true},
+ {id:"E4",name:"Essay 4",kind:"essay",date:"2026-12-23",half:true},
+ {id:"E5",name:"Essay 5",kind:"essay",date:"2026-12-30",half:true},
+ {id:"F1",name:"GS1 full test · Delhi",kind:"gs1",date:"2026-12-13",delhi:true,flt:true},
+ {id:"F2",name:"GS2 full test · Delhi",kind:"gs2",date:"2026-12-20",delhi:true,flt:true},
+ {id:"F3",name:"GS3 full test · Delhi",kind:"gs3",date:"2026-12-27",delhi:true,flt:true},
+ {id:"F4",name:"GS4 full test · Delhi",kind:"gs4",date:"2027-01-03",delhi:true,flt:true}
+];
+const R=(a,b)=>Array.from({length:b-a+1},(_,i)=>String(a+i));
+const S=a=>a.map(String);
+const TOPICS={ST3:R(1,10),ST4:R(11,20),ST5:S([1,2,4,5,8]),ST6:S([3,6,7,8]),ST2:S([10]).concat(R(12,20)),F1:R(1,8),F2:R(1,20),F3:R(1,20),F4:R(1,8)};
+const GS={
+ gs1:{1:"Art and culture: art forms, literature, architecture",2:"Modern Indian history from the mid-18th century; freedom struggle",3:"Post-independence consolidation and reorganisation",4:"World history from the 18th century",5:"Indian society: diversity, women, population, poverty, urbanisation, globalisation, empowerment, communalism, regionalism, secularism",6:"Physical geography of the world",7:"Distribution of natural resources; location of industries",8:"Geophysical phenomena; changes in geographical features"},
+ gs2:{1:"Constitution: evolution, features, amendments, basic structure",2:"Union and States: federal issues, devolution to local levels",3:"Separation of powers; dispute-redressal mechanisms",4:"Indian constitutional scheme vs other countries",5:"Parliament and State Legislatures",6:"Executive and Judiciary; ministries; pressure groups",7:"Representation of the People Act",8:"Constitutional posts and bodies",9:"Statutory, regulatory and quasi-judicial bodies",10:"Government policies and interventions; design and implementation issues",11:"Development processes: NGOs, SHGs, donors",12:"Welfare schemes for vulnerable sections; protective laws and bodies",13:"Social sector: health, education, human resources",14:"Poverty and hunger",15:"Governance, transparency, accountability; e-governance; citizens' charters",16:"Role of civil services in a democracy",17:"India and its neighbourhood",18:"Bilateral, regional and global groupings and agreements",19:"Other countries' policies and India's interests; diaspora",20:"International institutions, agencies and fora"},
+ gs3:{1:"Economy: planning, resources, growth, development, employment",2:"Inclusive growth",3:"Government budgeting",4:"Crops, cropping patterns, irrigation, farm marketing, e-tech for farmers",5:"Farm subsidies, MSP, PDS, buffer stocks, food security; animal rearing",6:"Food processing industries",7:"Land reforms",8:"Liberalisation; industrial policy and growth",9:"Infrastructure: energy, ports, roads, airports, railways",10:"Investment models",11:"S&T developments in everyday life",12:"Indian achievements in S&T; indigenisation",13:"IT, space, computers, robotics, nano, biotech; IPR",14:"Conservation, pollution, EIA",15:"Disasters and disaster management",16:"Development and the spread of extremism",17:"External state and non-state actors in internal security",18:"Communication networks, social media, cyber security, money laundering",19:"Border security; organised crime and terrorism",20:"Security forces and agencies"},
+ gs4:{1:"Ethics and human interface; human values",2:"Attitude: content, structure, function; persuasion",3:"Aptitude and foundational values for civil service",4:"Emotional intelligence",5:"Moral thinkers and philosophers",6:"Civil service values; ethical dilemmas; accountability; corporate governance",7:"Probity: RTI, codes, citizens' charters, public funds, corruption",8:"Case studies"}};
+const LAW=[
+ {s:"Contracts",items:["Quasi contracts (in progress)","Consequences of breach","Indemnity, guarantee and insurance","Agency","Sale of goods and hire purchase","Formation and dissolution of partnerships","Negotiable Instruments Act","Standard form contracts"]},
+ {s:"Torts",items:["Nature of tortious liability","Fault-based and strict liability","Absolute liability","Vicarious liability, including State liability","General defences","Joint tortfeasors","Remedies","Negligence","Defamation","Nuisance","Conspiracy","False imprisonment","Malicious prosecution","Consumer protection law"]},
+ {s:"Contemporary",items:["Public interest litigation","IPR: copyright, patents, trademarks, designs","IT law and cyber laws","Competition law","Alternate dispute resolution","Major environmental statutes","Right to Information Act","Trial by media"]},
+ {s:"Crimes",items:["General principles of criminal liability: mens rea, actus reus","Preparation and criminal attempt","General exceptions","Joint and constructive liability","Abetment","Criminal conspiracy","Offences against the State","Offences against public tranquillity","Offences against the human body","Offences against property","Offences against women","Criminal defamation","Prevention of Corruption Act, 1988","Protection of Civil Rights Act, 1955","Plea bargaining"]}];
+
+const lawKey=(i,j)=>LAW[i].s.toLowerCase()+"-"+j;
+const LAW_TOTAL=LAW.reduce((s,g)=>s+g.items.length,0);
+function lawLeft(){let n=0;LAW.forEach((g,i)=>g.items.forEach((_,j)=>{if(!(plan.law||{})[lawKey(i,j)])n++}));return n}
+function nextLaw(){for(let i=0;i<LAW.length;i++)for(let j=0;j<LAW[i].items.length;j++)if(!(plan.law||{})[lawKey(i,j)])return LAW[i].s+": "+LAW[i].items[j];return null}
+const taskDone=id=>!!(plan.tasks||{})[id];
+const CA_STAGES=[["vision","Vision May notes","2026-11-30"],["ca-june","June (Vision, plus the Factly index for species and places)","2026-12-15"],["ca-july","July","2026-12-31"],["ca-aug","August (Factly)","2027-01-15"]];
+function caStage(){return CA_STAGES.find(s=>!taskDone(s[0]))||null}
+/* spare days: a slipped test lands here; if nothing slipped, the day is prep for the next test */
+const SPARE={"2026-11-20":1,"2026-11-26":1};
+/* the 16 Nov replan: test dates moved before this moment are dropped so the new calendar applies */
+const REPLAN=Date.UTC(2026,10,15,21,5);
+const TRAVEL={"2026-12-12":"Travel to Delhi","2026-12-14":"Travel back from Delhi","2026-12-19":"Travel to Delhi","2026-12-21":"Travel back from Delhi","2026-12-26":"Travel to Delhi","2026-12-28":"Travel back from Delhi","2027-01-02":"Travel to Delhi"};
+const TASKS=[
+ {id:"screentime",t:"Screen Time blockers on, passcode with mom or brother",due:"2026-11-15"},
+ {id:"delhi",t:"Book Delhi travel and stay for all four trips: 12–14, 19–21, 26–28 Dec and 2–4 Jan",due:"2026-11-20"},
+ {id:"vision",t:"Vision May CA notes finished",due:"2026-11-30"},
+ {id:"wedding",t:"Pick the wedding function. 12 and 14 Dec clash with the Delhi trip; 16 or 17–18 Dec work. Set that day to Wedding on Today.",due:"2026-11-30"},
+ {id:"brother",t:"Brother has started Sep–Oct Factly notes",due:"2026-11-30"},
+ {id:"sp-june",t:"Download June Professor SP PDFs for the highlight test",due:"2026-11-30"},
+ {id:"ca-june",t:"June CA notes done",due:"2026-12-15"},
+ {id:"ca-july",t:"July CA notes done",due:"2026-12-31"},
+ {id:"sp-compile",t:"Professor SP Jun–Nov sets compiled",due:"2026-12-31"},
+ {id:"ca-aug",t:"August CA notes (Factly) done",due:"2027-01-15"},
+ {id:"sign",t:"Signature scan ready; check OTR profile; decide mains centre",due:"2026-12-31"},
+ {id:"law",t:"Law Optional pipeline finished (Contracts, Torts, Contemporary, Crimes)",due:"2027-01-03"},
+ {id:"photo",t:"Application photo with name and date printed on it, taken 3–12 Jan (must be under 10 days old on 13 Jan)",due:"2027-01-12"}
+];
+

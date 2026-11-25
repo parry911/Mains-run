@@ -1,0 +1,38 @@
+/* ---------- the reward for a big day ---------- */
+const bigDay=d=>(dayHours(d)||0)>=RULES.rewardH;
+const bigDays=()=>DAYS.filter(bigDay).length;
+function showReward(d,tier,pv){
+  /* tier 0: 10 h, plain trophy. 1: 11 h, the prize (animated trophy + confetti). 2: 12 h, prize + the treat. */
+  const H=[RULES.rewardH,RULES.prizeH,RULES.treatH][tier],h=pv?H:dayHours(d)||0;
+  const k=DAYS.filter(x=>(dayHours(x)||0)>=H).length;
+  const nextH=tier<2?[RULES.prizeH,RULES.treatH][tier]:null;
+  const cup=el("div",{class:"cup"+(tier?" prize":""),"aria-hidden":"true"},tier?el("span",{class:"rays"}):null,el("span",{class:"tro"},"🏆"));
+  openSheet([cup,
+    el("span",{class:"label"},pv?"Preview · nothing is logged":nice(d)+" · "+hrs(h)+" logged"),
+    el("h3",{},tier===2?hrs(H)+" day. Treat earned.":tier===1?hrs(H)+" day. Prize won.":hrs(H)+" day. Done."),
+    tier===2?el("p",{class:"what"},RULES.reward):el("p",{class:"what"},hrs(Math.max(0,nextH-h))+" more today "+(tier===0?"wins the prize.":"earns tonight's treat.")),
+    pv?null:el("p",{class:"note",style:"margin:0"},k===1?"Your first "+H+"-hour day of the run.":"That's "+k+" days of "+H+" hours since 9 Nov."),
+    el("div",{class:"btns"},el("button",{class:"primary",onclick:closeSheet},"Claim it"))],"Reward");
+  SHB.classList.add("reward");
+  if(tier)confetti();
+}
+function confetti(){
+  if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const old=$("confetti");if(old)old.remove();
+  const c=el("canvas",{id:"confetti","aria-hidden":"true"});document.body.append(c);
+  const x=c.getContext("2d"),W=c.width=innerWidth,H=c.height=innerHeight;
+  const cs=getComputedStyle(document.documentElement),col=["--accent","--gs1","--gs2","--gs3","--gs4","--law"].map(v=>cs.getPropertyValue(v).trim()||"#F2A300");
+  const P=Array.from({length:140},()=>({x:Math.random()*W,y:-20-Math.random()*H*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*3,r:Math.random()*6,s:4+Math.random()*5,c:col[Math.floor(Math.random()*col.length)]}));
+  const t0=performance.now();
+  (function f(t){x.clearRect(0,0,W,H);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.04;p.r+=.1;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore()});
+    if(t-t0<3200)requestAnimationFrame(f);else c.remove()})(t0);
+}
+function setStart(d,m,how,a){const patch={start:m,startHow:how,startAt:Date.now()};if(a!==undefined)patch.asleep=a;patchLog(d,patch)}
+function toggleDone(d,id,on){if(!canWrite)return;const set=new Set((logs[d]||{}).done||[]);on?set.add(id):set.delete(id);patchLog(d,{done:[...set]})}
+function tickItem(d,i,on){
+  if(i.paper){setField(i.paper,{done:on,writtenOn:on?todayIST():null});return}
+  if(i.upload){setField(i.upload,{uploaded:on,uploadedOn:on?todayIST():null});return}
+  toggleDone(d,i.id,on);
+}
+function setTopic(id,n,on,d){const all=Object.assign({},plan.topics),m=Object.assign({},all[id]);if(on)m[n]=d<=todayIST()?d:todayIST();else delete m[n];all[id]=m;plan.topics=all;savePlan()}
+

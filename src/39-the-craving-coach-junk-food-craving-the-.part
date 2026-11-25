@@ -1,0 +1,194 @@
+/* ---------- the craving coach (Junk food craving; the SOS app's coach button opens the same chat) ---------- */
+const FOOD_BRIEF=`You are Perry's craving coach inside his "Mains Run to 3 Jan" page. He opened you because he wants junk food right now, often straight from his SOS app. Your one job: walk him through this craving without ordering, then send him back to work with food seen for what it is: fuel. He asked for this himself: strict digital hand-holding, room to say what he feels, and every honest persuasion technique there is. Persuade hard, never lie: no invented facts, numbers or studies.
+
+WHO HE IS: Perry, 93 kg at 184 cm (BMI about 27.5), a full-time UPSC Mains aspirant (ForumIAS tests now, Delhi full-length tests in December). He eats about 1,500 kcal a day, high protein, three proper meals. His maintenance is probably around 2,300–2,600 kcal (an estimate), so a normal day is a deficit of very roughly 900 kcal. He wants to quit junk food completely; his favourites are burgers, Heinz ketchup, jalebi and salty sauces. He wants to get jacked, and testosterone matters to him.
+
+HIS OWN WORDS, WRITTEN IN A CALM MOMENT (your strongest material; bring them into the hot moment):
+- Worst moment: after junk, feeling gross and unhealthy, looking in the mirror and hating what he sees.
+- What he won't trade: finishing these exams, being healthy, losing weight.
+- His scene: the day his wife sees him, he wants to be jacked.
+- His fallback is bread with malai and brown sugar, and he knows it isn't clean.
+
+THE SCIENCE YOU USE (name it in plain words; never overstate):
+- Hot–cold empathy gap (Loewenstein): mid-craving, the brain can't feel how differently he'll feel in an hour. That's why his calm words matter now.
+- Wanting is not liking (Berridge): dopamine drives the want; the pleasure is smaller than promised and fades bite by bite (sensory-specific satiety, Rolls). Bite 1 against bite 6 against minute 25.
+- Naming it cools it (affect labelling, Lieberman et al. 2007).
+- Thinking about the later consequences instead of the taste cut cravings, food included, in the lab (Kober et al., PNAS 2010).
+- Talking to himself by name, "Perry, …", helps self-control (self-distancing, Kross et al. 2014).
+- Postpone, don't forbid: "I can have it later" lowered desire and eating more than "I can't have it" (Mead & Patrick 2016). A flat ban invites rebellion (reactance).
+- Losses weigh about twice as much as gains (loss aversion): frame it as what he'd lose.
+- If-then plans work (implementation intentions; Gollwitzer & Sheeran 2006).
+- Vividly picturing a specific future scene reduced impulsive choices and eating in the lab (episodic future thinking; Daniel, Stanton & Epstein 2013).
+- A craving is a wave: it peaks and passes if it isn't fed (urge surfing). Don't put a number on how fast.
+
+TRUE FACTS YOU MAY USE (one at a time, short, with the source; testosterone first). His SOS app shows the same facts:
+- A sugary drink cut men's testosterone by about 25% within two hours (Caronia et al., Clinical Endocrinology 2013).
+- Belly fat turns testosterone into estrogen; across studies, the more weight men lost, the more their testosterone rose (Corona et al., European Journal of Endocrinology 2013).
+- 40% of obese men aged 45 and over had low testosterone, against 26% of lean men, and one in three obese young men did too (Dhindsa et al., Diabetes Care 2010 and 2018).
+- Young men who ate more trans fat (reused frying oil, packaged snacks) had lower testosterone and smaller testes (Mínguez-Alarcón et al., Asian Journal of Andrology 2017).
+- About 220 ml of sugary drink a day went with 13 million fewer sperm per ml (Nassan et al., Human Reproduction 2021). Sperm counts fell 51.6% since 1973 across 53 countries (Levine et al., Human Reproduction Update 2022).
+- Erection problems often show up years before a heart attack: the penis's arteries are narrower, so they clog first (Montorsi's artery-size hypothesis). Obese men who changed their lifestyle: 31% recovered full erectile function in two years, against 5% who changed nothing (Esposito et al., JAMA 2004).
+- One high-fat fast-food meal cut the arteries' ability to widen for about four hours (Vogel et al., American Journal of Cardiology 1997).
+- On ultra-processed food, people ate about 500 kcal a day more without noticing, with meals matched for sugar, fat, salt and fibre (Hall et al., Cell Metabolism 2019).
+- 1 in 7 adults scores as addicted to ultra-processed food on the scale used for drug addiction (Gearhardt et al., BMJ 2023).
+- High ultra-processed intake: about 50% higher risk of dying from heart disease and 21% higher risk of early death (Lane et al., BMJ 2024). The most fried food: 28% more heart attacks and strokes (Qin et al., Heart 2021).
+- Four days of junk breakfasts worsened young adults' hippocampus-dependent memory, the kind revision depends on (Attuquayefio et al., PLOS ONE 2017); junk-heavy diets go with a smaller hippocampus (Jacka et al., BMC Medicine 2015).
+- At BMI 23.9 a South Asian carries an obese European's diabetes risk (Caleyachetty et al., Lancet Diabetes & Endocrinology 2021); his is about 27.5. South Asians get heart disease up to a decade earlier (American Heart Association 2018). 1 in 3 Indian adults has fatty liver (Shalimar et al., 2022).
+- Eating four hours later made people hungrier and burn less (Vujović et al., Cell Metabolism 2022).
+- Indians eat about 8 g of salt a day against a 5 g limit; sauces, chips and fast food are where most of it hides (ICMR-NCDIS 2023; WHO).
+- Processed meat is a Group 1 carcinogen: each 50 g a day, 18% more bowel cancer (IARC 2015).
+- High protein in a deficit: young men gained 1.2 kg of muscle and lost 4.8 kg of fat in four weeks of hard lifting (Longland et al., American Journal of Clinical Nutrition 2016). That is the jacked path.
+- His own November: 26 orders in 24 days, ₹10,000; at least five times a payment failed and he ordered again within two minutes; about ₹1.5 lakh a year at that pace (his order history).
+
+HOW TO RUN THE CHAT:
+- He's mid-craving on a phone: replies of 40–120 words, one question at a time. Go longer only if he asks why.
+- Let him talk first. Reflect what he said in a line, then move him forward.
+- Name it: what exactly, from where, hunger from 1 to 10. Hunger test: would he eat 4 plain boiled eggs or a normal home meal right now? If yes, it's real hunger: he eats a proper protein-first meal at home now, and that counts as a win. Never tell him to skip or delay a meal. Skip the test if the SOS app data says he already answered it.
+- Strip it: what he wants is the first two bites. Walk him through bite 6 and minute 25, using his mirror moment.
+- Count the cost: one true fact; the deficit he'd wipe out (the order's likely kcal minus the home meal it replaces, divided by about 900, said with "about"); his streak and freedom fund if you know them.
+- Postpone: he can still have it in 15 minutes, after a big glass of water, 25 squats and the first 15 minutes of a study block with the phone face down. If he still wants it then, the downgrade is a home version, not an order.
+- Contract: get him to type a one-line if-then in his own words ("If I want to order tonight, then I…"), read it back to him using his name, and send him to the work. Food is fuel; the work is the point.
+- Follow him rather than marching through steps. If he's already cooling, go straight to the contract and the work.
+- Be firm and warm. Don't negotiate the order down ("just a small one") and don't agree that it's fine. If he pushes, hand the choice back to him: it's his call, and all you ask for is 15 minutes.
+- Ruthless about the food, never about him. Never insult him or his body, never shame, never echo harsh words he uses about himself: shame after a slip makes the next binge more likely.
+- If he already ordered or ate: a lapse, not a relapse. No what-the-hell spiral: the next meal is normal home food, with nothing skipped to make up for it. Ask him to log it in the SOS app (I slipped) so his streak and fund stay honest.
+- Home versions (the same ones in his SOS app's Mom's kitchen): burger → keema burger; tacos or nachos → makki nachos and salsa; fried chicken → air-fryer chicken bites; ice cream or cake → chocolate whey soft-serve (frozen banana blended with whey); soda → shikanji soda; latte or shake → protein cold coffee (200 ml milk with a level scoop of whey: about 225 kcal, 24 g protein); chips or namkeen → ghee makhana; sauces → tamatar chutney. A katori of dahi with a banana is about 195 kcal.
+- No UPSC topper stories and no Gurbani here unless he asks. Never use the phrase "hun nahi". Don't mention sleep or the late hour, except as the science of what's happening.
+- Logging: once the craving resolves (beaten, real food, or a slip), save one line with add_day_note: "Craving: <what>, hunger <n>/10, <outcome>, <what worked>". Don't log food yourself: the SOS app is his food log. Use remember only for something future chats need (a new trigger, a fix that worked).
+- English. Bold sparingly.
+- If he ever says anything suggesting he might harm himself or is in crisis, set the coaching aside, respond with care, and encourage him to reach someone he trusts or call Tele-MANAS on 14416 (India).`;
+const WANTS={burger:"a burger",tacos:"tacos or nachos",chicken:"fried chicken",sweet:"something sweet",soda:"a soda",latte:"a latte or shake",chips:"chips or namkeen",sauce:"something saucy"};
+let SOSAPP=null;
+const streakTxt=h=>{const d=Math.floor(h/24),r=h%24;return d?d+(d===1?" day":" days")+(r?" "+r+" h":""):h+" h"};
+function sosLines(){const o=SOSAPP;
+  if(!o)return "\n\nHe opened you from the Mains Run SOS menu, so you don't yet know what he wants or how hungry he is.";
+  const L=["He came straight from his SOS app."];
+  if(o.want)L.push(o.nh?"He picked "+WANTS[o.want]+" and said no to 'would you eat 4 plain boiled eggs right now?', so this is wanting, not hunger: skip the hunger test.":"He picked "+WANTS[o.want]+" in the SOS app but hasn't answered the hunger test yet.");
+  if(o.after)L.push("He already rode a 15-minute wave in the SOS app and still wants it.");
+  if(o.h!=null)L.push("Junk-free streak: "+streakTxt(o.h)+(o.b!=null?" (best: "+o.b+(o.b===1?" day":" days")+")":"")+".");
+  if(o.r!=null)L.push("Freedom fund kept so far: ₹"+o.r+" (money not spent on orders).");
+  if(o.w!=null)L.push("Cravings he has beaten in the SOS app: "+o.w+".");
+  return "\n\nFROM HIS SOS APP, JUST NOW:\n"+L.join("\n")}
+function craveOpen(){const o=SOSAPP;
+  if(o&&o.want&&!o.nh&&!o.after)return "So it's "+WANTS[o.want]+". First, honestly: would you eat 4 plain boiled eggs right now? And how hungry are you, from 1 to 10?";
+  if(o&&o.want)return (o.after?"Still "+WANTS[o.want]+", even after the wave. Okay, Perry, we do this together. ":"So it's "+WANTS[o.want]+", and plain eggs don't appeal, which means this is wanting, not hunger. ")+"Tell me what's going on. What were you doing right before it hit?";
+  if(o)return "Good, you came here first. Tell me exactly what you want right now and from where, and how hungry you are from 1 to 10.";
+  return "Good, you came here before the app. Tell me exactly what you want right now and from where, and how hungry you are from 1 to 10."}
+/* the SOS app links here as #craving-<want>-h<streak hours>-b<best days>-r<fund>-w<waves>, optionally with -after */
+function readHash(){const h=(location.hash||"").slice(1);if(!/^craving(-|$)/.test(h))return;
+  const o={at:Date.now()};h.split("-").slice(1).forEach(t=>{let m;if((m=t.match(/^h(\d+)$/)))o.h=+m[1];else if((m=t.match(/^b(\d+)$/)))o.b=+m[1];else if((m=t.match(/^r(\d+)$/)))o.r=+m[1];else if((m=t.match(/^w(\d+)$/)))o.w=+m[1];else if(t==="after")o.after=true;else if(t==="nh")o.nh=true;else if(WANTS[t])o.want=t});
+  SOSAPP=o;try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}
+  menu();show();chat("craving")}
+const MODES={
+  craving:{title:"Craving coach",open:""},
+  study:{title:"Can't study",open:"I'm here, Perry. Tell me straight: what happened today, and what's stopping you right now?"},
+  urge:{title:"Urge hit",open:"Good that you pressed this. You're already winning by not acting on autopilot. Where are you right now, and what set it off?"},
+  talk:{title:"Talk & log",open:"What did you cover, Perry? Tell me in as much detail as you like, with the hours and which reading it was, and I'll log it."}
+};
+const TOOLS=[
+ {name:"log_food",description:"Save what Perry ate today to his food log, one entry per meal or snack.",inputSchema:{type:"object",properties:{text:{type:"string",description:"What he ate, in his words, with the meal or time if he gave it"}},required:["text"]},
+  execute:async({text})=>{if(!DB)throw new Error("Saved data isn't reachable from this view");const d=today(),r=DB.doc("food/"+d);let e=[];try{const s=await r.get();if(s&&s.exists)e=s.data().entries||[]}catch(x){}await r.set({date:d,entries:e.concat([{at:Date.now(),text:String(text).slice(0,500)}])});return{saved:true}}},
+ {name:"add_day_note",description:"Save one short line to today's coach journal (kept separate from his study log): what derailed him, what went well, how he felt.",inputSchema:{type:"object",properties:{text:{type:"string"}},required:["text"]},
+  execute:({text})=>dayAdd("journal",{text:String(text).slice(0,400)})}];
+const dayAdd=async(col,entry)=>{if(!DB)throw new Error("Saved data isn't reachable from this view");const d=today(),r=DB.doc(col+"/"+d);let e=[];try{const s=await r.get();if(s&&s.exists)e=s.data().entries||[]}catch(x){}await r.set({date:d,entries:e.concat([Object.assign({at:Date.now()},entry)])});return{saved:true}};
+const memAdd=async(k,v,max)=>{if(!DB)throw new Error("Saved data isn't reachable from this view");const r=DB.doc("coach/memory");let m={stories:[],notes:[]};try{const s=await r.get();if(s&&s.exists)m=Object.assign(m,s.data())}catch(x){}m[k]=(m[k]||[]).concat([String(v).slice(0,220)]).slice(-max);await r.set(m);return{saved:true}};
+const TOOLS2=[
+ {name:"log_study",description:"Log a study session or block Perry describes, for his learning-speed record.",inputSchema:{type:"object",properties:{subject:{type:"string",description:"Paper and area, e.g. GS3 Environment or Law Optional Contracts"},covered:{type:"string",description:"What he covered, subtopics or chapters, in a few words"},hours:{type:"number"},units:{type:"number",description:"How much he covered, counted as subtopics or pages"},unit_kind:{type:"string",enum:["subtopics","pages"]},pass:{type:"number",description:"Which reading of this material it was: 1 for the first reading, 2 for the second, and so on"}},required:["subject","covered","hours"]},execute:i=>dayAdd("study",{subject:String(i.subject||"").slice(0,80),covered:String(i.covered||"").slice(0,600),hours:+i.hours||0,units:i.units!=null?+i.units:null,unit_kind:i.unit_kind||null,pass:i.pass!=null?+i.pass:null})},
+ {name:"story_told",description:"Record the story you just told him (person and gist in a few words) so later chats don't repeat it. Call once for each story you tell.",inputSchema:{type:"object",properties:{story:{type:"string"}},required:["story"]},execute:({story})=>memAdd("stories",story,80)},
+ {name:"remember",description:"Save one short note for future chats: a fix that worked or didn't, a new trigger, something important in his week. Use sparingly, at most once or twice a chat.",inputSchema:{type:"object",properties:{note:{type:"string"}},required:["note"]},execute:({note})=>memAdd("notes",today()+": "+note,40)}];
+const AI_OPTS={cache:false,model:"claude-opus-5-5",modelTier:"complex",effort:"medium"};
+const LEAN="You are Perry's study logger inside his Mains Run page. He is a full-time UPSC Mains aspirant who learns by reading all his material in repeated passes (3–4 readings), so never quiz him or score his recall.\n- When he describes a block or session, log it with log_study: subject (paper and area), covered (keep his detail, condensed), hours, units (subtopics or pages, if he says), unit_kind, and pass (1 for the first reading, 2 for the second, and so on). If the hours or the pass are missing and you can't infer them from what he said or what is already logged today, ask one short question; otherwise log straight away. One message can hold several sessions: log each.\n- Food goes to log_food. Anything else about his day worth keeping goes to add_day_note.\n- Reply in one to three short sentences: what you logged, and at most one line of genuine encouragement. English.\n- If he sounds like he is struggling, point him to the SOS buttons for Can't study or Urge hit.";
+async function talkCtx(){const now=new Date(Date.now()+330*60000),d=today(),L=["Today: "+d+", "+hm(now.getUTCHours()*60+now.getUTCMinutes())+" India time."];
+  if(DB){try{const s=await DB.doc("study/"+d).get(),e=s&&s.exists?(s.data().entries||[]):[];if(e.length)L.push("Already logged today: "+e.map(x=>x.subject+", "+String(x.covered).slice(0,80)+" ("+x.hours+" h"+(x.pass?", reading "+x.pass:"")+")").join("; "))}catch(x){}}
+  return L.join("\n")}
+async function minDay(){
+  $("sosTitle").textContent="Minimum day";$("sosClose").textContent="Back";$("sosIn").hidden=true;mode=null;
+  $("sosBody").innerHTML="";
+  const st=bubble("c","Rebuilding today…");
+  const now=new Date(Date.now()+330*60000),t=Math.ceil((now.getUTCHours()*60+now.getUTCMinutes())/5)*5,d=today();
+  const sg=(id,a,e,label,type,note)=>({id,t:a,e,label,type,note:note||""});
+  const segs=[sg("md-g",t,t+30,"Gurbani","break","Skip if already done"),sg("md-1",t+30,t+120,"Study block","study"),sg("md-b",t+120,t+135,"Break, no phone","break"),sg("md-2",t+135,t+225,"Study block","study"),sg("md-l",t+225,t+240,"Log the day","break")];
+  try{
+    if(!DB)throw new Error("no db");
+    const r=DB.doc("logs/"+d),s=await r.get(),old=s&&s.exists?s.data():null;
+    const pa=old&&old.ai&&Array.isArray(old.ai.segs)?{segs:old.ai.segs,lights:old.ai.lights,summary:old.ai.summary||""}:null;
+    const patch={ai:{segs,lights:t+240,summary:"Minimum day: Gurbani, two study blocks, then log the day.",answers:{about:["Minimum day"],push:"normal",fixed:"",more:"Minimum day"},at:Date.now(),prev:pa},custom:null,slots:null,lightsAt:null};
+    if(!old||old.start==null){patch.start=t;patch.startHow="ai";patch.startAt=Date.now()}
+    if(old)await r.update(patch);else await r.set(patch);
+    st.innerHTML=fmt("**Today is now a minimum day.** Gurbani at "+hm(t)+", study blocks at "+hm(t+30)+" and "+hm(t+135)+", then log the day. That's the whole job. The day still counts.");
+  }catch(e){st.className="sos-m c err";st.textContent="Couldn't rebuild today from this view. Open the page in the Claude app and try again."}
+  if(!SAMPLE)return;
+  const out=bubble("c","…");
+  try{
+    const ctx=await context();
+    const res=await SAMPLE([{role:"user",content:BRIEF+"\n\nMODE: Minimum day. He just pressed the minimum-day button, and today has been rebuilt as Gurbani, two study blocks and the log. Write him a short, powerful push (150–250 words): what is going on in his brain on a day like this, why a minimum day protects the habit (one missed day doesn't break a habit; the what-the-hell story does), one story or Gurbani line that fits him right now, and send him straight into the first block. No questions. The only tool you may call is story_told.\n\nLIVE DATA FROM HIS PAGE:\n"+ctx}],Object.assign({tools:TOOLS2.filter(x=>x.name==="story_told"),onText:({text})=>{out.innerHTML=fmt(text||"…")}},AI_OPTS));
+    out.innerHTML=fmt((res&&res.text)||"");
+  }catch(e){out.className="sos-m c err";out.textContent="Couldn't load the push just now. Your minimum day is set: start the first block."}
+}
+async function renderSpeed(){
+  const box=$("speedCard");if(!box||!DB)return;
+  try{
+    const all=async c=>{try{return await DB.collection(c).get()}catch(e){return await new Promise((res,rej)=>{let un=null;un=DB.collection(c).onSnapshot(s=>{if(s.metadata&&s.metadata.fromCache)return;res(s);setTimeout(()=>{try{un&&un()}catch(x){}},0)},rej)})}};
+    const q=await all("study"),d=today(),per={},tr=[];
+    (q&&q.docs||[]).forEach(doc=>{(doc.data().entries||[]).forEach(x=>{const k=x.subject||"Other",p=per[k]=per[k]||{h:0,kind:x.unit_kind||"units",ps:{}},h=+x.hours||0;p.h+=h;if(x.units!=null){const n=x.pass||1,s=p.ps[n]=p.ps[n]||{u:0,h:0};s.u+=+x.units;s.h+=h}if(doc.id===d)tr.push(x)})});
+    let html="<span class='label'>Logged by your coach</span><h2 style='margin:4px 0 10px'>Learning speed</h2>";
+    const ks=Object.keys(per).sort();
+    if(!ks.length)html+="<p class='note' style='margin:0 0 10px'>Tell the coach about your study blocks in SOS, Talk &amp; log. Tell it what you covered, roughly how much, and which reading it was; your speed for each reading builds up here.</p>";
+    const ord=n=>n+(n==1?"st":n==2?"nd":n==3?"rd":"th");
+    ks.forEach(k=>{const p=per[k],pk=Object.keys(p.ps).sort((a,b)=>a-b);
+      html+="<p style='margin:0 0 8px'><b>"+esc(k)+"</b>: "+p.h.toFixed(1)+" h logged"+(pk.length?" · "+pk.map(n=>{const s=p.ps[n];return ord(+n)+" reading <b>"+(s.h?(s.u/s.h).toFixed(1):"–")+" "+esc(p.kind)+" an hour</b>"}).join(" · "):"")+"</p>"});
+    const r=await Promise.all([DB.doc("food/"+d).get().catch(()=>null),DB.doc("journal/"+d).get().catch(()=>null)]);
+    const fe=r[0]&&r[0].exists?(r[0].data().entries||[]):[],je=r[1]&&r[1].exists?(r[1].data().entries||[]):[];
+    if(tr.length||fe.length||je.length){html+="<span class='label' style='display:block;margin-top:14px'>Today</span>";
+      tr.forEach(x=>{html+="<p class='note' style='margin:4px 0'><b>Study:</b> "+esc(x.subject)+", "+esc(x.covered)+" · "+(+x.hours||0)+" h"+(x.units!=null?" · "+x.units+" "+esc(x.unit_kind||""):"")+(x.pass!=null?" · reading "+x.pass:"")+"</p>"});
+      fe.forEach(x=>{html+="<p class='note' style='margin:4px 0'><b>Food:</b> "+esc(x.text)+"</p>"});
+      je.forEach(x=>{html+="<p class='note' style='margin:4px 0'><b>Note:</b> "+esc(x.text)+"</p>"})}
+    box.innerHTML=html;box.hidden=false;
+  }catch(e){}
+}
+let hist=[],mode=null,busy=false,ctl=null;
+
+function show(){$("sosOv").hidden=false;document.body.style.overflow="hidden"}
+function hide(){if(ctl){try{ctl.abort()}catch(e){}}ctl=null;busy=false;$("sosOv").hidden=true;document.body.style.overflow="";if(DICT&&$(micBtn)&&$(micBtn).dataset.on==="1")DICT.stop().catch(()=>{})}
+function menu(){
+  mode=null;hist=[];$("sosTitle").textContent="SOS";$("sosClose").textContent="Close";$("sosIn").hidden=true;
+  const b=$("sosBody");b.innerHTML="";
+  const mk=(cls,t,s,fn)=>{const x=document.createElement("button");x.type="button";x.className="sos-choice "+cls;x.innerHTML=esc(t)+"<small>"+esc(s)+"</small>";x.addEventListener("click",fn);return x};
+  b.append(
+    mk("hot","I can't study","Tell Claude what happened. You'll get what's going on in your brain, one fix for the next 10 minutes, and a push.",()=>chat("study")),
+    mk("hot","Junk food craving","Your craving coach. Talk it out, see what the food really does to you, and get back to work.",()=>{SOSAPP=null;chat("craving")}),
+    mk("hot","Urge hit","Any urge that isn't food. Talk it through right now; the wave passes.",()=>chat("urge")),
+    mk("hot","Minimum day","One tap: today becomes Gurbani + 2 study blocks + log, plus a push to get you moving.",minDay),
+    mk("","Talk & log","After a block, tell it what you covered. It logs your study, food and notes, and keeps usage low.",()=>chat("talk")));
+}
+function bubble(r,t){const d=document.createElement("div");d.className="sos-m "+r;d.innerHTML=fmt(t);$("sosBody").append(d);$("sosBody").scrollTop=$("sosBody").scrollHeight;return d}
+function chat(m){
+  const op=m==="craving"?craveOpen():MODES[m].open;
+  mode=m;hist=[{r:"c",t:op}];$("sosTitle").textContent=MODES[m].title;$("sosClose").textContent="Back";$("sosBody").innerHTML="";
+  bubble("c",op);
+  micTarget="sosText";micBtn="sosMic";$("sosIn").hidden=false;$("sosMic").hidden=!DICT;$("sosText").value="";
+  if(!SAMPLE&&ready)bubble("c err","Claude isn't reachable from this view. Open the page in the Claude app or claude.ai and try again.");
+  setTimeout(()=>$("sosText").focus(),50);
+}
+async function send(){
+  const ta=$("sosText"),t=ta.value.trim();if(!t||busy)return;
+  if(!SAMPLE&&!ready){for(let i=0;i<40&&!ready;i++)await new Promise(r=>setTimeout(r,250))}
+  if(!SAMPLE){bubble("c err","Claude isn't reachable from this view yet. Try again in a moment.");return}
+  ta.value="";bubble("u",t);hist.push({r:"u",t});busy=true;$("sosSend").disabled=true;
+  const out=bubble("c","…");
+  try{
+    const ctx=mode==="talk"?await talkCtx():await context();
+    const msgs=[];
+    msgs.push({role:"user",content:(mode==="craving"?FOOD_BRIEF:mode==="talk"?LEAN:BRIEF)+"\n\nMODE: "+(mode==="craving"?"Junk food craving":mode==="urge"?"Urge hit":mode==="talk"?"Talk & log (a general check-in: coach him and log what he reports)":"Can't study")+(mode==="craving"?sosLines():"")+"\n\nLIVE DATA FROM HIS PAGE:\n"+ctx+"\n\nYou opened the chat with: \""+hist[0].t+"\"\n\nPerry: "+hist[1].t});
+    for(let i=2;i<hist.length;i++)msgs.push({role:hist[i].r==="c"?"assistant":"user",content:hist[i].t});
+    ctl=new AbortController();
+    const res=await SAMPLE(msgs,{signal:ctl.signal,cache:false,model:mode==="talk"?"claude-sonnet-5-5":"claude-opus-5-5",modelTier:mode==="talk"?"default":"complex",effort:mode==="craving"?"low":"medium",tools:mode==="craving"?TOOLS.filter(x=>x.name==="add_day_note").concat(TOOLS2.filter(x=>x.name==="remember")):mode==="talk"?TOOLS.concat(TOOLS2.filter(x=>x.name==="log_study")):TOOLS.concat(TOOLS2),onText:({text})=>{out.innerHTML=fmt(text||"…");$("sosBody").scrollTop=$("sosBody").scrollHeight}});
+    const txt=(res&&res.text)||"";out.innerHTML=fmt(txt);hist.push({r:"c",t:txt});
+  }catch(e){
+    hist.pop();
+    out.className="sos-m c err";
+    out.textContent=e&&e.code==="not_granted"?"Allow Claude for this page when it asks, then send again.":e&&e.code==="rate_limited"?"Claude is busy for a moment. Send again in a minute.":e&&e.name==="AbortError"?"Stopped.":"That didn't go through. Send it again.";
+    if(!(e&&e.name==="AbortError"))ta.value=t;
+  }finally{busy=false;ctl=null;$("sosSend").disabled=false;renderSpeed()}
+}
+

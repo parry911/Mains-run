@@ -1,0 +1,18 @@
+/* ---------- state ---------- */
+let plan={tests:{},tasks:{},days:{},topics:{},law:{},drop:{},rules:{}};
+let logs={};
+let canWrite=true, db=null, live=false;
+let sel=clampDay(todayIST());
+const LS="mains-run-v2";
+function loadLocal(){try{const s=JSON.parse(localStorage.getItem(LS)||"null");if(s){plan=Object.assign(plan,s.plan||{});logs=s.logs||logs}}catch(e){}}
+function saveLocal(){try{localStorage.setItem(LS,JSON.stringify({plan,logs}))}catch(e){}}
+
+function tests(over){
+  const o=over||plan.tests||{};
+  return BASE.map(b=>{const x=o[b.id]||{},mv=(x.moves||[]).filter(m=>m.at>=REPLAN);return Object.assign({},b,{orig:b.date,date:((x.pv||mv.length||!(x.moves||[]).length)&&x.date)||b.date,written:!!x.done,skipped:!!x.skipped,done:!!x.done||!!x.skipped,
+    uploaded:!!x.uploaded||(!!x.done&&!!b.delhi),uploadedOn:x.uploadedOn||null,writtenOn:x.writtenOn||null,back:!!x.back,marks:x.marks||"",fix:x.fix||"",moves:mv,one:!!x.one&&!!x.done,half:x.half!=null?!!x.half:!!b.half,eve:!!x.eve,
+    topics:TOPICS[b.id]||[],win:b.window||add(b.date,21),opt:!!b.opt})}).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
+}
+const ticks=id=>(plan.topics||{})[id]||{};
+const drops=id=>(plan.drop||{})[id]||{};
+
