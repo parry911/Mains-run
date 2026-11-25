@@ -1,0 +1,260 @@
+    <button class="t-today" data-v="today" role="tab">Today</button>
+    <button data-v="log" role="tab">Log</button>
+    <button data-v="tests" role="tab">Tests</button>
+    <button data-v="calendar" role="tab">Weeks</button>
+    <button data-v="law" role="tab">Law</button>
+    <button data-v="jobs" role="tab">More</button>
+  </nav>
+  <main class="views">
+    <section class="page" data-view="today" id="day"></section>
+    <section class="page" data-view="log" id="logpage" hidden></section>
+    <section class="page" data-view="tests" hidden>
+      <div class="pagehead"><h2>Tests</h2><span class="label" id="moveCount"></span></div>
+      <div id="gs1run"></div>
+      <ul class="tests" id="tests"></ul>
+      <p class="note" style="margin:12px 0 0">Replanned 16 Nov. Copies must reach ForumIAS within 3 weeks of each test's release, and every sectional now lands inside its window; ST2 (window 27 Nov) is on 25 Nov with a spare day after it. GS1 gets one week, 5–11 Dec. Spare days on 20 and 26 Nov catch a slipped test, or go to CA catch-up if nothing slipped; when you move a sectional, later ones shift only if they get squeezed.</p>
+    </section>
+    <section class="page" data-view="calendar" hidden>
+      <div class="pagehead"><h2>9 Nov – 3 Jan</h2><span class="label">Tap a day</span></div>
+      <div class="weekdays"><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span></div>
+      <div class="strip" id="strip"></div>
+      <div class="legend">
+        <em style="--kc:var(--gs1)">GS1</em><em style="--kc:var(--gs2)">GS2</em><em style="--kc:var(--gs3)">GS3</em><em style="--kc:var(--gs4)">GS4</em><em style="--kc:var(--essay)">Essay</em><em style="--kc:var(--muted)">Travel / light / off</em>
+      </div>
+      <div id="week" style="margin-top:22px"></div>
+    </section>
+    <section class="page" data-view="law" id="lawcard" hidden></section>
+    <section class="page" data-view="jobs" hidden>
+      <div class="cover" style="padding:16px 18px;margin-bottom:28px">
+        <span class="label">How it all works</span>
+        <h2 style="margin:4px 0 10px">My system</h2>
+        <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:9px;line-height:1.45">
+          <li><b>Today</b> builds your day from the time you wake. Gurbani lands in the morning or the evening on its own. Blocks are just study blocks; you decide what goes in them.</li>
+          <li><b>Log</b> what really happened, honestly. The coach and the Sunday review read it.</li>
+          <li><b>SOS</b> (red button, bottom right, on every tab): <i>I can't study</i> or <i>Urge hit</i> opens a live chat with Claude. <i>Log food</i> notes what you ate.</li>
+          <li><b>9:16 pm, nightly coach:</b> a push on your phone. Open it and reply with tomorrow's first action.</li>
+          <li><b>Sundays 5:39 pm, weekly review:</b> your week's pattern, the science behind it, and 2–3 adjustments.</li>
+          <li><b>Rules:</b> Opal locks the phone 10 pm–5 am · minimum day = Gurbani + 2 study blocks + the log · every paper is written by its latest date · a lapse is a fork in the road, not the end of the day.</li>
+        </ol>
+      </div>
+      <div class="cover" id="speedCard" style="padding:16px 18px;margin-bottom:28px" hidden></div>
+      <div class="pagehead"><h2>One-time jobs</h2><span class="label" id="taskCount"></span></div>
+      <ul class="tasks" id="tasks"></ul>
+      <div id="rulespage" style="margin-top:36px"></div>
+    </section>
+  </main>
+  <p class="note" id="sync"></p>
+</div>
+
+<div class="overlay" id="sheetOv" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" id="sheetBody"></div>
+</div>
+<div class="overlay" id="overlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mvTitle">
+    <div>
+      <span class="label">Move a test</span>
+      <h3 id="mvTitle"></h3>
+    </div>
+    <div class="row" id="mvChips"></div>
+    <input type="date" id="mvDate" aria-label="New date">
+    <label class="row" id="mvCascRow" for="mvCasc" style="gap:10px"><input type="checkbox" id="mvCasc" checked><span>Shift later sectionals only if they get squeezed</span></label>
+    <ul class="args" id="mvArgs"></ul>
+    <div class="btns">
+      <button id="mvSkip">Skip this test</button>
+      <button id="mvKeep">Cancel</button>
+      <button class="primary" id="mvGo" disabled>Move</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+/* ---------- dates and time ---------- */
+const START="2026-11-09", END="2027-01-03", DAY=864e5;
+const P=s=>{const[a,b,c]=s.split("-").map(Number);return Date.UTC(a,b-1,c)};
+const F=t=>new Date(t).toISOString().slice(0,10);
+const add=(s,n)=>F(P(s)+n*DAY);
+const diff=(a,b)=>Math.round((P(b)-P(a))/DAY);
+const dow=s=>new Date(P(s)).getUTCDay();
+const WD=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], MO=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const nice=s=>{const d=new Date(P(s));return WD[d.getUTCDay()]+" "+d.getUTCDate()+" "+MO[d.getUTCMonth()]};
+const short=s=>{const d=new Date(P(s));return d.getUTCDate()+" "+MO[d.getUTCMonth()]};
+function todayIST(){return F(Date.now()+330*60000)}
+function nowMins(){const n=new Date(Date.now()+330*60000);return n.getUTCHours()*60+n.getUTCMinutes()}
+const clampDay=s=>s<START?START:s>END?END:s;
+const DAYS=[];for(let d=START;d<=END;d=add(d,1))DAYS.push(d);
+const r15=x=>Math.round(x/15)*15;
+const hm=m=>{m=Math.round(m);const h=Math.floor(m/60)%24,mm=m%60;return ((h+11)%12+1)+":"+String(mm).padStart(2,"0")+(h>=12?" pm":" am")};
+const hmS=m=>{m=Math.round(m);return ((Math.floor(m/60)%24+11)%12+1)+":"+String(m%60).padStart(2,"0")};
+const dur=m=>{m=Math.max(0,Math.round(m));const h=Math.floor(m/60),r=m%60;return (h?h+"h":"")+(h&&r?" ":"")+(r||!h?r+"m":"")};
+const hrs=h=>dur((+h||0)*60);
+/* hours + minutes entry: two whole-number boxes, read back as decimal hours */
+function durIn(val,phMin,maxH){
+  const has=val!=null&&val!=="";const tot=has?Math.round(+val*60):null;
+  const mk=(id,v,ph,max)=>el("input",{type:"number",id,inputmode:"numeric",pattern:"[0-9]*",min:"0",max,step:"1",value:v==null?"":v,placeholder:ph});
+  const h=mk("lgHrs",has?Math.floor(tot/60):null,phMin!=null?String(Math.floor(phMin/60)):"0",String(maxH));
+  const m=mk("lgMin",has?tot%60:null,phMin!=null?String(phMin%60):"0","59");
+  const box=el("div",{class:"durin"},h,el("span",{},"h"),m,el("span",{},"min"));
+  const empty=()=>h.value===""&&m.value==="";
+  const get=()=>{if(empty())return null;const a=Number(h.value||0),b=Number(m.value||0);if(isNaN(a)||isNaN(b)||a<0||b<0)return null;return a+b/60};
+  const on=f=>{h.addEventListener("input",f);m.addEventListener("input",f)};
+  return{box,get,empty,on};
+}
+const toTime=m=>String(Math.floor(m/60)%24).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+const fromTime=v=>{if(!v)return null;const[a,b]=v.split(":").map(Number);return isNaN(a)?null:a*60+(b||0)};
+
+/* ---------- the test calendar (MGP+ 2027, replanned 16 Nov with spare days) ---------- */
+/* window = MGP release + 21 days. gap = fewest days after the previous sectional this test needs (for the cascade). */
+const BASE=[
+ {id:"E1",name:"Essay 1",kind:"essay",date:"2026-11-10"},
+ {id:"ST3",name:"ST3 · GS3 topics 1–10",kind:"gs3",date:"2026-11-16",window:"2026-12-04"},
+ {id:"ST4",name:"ST4 · GS3 topics 11–20",kind:"gs3",date:"2026-11-19",window:"2026-12-07",gap:3},
+ {id:"E2",name:"Essay 2",kind:"essay",date:"2026-11-21",half:true},
+ {id:"ST2",name:"ST2 · GS2 second half",kind:"gs2",date:"2026-11-25",window:"2026-11-27",gap:3},
+  {id:"ST5",name:"ST5 · GS4 topics 1, 2, 4, 5",kind:"gs4",date:"2026-12-01",window:"2026-12-12",gap:3},
+ {id:"ST6",name:"ST6 · GS4 topics 3, 6, 7",kind:"gs4",date:"2026-12-04",window:"2026-12-16",gap:3},
+ {id:"E3",name:"Essay 3",kind:"essay",date:"2026-12-08",half:true},
+ {id:"E4",name:"Essay 4",kind:"essay",date:"2026-12-23",half:true},
+ {id:"E5",name:"Essay 5",kind:"essay",date:"2026-12-30",half:true},
+ {id:"F1",name:"GS1 full test · Delhi",kind:"gs1",date:"2026-12-13",delhi:true,flt:true},
+ {id:"F2",name:"GS2 full test · Delhi",kind:"gs2",date:"2026-12-20",delhi:true,flt:true},
+ {id:"F3",name:"GS3 full test · Delhi",kind:"gs3",date:"2026-12-27",delhi:true,flt:true},
+ {id:"F4",name:"GS4 full test · Delhi",kind:"gs4",date:"2027-01-03",delhi:true,flt:true}
+];
+const R=(a,b)=>Array.from({length:b-a+1},(_,i)=>String(a+i));
+const S=a=>a.map(String);
+const TOPICS={ST3:R(1,10),ST4:R(11,20),ST5:S([1,2,4,5,8]),ST6:S([3,6,7,8]),ST2:S([10]).concat(R(12,20)),F1:R(1,8),F2:R(1,20),F3:R(1,20),F4:R(1,8)};
+const GS={
+ gs1:{1:"Art and culture: art forms, literature, architecture",2:"Modern Indian history from the mid-18th century; freedom struggle",3:"Post-independence consolidation and reorganisation",4:"World history from the 18th century",5:"Indian society: diversity, women, population, poverty, urbanisation, globalisation, empowerment, communalism, regionalism, secularism",6:"Physical geography of the world",7:"Distribution of natural resources; location of industries",8:"Geophysical phenomena; changes in geographical features"},
+ gs2:{1:"Constitution: evolution, features, amendments, basic structure",2:"Union and States: federal issues, devolution to local levels",3:"Separation of powers; dispute-redressal mechanisms",4:"Indian constitutional scheme vs other countries",5:"Parliament and State Legislatures",6:"Executive and Judiciary; ministries; pressure groups",7:"Representation of the People Act",8:"Constitutional posts and bodies",9:"Statutory, regulatory and quasi-judicial bodies",10:"Government policies and interventions; design and implementation issues",11:"Development processes: NGOs, SHGs, donors",12:"Welfare schemes for vulnerable sections; protective laws and bodies",13:"Social sector: health, education, human resources",14:"Poverty and hunger",15:"Governance, transparency, accountability; e-governance; citizens' charters",16:"Role of civil services in a democracy",17:"India and its neighbourhood",18:"Bilateral, regional and global groupings and agreements",19:"Other countries' policies and India's interests; diaspora",20:"International institutions, agencies and fora"},
+ gs3:{1:"Economy: planning, resources, growth, development, employment",2:"Inclusive growth",3:"Government budgeting",4:"Crops, cropping patterns, irrigation, farm marketing, e-tech for farmers",5:"Farm subsidies, MSP, PDS, buffer stocks, food security; animal rearing",6:"Food processing industries",7:"Land reforms",8:"Liberalisation; industrial policy and growth",9:"Infrastructure: energy, ports, roads, airports, railways",10:"Investment models",11:"S&T developments in everyday life",12:"Indian achievements in S&T; indigenisation",13:"IT, space, computers, robotics, nano, biotech; IPR",14:"Conservation, pollution, EIA",15:"Disasters and disaster management",16:"Development and the spread of extremism",17:"External state and non-state actors in internal security",18:"Communication networks, social media, cyber security, money laundering",19:"Border security; organised crime and terrorism",20:"Security forces and agencies"},
+ gs4:{1:"Ethics and human interface; human values",2:"Attitude: content, structure, function; persuasion",3:"Aptitude and foundational values for civil service",4:"Emotional intelligence",5:"Moral thinkers and philosophers",6:"Civil service values; ethical dilemmas; accountability; corporate governance",7:"Probity: RTI, codes, citizens' charters, public funds, corruption",8:"Case studies"}};
+const LAW=[
+ {s:"Contracts",items:["Quasi contracts (in progress)","Consequences of breach","Indemnity, guarantee and insurance","Agency","Sale of goods and hire purchase","Formation and dissolution of partnerships","Negotiable Instruments Act","Standard form contracts"]},
+ {s:"Torts",items:["Nature of tortious liability","Fault-based and strict liability","Absolute liability","Vicarious liability, including State liability","General defences","Joint tortfeasors","Remedies","Negligence","Defamation","Nuisance","Conspiracy","False imprisonment","Malicious prosecution","Consumer protection law"]},
+ {s:"Contemporary",items:["Public interest litigation","IPR: copyright, patents, trademarks, designs","IT law and cyber laws","Competition law","Alternate dispute resolution","Major environmental statutes","Right to Information Act","Trial by media"]},
+ {s:"Crimes",items:["General principles of criminal liability: mens rea, actus reus","Preparation and criminal attempt","General exceptions","Joint and constructive liability","Abetment","Criminal conspiracy","Offences against the State","Offences against public tranquillity","Offences against the human body","Offences against property","Offences against women","Criminal defamation","Prevention of Corruption Act, 1988","Protection of Civil Rights Act, 1955","Plea bargaining"]}];
+
+const lawKey=(i,j)=>LAW[i].s.toLowerCase()+"-"+j;
+const LAW_TOTAL=LAW.reduce((s,g)=>s+g.items.length,0);
+function lawLeft(){let n=0;LAW.forEach((g,i)=>g.items.forEach((_,j)=>{if(!(plan.law||{})[lawKey(i,j)])n++}));return n}
+function nextLaw(){for(let i=0;i<LAW.length;i++)for(let j=0;j<LAW[i].items.length;j++)if(!(plan.law||{})[lawKey(i,j)])return LAW[i].s+": "+LAW[i].items[j];return null}
+const taskDone=id=>!!(plan.tasks||{})[id];
+const CA_STAGES=[["vision","Vision May notes","2026-11-30"],["ca-june","June (Vision, plus the Factly index for species and places)","2026-12-15"],["ca-july","July","2026-12-31"],["ca-aug","August (Factly)","2027-01-15"]];
+function caStage(){return CA_STAGES.find(s=>!taskDone(s[0]))||null}
+/* spare days: a slipped test lands here; if nothing slipped, the day is prep for the next test */
+const SPARE={"2026-11-20":1,"2026-11-26":1};
+/* the 16 Nov replan: test dates moved before this moment are dropped so the new calendar applies */
+const REPLAN=Date.UTC(2026,10,15,21,5);
+const TRAVEL={"2026-12-12":"Travel to Delhi","2026-12-14":"Travel back from Delhi","2026-12-19":"Travel to Delhi","2026-12-21":"Travel back from Delhi","2026-12-26":"Travel to Delhi","2026-12-28":"Travel back from Delhi","2027-01-02":"Travel to Delhi"};
+const TASKS=[
+ {id:"screentime",t:"Screen Time blockers on, passcode with mom or brother",due:"2026-11-15"},
+ {id:"delhi",t:"Book Delhi travel and stay for all four trips: 12–14, 19–21, 26–28 Dec and 2–4 Jan",due:"2026-11-20"},
+ {id:"vision",t:"Vision May CA notes finished",due:"2026-11-30"},
+ {id:"wedding",t:"Pick the wedding function. 12 and 14 Dec clash with the Delhi trip; 16 or 17–18 Dec work. Set that day to Wedding on Today.",due:"2026-11-30"},
+ {id:"brother",t:"Brother has started Sep–Oct Factly notes",due:"2026-11-30"},
+ {id:"sp-june",t:"Download June Professor SP PDFs for the highlight test",due:"2026-11-30"},
+ {id:"ca-june",t:"June CA notes done",due:"2026-12-15"},
+ {id:"ca-july",t:"July CA notes done",due:"2026-12-31"},
+ {id:"sp-compile",t:"Professor SP Jun–Nov sets compiled",due:"2026-12-31"},
+ {id:"ca-aug",t:"August CA notes (Factly) done",due:"2027-01-15"},
+ {id:"sign",t:"Signature scan ready; check OTR profile; decide mains centre",due:"2026-12-31"},
+ {id:"law",t:"Law Optional pipeline finished (Contracts, Torts, Contemporary, Crimes)",due:"2027-01-03"},
+ {id:"photo",t:"Application photo with name and date printed on it, taken 3–12 Jan (must be under 10 days old on 13 Jan)",due:"2027-01-12"}
+];
+
+/* ---------- rules (editable on the Rules tab) ---------- */
+const R0={late:480,lateLights:1350,afterTest:360,sundayH:54,essayEve:60,copy:45,ca:30,law:45,lawFrom:"2026-11-20",news:60,eveCA:30,topicMin:45,fltRevise:20,fltStudy:45,rewardH:10,prizeH:11,treatH:12,reward:"Your pick tonight, guilt-free: a film, a long call, or a proper treat."};
+let RULES=Object.assign({},R0);
+
+/* ---------- state ---------- */
+let plan={tests:{},tasks:{},days:{},topics:{},law:{},drop:{},rules:{}};
+let logs={};
+let canWrite=true, db=null, live=false;
+let sel=clampDay(todayIST());
+const LS="mains-run-v2";
+function loadLocal(){try{const s=JSON.parse(localStorage.getItem(LS)||"null");if(s){plan=Object.assign(plan,s.plan||{});logs=s.logs||logs}}catch(e){}}
+function saveLocal(){try{localStorage.setItem(LS,JSON.stringify({plan,logs}))}catch(e){}}
+
+function tests(over){
+  const o=over||plan.tests||{};
+  return BASE.map(b=>{const x=o[b.id]||{},mv=(x.moves||[]).filter(m=>m.at>=REPLAN);return Object.assign({},b,{orig:b.date,date:((x.pv||mv.length||!(x.moves||[]).length)&&x.date)||b.date,written:!!x.done,skipped:!!x.skipped,done:!!x.done||!!x.skipped,
+    uploaded:!!x.uploaded||(!!x.done&&!!b.delhi),uploadedOn:x.uploadedOn||null,writtenOn:x.writtenOn||null,back:!!x.back,marks:x.marks||"",fix:x.fix||"",moves:mv,one:!!x.one&&!!x.done,half:x.half!=null?!!x.half:!!b.half,eve:!!x.eve,
+    topics:TOPICS[b.id]||[],win:b.window||add(b.date,21),opt:!!b.opt})}).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
+}
+const ticks=id=>(plan.topics||{})[id]||{};
+const drops=id=>(plan.drop||{})[id]||{};
+
+/* ---------- day kinds ---------- */
+const KIND_LABEL={normal:"Normal day",gstest:"GS test day",essay:"Essay day",centre:"Centre test",travel:"Travel day",wedding:"Wedding",off:"Off",light:"Light Sunday"};
+const UNTIMED={travel:240,wedding:240,centre:180,off:0,light:0};
+function testOn(d,T){return T.find(x=>x.date===d&&!x.skipped&&!x.opt)}
+function dayHours(d){const l=logs[d];if(!l)return null;if(l.realH!=null)return +l.realH;const b=Object.values(l.blocks||{});if(b.length)return b.reduce((s,x)=>s+(x.nostudy?0:+x.hours||0),0);return l.hours!=null?+l.hours:null}
+function dayAdmin(d){const l=logs[d];if(!l)return 0;return Object.values(l.blocks||{}).reduce((s,x)=>s+(x.nostudy?+x.hours||0:0),0)}
+/* sleep: "fell asleep at" is minutes after midnight; 12:00 or later means the evening before */
+function sleepMins(a,start){if(a==null||start==null)return null;return a>=720?1440-a+start:start-a}
+function idealStart(a){const t=a>=720?a+420-1440:a+420;return Math.min(t,450)}
+function idealText(a,startM){
+  const ideal=idealStart(a),dr=sleepMins(a,startM);
+  if(dr<360)return "Ideal start: "+hm(ideal)+". You fell asleep at "+hm(a)+", and starting earlier borrows from the afternoon, which is when this plan asks the most of you."+(startM<ideal?" Earlier than ideal, so the short-night version of today applies.":" The short-night version of today applies.");
+  return "Ideal start: "+hm(ideal)+". You slept enough for the day to run at full length.";
+}
+let asleepDraft={};
+function defaultAsleep(d){if(asleepDraft[d]!=null)return asleepDraft[d];const pd=add(d,-1),pl=logs[pd];if(pl&&pl.lightsAt!=null)return pl.lightsAt;if(pd>=START&&TS){const pp=dayPlan(pd,TS);if(pp.lights!=null)return pp.lights}return 1290}
+function monSatHours(sun){let s=0;for(let i=6;i>=1;i--)s+=dayHours(add(sun,-i))||0;return s}
+function lightEarned(d){return dow(d)===0&&d<=todayIST()&&monSatHours(d)>=RULES.sundayH}
+function autoKind(d,T){
+  const t=testOn(d,T);
+  if(t){if(t.delhi&&t.date===t.orig)return "centre";return t.kind==="essay"?"essay":"gstest"}
+  if(TRAVEL[d])return "travel";
+  if(dow(d)===0&&lightEarned(d))return "light";
+  return "normal";
+}
+function dayKind(d,T){
+  const m=(plan.days||{})[d];
+  if(m==="normal"){const a=autoKind(d,T);return a==="gstest"||a==="essay"||a==="centre"?a:"normal"}
+  if(m==="travel"||m==="wedding"||m==="off")return m;
+  return autoKind(d,T);
+}
+function defaultStart(d,T){const pr=add(d,-1);return pr>=START&&dayKind(pr,T)==="gstest"?RULES.afterTest:300}
+function startOf(d,T){const l=logs[d];if(l&&l.start!=null)return{s:+l.start,how:l.startHow||"tap",set:true};return{s:defaultStart(d,T),how:"model",set:false}}
+
+/* ---------- the clock: one rule, every start time ---------- */
+/* Fixed anchors: 3 pm shower and fruit, 7–9 dinner, log, lights out, and the 2:30 paper on test days.
+   Before them: Gurbani, then eat (+ newspaper on late days), then study blocks with a break every 2–2½ h. */
+const STUDY_ROLES={study:1,rev:1,eve:1};
+function buildDay(kind,s,o){
+  o=o||{};const sh=!!o.short,half=!!o.half&&kind==="essay";
+  const out=[];let bn=0;
+  const push=x=>{if(x.e!=null&&x.e-x.t<(x.k==="block"?20:5))return;if(x.k==="block"&&!x.name)x.name="Block "+(++bn);if(!x.id)x.id=(x.name||x.label).toLowerCase().replace(/[^a-z0-9]+/g,"-");const base=x.id;let n=2;while(out.some(y=>y.id===x.id))x.id=base+"-"+(n++);out.push(x)};
+  const br=(t,e,label,tick)=>push({k:"break",t,e,label,tick});
+  const blk=(t,e,x)=>push(Object.assign({k:"block",t,e,role:"study"},x||{}));
+  const stretch=(a,b,first)=>{const L=b-a;if(L<20)return;if(L<=150){blk(a,b,first);return}
+    const g=L>240?30:15,b1=Math.min(150,r15((L-g)*.6));blk(a,a+b1,first);br(a+b1,a+b1+g,g===30?"Rest, no phone":"Short break");blk(a+b1+g,b)};
+  const late=s>=RULES.late;
+  const PREP="essay prep",HALFH="includes 45 min essay prep";
+  let lights=1290,gdisp=false;
+  const gur=t=>br(t,t+30,"Gurbani");
+  /* Early start (before 5:00): 15 min to freshen up, then Gurbani. Returns when study begins. */
+  const earlyGur=()=>{if(s<300){br(s,s+15,"Freshen up");gur(s+15);return s+45}gur(s);return s+30};
+  const SNACK="Light snack: fruit, nuts, tea (not a meal)";
+  /* Morning for a normal or essay day that starts before the late-day line.
+     Up to 6:15: Gurbani, study to 8:45, walk, gym at 9:00.
+     6:16-7:00: Gurbani runs from the start to 7:00 at most, study to 9:00, gym at 9:05.
+     7:01 onward: Gurbani, study to 9:00, then a home workout; after a short night, newspaper, breakfast and sleep instead. */
+  const morningNL=hint=>{
+    const first=hint?{hint}:{};
+    if(s<300){const a=earlyGur();stretch(a,450,first);br(450,465,SNACK);blk(465,525);br(525,600,"Walk and gym","gym");return{}}
+    if(s<=375){gur(s);blk(s+30,525,first);br(525,600,"Walk and gym","gym");return{}}
+    if(s<=420){const gE=Math.min(s+30,420);let st;
+      if(gE-s>=10){br(s,gE,"Gurbani");st=gE}else{st=s+10;gdisp=true}
+      blk(st,540,first);br(540,545,"Quick change");br(545,600,"Gym","gym");return{}}
+    gur(s);blk(s+30,600,first);return sh?{}:{homeWO:true};
+  };
+  /* Morning of a late day: study until the 10:00 breakfast, breakfast, the newspaper on its own. Returns the clock after the newspaper. */
+  const morningLate=hint=>{
+    if(600-s>=30)blk(s,600,hint?hint():{});
+    const bS=Math.max(600,s);
+    blk(bS,bS+60,{role:"news",name:"Breakfast and newspaper"});
+    gdisp=true;return bS+60;

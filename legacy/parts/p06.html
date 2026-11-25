@@ -1,0 +1,300 @@
+function askCard(d,T,l){
+  const a=Object.assign({about:[],push:"normal",fixed:"",more:""},(aiOf(l)||{}).answers||{},aiDraft[d]||{});
+  const save=()=>{aiDraft[d]=a};
+  const isT=d===todayIST();
+  const wake=el("input",{type:"time",id:"aiWake",value:a.wake||toTime(l.start!=null?l.start:isT?Math.floor(nowMins()/5)*5:300),oninput:e=>{a.wake=e.target.value;save()}});
+  const lights=el("input",{type:"time",id:"aiLights",value:a.lights||"22:00",oninput:e=>{a.lights=e.target.value;save()}});
+  const chip=(txt,on,fn)=>el("button",{class:on?"primary":"",type:"button",onclick:fn},txt);
+  const sug=suggestions(d);const aboutBox=el("div",{class:"chips"});
+  const drawAbout=()=>{aboutBox.textContent="";sug.forEach(s=>aboutBox.append(chip(s,a.about.includes(s),()=>{a.about=a.about.includes(s)?a.about.filter(x=>x!==s):a.about.concat([s]);save();drawAbout()})))};drawAbout();
+  const pushBox=el("div",{class:"chips"});
+  const drawPush=()=>{pushBox.textContent="";[["normal","Normal"],["hard","Hard"],["max","Max"]].forEach(([k,t])=>pushBox.append(chip(t,a.push===k,()=>{a.push=k;save();drawPush()})))};drawPush();
+  const more=el("input",{type:"text",id:"aiMore",value:a.more,placeholder:"Anything else about today",oninput:e=>{a.more=e.target.value;save()}});
+  const fixed=el("textarea",{id:"aiFixed",rows:"2",placeholder:"Gurbani done, gym at 5, nap after lunch, paper at 8 am",oninput:e=>{a.fixed=e.target.value;save()}});fixed.value=a.fixed;
+  const msg=el("p",{class:"note",style:"margin:0"});
+  const go=el("button",{class:"accent big",onclick:async()=>{
+    const from=fromTime(wake.value),lo=fromTime(lights.value);if(from==null||lo==null){msg.textContent="Set both times first.";return}
+    a.wake=wake.value;a.lights=lights.value;
+    go.disabled=true;go.textContent="Planning…";msg.textContent="This takes a few seconds.";
+    const prompt="You plan one study day for Perry, a UPSC Mains aspirant in India. Follow his rules; his answers for today override them.\n\nHIS RULES:\n"+bookText()+"\n\nTODAY:\n"+aiContext(d)+"\n\nHIS ANSWERS:\nStarts at "+wake.value+" (that is the first slot's start).\nLights out at "+lights.value+".\nToday is about: "+(a.about.concat(a.more?[a.more]:[]).join("; ")||"use the context")+".\nHow hard: "+a.push+".\nFixed things and notes: "+(a.fixed||"none")+".\n\n"+OUT_SPEC;
+    try{const v=await askAI(prompt);const c=cleanPlan(v,from);
+      delete aiAsk[d];delete aiDraft[d];
+      const prev=aiOf(l);
+      patchLog(d,{ai:{segs:c.segs,lights:c.lights,summary:c.summary,answers:a,at:Date.now(),prev:prev?{segs:prev.segs,lights:prev.lights,summary:prev.summary||""}:null},start:l.start!=null?l.start:from,startHow:l.startHow||"ai",startAt:l.startAt||Date.now(),custom:null,slots:null,lightsAt:null});
+    }catch(e){go.disabled=false;go.textContent="Plan my day";msg.textContent=aiErr(e)}
+  }},"Plan my day");
+  const q=(lab,...kids)=>el("div",{class:"field",style:"display:flex;flex-direction:column;gap:8px"},el("span",{class:"label"},lab),...kids);
+  return el("section",{class:"work",style:"padding:14px;display:flex;flex-direction:column;gap:16px"},
+    el("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:10px"},el("div",{style:"display:flex;flex-direction:column;gap:6px;min-width:0"},el("label",{class:"label",for:"aiWake"},isT?"Start":"Planned start"),wake),el("div",{style:"display:flex;flex-direction:column;gap:6px;min-width:0"},el("label",{class:"label",for:"aiLights"},"Lights out"),lights)),
+    q("What's today about",aboutBox,more),
+    q("How hard",pushBox),
+    q("Anything fixed",fixed),
+    el("div",{class:"row"},go,aiOf(l)?el("button",{onclick:()=>{delete aiAsk[d];renderDay(TS)}},"Cancel"):null),msg);
+}
+function workHours(seg){return (seg.e-seg.t)/60}
+function aiDayView(d,T,l,isToday,mins){
+  const ai=aiOf(l),B=l.blocks||{},sec=el("section",{class:"plan"});let sn=0;
+  const planned=ai.segs.filter(isWork).reduce((s,x)=>s+x.e-x.t,0);
+  const done=dayHours(d)||0;
+  sec.append(el("div",{class:"section-h"},el("h3",{},"Timetable"),el("span",{class:"sumline"},"Planned ",el("b",{},dur(planned))," · done ",el("b",{},hrs(done)))));
+  if(ai.summary)sec.append(el("p",{class:"note",style:"margin:0 0 8px"},ai.summary));
+  const ul=el("ul",{class:"tt"});
+  ai.segs.forEach(s=>{const live=isToday&&mins>=s.t&&mins<s.e,work=isWork(s),lab=s.type==="study"?"Study block "+(++sn):s.label,nt=s.type==="study"?"":s.note;
+    const nm=el("span",{class:"nm"},work?el("b",{},lab):lab,nt?el("span",{class:"hint"}," · "+nt):null);
+    let right=el("span");
+    if(work){const cid="ai-"+s.id,on=!!B[s.id];
+      const pm=s.e-s.t,rm=on?Math.round((+B[s.id].hours||0)*60):null,diffd=on&&rm!==pm;
+      const setMin=m=>{const nb=Object.assign({},B);if(m>0)nb[s.id]={name:lab,what:lab,t:s.t,e:s.e,hours:m/60,at:Date.now()};else delete nb[s.id];patchLog(d,{blocks:nb,realH:null})};
+      const hb=el("button",{class:"hrbtn"+(diffd?" got":""),type:"button",disabled:!canWrite,"aria-label":"Minutes studied in "+lab,onclick:()=>{
+        const inp=el("input",{type:"number",min:"0",max:String(pm+120),step:"5",inputmode:"numeric",value:String(rm!=null?rm:pm),"aria-label":"Minutes studied in "+lab,class:"mininp"});
+        const ok=el("button",{class:"mini",type:"button",onclick:()=>{const v=Number(inp.value);if(inp.value===""||isNaN(v)||v<0)return;setMin(Math.round(v))}},"Save");
+        inp.addEventListener("keydown",e=>{if(e.key==="Enter")ok.click()});
+        const li=hb.closest("li");if(li.querySelector(".minrow"))return;li.append(el("div",{class:"row minrow",style:"grid-column:1/-1;gap:8px;justify-content:flex-end;padding-top:6px"},el("span",{class:"tm"},"Studied"),inp,el("span",{class:"tm"},"min"),ok));inp.focus();inp.select()}},diffd?dur(rm)+" of "+dur(pm):dur(pm));
+      right=el("span",{class:"row",style:"gap:10px;flex-wrap:nowrap"},hb,
+        el("input",{type:"checkbox",id:cid,checked:on,disabled:!canWrite,"aria-label":"Done: "+lab,onchange:e=>setMin(e.target.checked?pm:0)}))}
+    ul.append(el("li",{class:(work?"bl":"br")+(live?" live":"")+(s.type==="paper"?" paper":"")},el("span",{class:"tm"},hmS(s.t)),nm,right))});
+  ul.append(el("li",{class:"br"},el("span",{class:"tm"},hmS(ai.lights)),el("span",{class:"nm"},"Lights out"),el("span")));
+  sec.append(ul);
+  if(canWrite&&d>=todayIST()){
+    const inp=el("input",{type:"text",id:"aiChange",placeholder:"make 3 to 4 a break · I'm 30 min late · lights out 11"});
+    const msg=el("p",{class:"note",style:"margin:6px 0 0"});
+    const btn=el("button",{class:"primary",onclick:async()=>{
+      const req=inp.value.trim();if(!req){msg.textContent="Type what to change first.";return}
+      btn.disabled=true;btn.textContent="Changing…";msg.textContent="";
+      const now=isToday?mins:0,keep=ai.segs.filter(s=>B[s.id]);
+      const cur=ai.segs.map(s=>({id:s.id,start:t24(s.t),end:t24(s.e),label:s.label,type:s.type,note:s.note||undefined,done:!!B[s.id]||undefined}));
+      const prompt="You adjust Perry's study plan for today. Make exactly the change he asks for and only what it forces; keep everything else as it is. Keep his rules where the change allows.\n\nHIS RULES:\n"+bookText()+"\n\nTODAY:\n"+aiContext(d)+"\n\nCURRENT PLAN (lights out "+t24(ai.lights)+"):\n"+JSON.stringify(cur)+"\n\n"+(isToday?"It is now "+t24(now)+".\n":"")+"HOW TO APPLY THE CHANGE:\n- Do exactly what he asks. You may remove, move or replace any slot, including ones that already ended, except slots marked done:true: those stay exactly as they are.\n- If he gives a new window (for example 'from 4 pm to 12:15 am'), the replanned part runs from that start to that end, and lights out is that end. Times after midnight are fine (write 00:15).\n- Removed slots that already ended are simply left out; don't fill that time.\n- Slots he didn't mention that ended before now and aren't done: keep them as they are.\n- Keep studying blocks labelled exactly \"Study block\".\n\nHIS CHANGE: "+req+"\n\n"+OUT_SPEC;
+      try{const v=await askAI(prompt);const c=cleanPlan(v,ai.segs[0].t,keep,ai.segs);
+        patchLog(d,{ai:Object.assign({},ai,{segs:c.segs,lights:c.lights,summary:c.summary||ai.summary,at:Date.now(),prev:{segs:ai.segs,lights:ai.lights,summary:ai.summary||""}})});
+      }catch(e){btn.disabled=false;btn.textContent="Change";msg.textContent=aiErr(e)}
+    }},"Change");
+    inp.addEventListener("keydown",e=>{if(e.key==="Enter")btn.click()});
+    sec.append(el("div",{class:"row",style:"margin-top:14px;flex-wrap:nowrap"},inp,btn),msg);
+    sec.append(el("div",{class:"row",style:"margin-top:8px"},
+      ai.prev?el("button",{class:"mini",onclick:()=>patchLog(d,{ai:Object.assign({},ai,{segs:ai.prev.segs,lights:ai.prev.lights,summary:ai.prev.summary,prev:null})})},"Undo last change"):null,
+      el("button",{class:"mini",onclick:()=>{aiAsk[d]=true;renderDay(TS)}},"Plan again from questions")));
+  }
+  if(canWrite&&d<=todayIST()){
+    const ri=el("input",{type:"number",id:"aiReal",min:"0",max:"20",step:"0.25",inputmode:"decimal",style:"width:90px",placeholder:(Math.round(done*4)/4).toString()});
+    if(l.realH!=null)ri.value=l.realH;
+    sec.append(el("div",{class:"row",style:"margin-top:14px"},el("label",{class:"note",for:"aiReal"},"Real hours today, if different"),ri,
+      el("button",{class:"mini",onclick:()=>{const v=ri.value===""?null:Number(ri.value);if(v!=null&&(isNaN(v)||v<0))return;patchLog(d,{realH:v})}},"Save")));
+  }
+  return sec;
+}
+function rng(a,b){
+  const f=m=>{m=Math.round(m);const h=Math.floor(m/60)%24,mm=m%60;return{t:((h+11)%12+1)+(mm?":"+String(mm).padStart(2,"0"):""),p:h>=12?"pm":"am"}};
+  const x=f(a),y=f(b);return x.p===y.p?x.t+"–"+y.t+" "+y.p:x.t+" "+x.p+"–"+y.t+" "+y.p;
+}
+function dayText(d){
+  const p=dayPlan(d,TS);if(!p.segs)return"";
+  let n=0;const lines=[nice(d)];
+  p.segs.forEach(sg=>{
+    if(sg.k==="break"&&sg.label==="Log the day")return;
+    const nm=sg.k==="break"?sg.label:(sg.name==="Study block"?"Study block "+(++n):sg.name);
+    lines.push(rng(sg.t,sg.e)+"  "+nm)});
+  lines.push(hm(p.lights).replace(":00","")+"  Lights out");
+  return lines.join("\n");
+}
+function copyDay(d,btn){
+  const txt=dayText(d);if(!txt)return;
+  const done=ok=>{btn.textContent=ok?"Copied ✓":"Copy blocked";setTimeout(()=>{btn.textContent="Copy timetable"},2200)};
+  const fb=()=>{const ta=el("textarea",{style:"position:fixed;opacity:0"});ta.value=txt;document.body.append(ta);ta.select();let ok=false;try{ok=document.execCommand("copy")}catch(e){}ta.remove();done(ok)};
+  try{navigator.clipboard.writeText(txt).then(()=>done(true),fb)}catch(e){fb()}
+}
+function renderDay(T){
+  const box=$("day");box.textContent="";
+  const real=todayIST(),isToday=sel===real,mins=nowMins(),p=dayPlan(sel,T),l=logs[sel]||{},ai=aiOf(l);
+  box.append(el("div",{class:"dayhead"},el("div",{},el("div",{class:"label"},isToday?"Today":sel<real?"Past day":"Coming up"),el("h2",{},nice(sel))),dayNav(real)));
+  if(p.segs&&!(sel>=real&&canWrite&&(!ai||aiAsk[sel]))){const cb=el("button",{class:"mini"},"Copy timetable");cb.onclick=()=>copyDay(sel,cb);box.append(el("div",{class:"row",style:"margin:0 0 12px"},cb))}
+  if(isToday)box.append(thoughtCard(sel,p,T));
+  if(testOn(sel,T)){const fixes=T.filter(t=>t.done&&t.fix).sort((a,b)=>a.date<b.date?1:-1).slice(0,4);
+    if(fixes.length)box.append(el("aside",{class:"fixes"},el("div",{class:"label"},"Fixes for today's paper"),el("ul",{},fixes.map(t=>el("li",{},t.fix)))))}
+  if(sel>=real&&canWrite&&(!ai||aiAsk[sel]))box.append(askCard(sel,T,l));
+  else if(ai)box.append(aiDayView(sel,T,l,isToday,mins));
+  else box.append(p.segs?timetableSection(sel,p,T,l,isToday,mins):untimedSection(sel,p,T,l));
+  box.append(todoSection(sel,p,T,l,isToday,mins));
+}
+
+function dayLine(d,p,T,isToday){
+  const wrap=el("div",{class:"dayopts"}),lg=logs[d]||{};
+  if(p.segs&&isToday&&!p.start.set&&canWrite){
+    const ti=el("input",{type:"time",id:"startAt","aria-label":"Time you started",value:toTime(nowMins())});
+    const ai=el("input",{type:"time",id:"asleepAt","aria-label":"Fell asleep at",value:toTime(defaultAsleep(d)),style:"width:auto"});
+    const note=el("p",{class:"note",id:"idealNote",style:"margin:6px 0 0"});
+    const getA=()=>{const a=fromTime(ai.value);return a==null?null:a};
+    const upd=()=>{const a=getA(),sm=fromTime(ti.value);note.textContent=a==null||sm==null?"":idealText(a,sm)};
+    ai.addEventListener("input",()=>{const a=getA();if(a!=null)asleepDraft[d]=a;upd()});ti.addEventListener("input",upd);upd();
+    wrap.append(el("div",{class:"startrow"},el("button",{class:"accent big",onclick:()=>{if(getA()!=null)asleepDraft[d]=getA();openBuild(d)}},"Build my day"),
+      el("button",{onclick:()=>setStart(d,nowMins(),"tap",getA())},"Standard day"),
+      el("span",{class:"note"},"standard day, started at"),ti,el("button",{class:"mini",onclick:()=>{const v=fromTime(ti.value);if(v!=null)setStart(d,v,"set",getA())}},"Set")),
+      el("div",{class:"row",style:"margin-top:8px"},el("label",{class:"note",for:"asleepAt"},"Fell asleep at"),ai),note);
+  }
+  const info=[];
+  if(p.segs&&p.start.set)info.push("Started "+hm(p.start.s));
+  else if(p.segs&&!(isToday&&canWrite))info.push("Model start "+hm(p.start.s));
+  if(p.segs&&p.start.set&&lg.asleep!=null)info.push("slept "+dur(sleepMins(lg.asleep,p.start.s))+(p.short?", short night":""));
+  info.push(p.custom?"Your own timetable":shortKind(p,d));
+  if(p.late)info.push("no gym, lights out "+hmS(p.lights));
+  const row=el("div",{class:"startline"},el("span",{},info.join(" · ")));
+  if(canWrite&&isToday&&p.segs&&p.start.set&&(logs[d]||{}).stopAt==null)row.append(el("button",{class:"mini",onclick:()=>openReplan(d)},"Re-plan"));
+  if(canWrite&&d>=todayIST()&&(logs[d]||{}).stopAt==null&&!(isToday&&p.segs&&!p.start.set&&!p.custom))row.append(el("button",{class:"mini"+(p.custom?"":" accent"),onclick:()=>openBuild(d)},p.custom?"Edit my timetable":"Build my day"));
+  if(canWrite){
+    const ti=el("input",{type:"time",id:"chgStart",value:toTime(p.start.s),style:"width:auto"});
+    const ai2=el("input",{type:"time",id:"chgAsleep",value:toTime(lg.asleep!=null?lg.asleep:defaultAsleep(d)),style:"width:auto"});
+    const ov=(plan.days||{})[d]||"auto";
+    const typeSel=el("select",{id:"dayType",onchange:e=>{const v=e.target.value;plan.days=Object.assign({},plan.days);if(v==="auto")delete plan.days[d];else plan.days[d]=v;savePlan()}},
+      [["auto","Auto ("+KIND_LABEL[autoKind(d,T)].toLowerCase()+")"],["normal","Normal day"],["travel","Travel day"],["wedding","Wedding"],["off","Off (sick / emergency)"]].map(([k,t])=>el("option",{value:k,selected:k===ov},t)));
+    const et=testOn(d,T);let essayRow=null;
+    if(dayKind(d,T)==="gstest"&&p.segs&&p.start.s<=375){
+      const gs=el("select",{id:"tgym",onchange:e=>patchLog(d,{gym:e.target.value==="gym"?true:null})},
+        [["no","Walk, then breakfast"],["gym","Gym 9–10, then breakfast"]].map(([k,t])=>el("option",{value:k,selected:(k==="gym")===!!lg.gym},t)));
+      essayRow=el("div",{class:"row"},el("label",{for:"tgym",class:"note"},"Morning"),gs);
+    }
+    let paperRow=null;
+    if(et&&et.kind!=="essay"&&!et.written&&dayKind(d,T)==="gstest"){
+      const ps=el("select",{id:"paperAt",onchange:e=>setField(et.id,{eve:e.target.value==="eve"?true:null})},
+        [["aft","2:30 pm (exam timing)"],["eve","6:30 pm"]].map(([k,t])=>el("option",{value:k,selected:(k==="eve")===!!et.eve},t)));
+      paperRow=el("div",{class:"row"},el("label",{for:"paperAt",class:"note"},"Paper at"),ps);
+    }
+    row.append(el("details",{class:"chg"},el("summary",{},"Change"),el("div",{class:"chgbox"},
+      p.segs&&d<=todayIST()?el("div",{class:"row"},el("label",{for:"chgStart",class:"note"},"Start time"),ti,el("button",{class:"mini",onclick:()=>{const v=fromTime(ti.value);if(v!=null)setStart(d,v,"set")}},"Save")):null,
+      p.segs&&d<=todayIST()?el("div",{class:"row"},el("label",{for:"chgAsleep",class:"note"},"Fell asleep at"),ai2,el("button",{class:"mini",onclick:()=>{const v=fromTime(ai2.value);if(v!=null)patchLog(d,{asleep:v})}},"Save")):null,
+      essayRow,paperRow,
+      el("div",{class:"row"},el("label",{for:"dayType",class:"note"},"Type of day"),typeSel))));
+  }
+  wrap.append(row);
+  if(p.segs&&p.start.set&&lg.asleep!=null){const shortN=sleepMins(lg.asleep,p.start.s)<360;
+    wrap.append(el("p",{class:"note",style:"margin:6px 0 0"},lg.noNap&&shortN?"Short night, but you chose the full day with no afternoon sleep. ":idealText(lg.asleep,p.start.s)+" ",
+      shortN&&canWrite?el("button",{class:"mini",onclick:()=>patchLog(d,{noNap:lg.noNap?null:true})},lg.noNap?"Add the sleep back":"I'm fresh, skip the sleep"):null))}
+  return wrap;
+}
+function itemLabel(i,T){
+  const tn=id=>{const t=T.find(x=>x.id===id);return t?t.name.split(" · ")[0]:""};
+  if(i.paper){const tt=T.find(x=>x.id===i.paper);return "Write "+tn(i.paper)+(tt&&tt.half?", 90 min":"")}
+  if(i.rev)return "Revise for "+tn(i.rev)+", unticked topics first";
+  if(i.upload){const tt=T.find(x=>x.id===i.upload);return tt&&tt.kind==="essay"?"Send the copy to Professor SP":"Upload the copy"}
+  if(i.id==="law")return "Law: "+(nextLaw()||"");
+  if(i.id==="ca"){const cs=caStage();return "CA notes: "+(cs?cs[1].split(" (")[0]:"")}
+  if(i.id==="cl")return "CA notes or Law, your pick";
+  if(i.id==="review")return "Sunday review, 15 min";
+  return i.title;
+}
+function todoRows(d,p,T,l){
+  const rows=[];rows.ticked=[];
+  p.items.slice().sort((a,b)=>RANK(a)-RANK(b)).forEach(i=>{
+    /* test day: every topic of today's test gets its own row, open ones first; nothing is removed automatically */
+    if(i.rev){const t=T.find(x=>x.id===i.rev);if(t){const tk=ticks(t.id);topicsFor(i,d,T).forEach(n=>rows.push({label:"Topic "+n+" · "+topicText(t,T,n),done:!!tk[n],topic:[t.id,n]}));return}}
+    if(i.prep){const t=T.find(x=>x.id===i.prep),sh=t.name.split(" · ")[0];let list=topicsFor(i,d,T);
+      /* sectional tests, today only: a queue. Ticked topics leave the list and the next unticked one takes the place. */
+      if(!t.flt&&d===clampDay(todayIST())){const tk=ticks(t.id),dr=drops(t.id),k=Math.max(1,allocFor(t,T)._k||list.length||1);
+        t.topics.filter(n=>tk[n]===d&&!dr[n]).forEach(n=>rows.ticked.push([t.id,n,sh]));
+        list=t.topics.filter(n=>!tk[n]&&!dr[n]).slice(0,k)}
+      if(list.length)list.forEach(n=>rows.push({label:"Topic "+n+" · "+topicText(t,T,n),done:!!ticks(t.id)[n],topic:[t.id,n]}));
+      else rows.push({label:sh+": revise what you've covered",done:itemDone(i,d,T,l),item:i});
+      return}
+    rows.push({label:itemLabel(i,T),done:itemDone(i,d,T,l),item:i,sub:i.id==="cl"?i.detail:null});
+  });
+  return rows;
+}
+function todoSection(d,p,T,l,isToday,mins){
+  const rows=todoRows(d,p,T,l),tkd=rows.ticked||[],nd=rows.filter(r=>r.done).length+tkd.length,sec=el("section",{});
+  sec.append(el("div",{class:"section-h"},el("h3",{},"To do"),el("span",{class:"note"},rows.length?(tkd.length?nd+" done today":nd+" of "+rows.length+" done"):"")));
+  if(!rows.length){sec.append(el("p",{class:"note",style:"margin:0"},p.kind==="light"?"Nothing planned. Log anything you do.":p.kind==="off"?"Nothing planned. Rest properly.":"Nothing planned."));return sec}
+  const ul=el("ul",{class:"todo"});
+  rows.forEach((r,k)=>{const cid="td-"+d+"-"+k;
+    ul.append(el("li",{class:r.done?"done":""},el("input",{type:"checkbox",id:cid,checked:r.done,disabled:!canWrite,onchange:e=>r.topic?setTopic(r.topic[0],r.topic[1],e.target.checked,d):tickItem(d,r.item,e.target.checked)}),
+      el("label",{for:cid},r.label,r.sub?el("span",{class:"sub"},r.sub):null)))});
+  sec.append(ul);
+  if(tkd.length)sec.append(el("div",{class:"row",style:"margin-top:10px"},el("span",{class:"note"},"Done today"+(canWrite?", tap to untick:":": "+tkd.map(x=>x[2]+" · "+x[1]).join(", "))),
+    canWrite?tkd.map(x=>el("button",{class:"mini","aria-label":"Untick "+x[2]+" topic "+x[1],onclick:()=>setTopic(x[0],x[1],false,d)},x[2]+" · "+x[1]+" ↩")):null));
+  if(isToday&&p.segs&&p.start.set){const fit=fitItems(p,T,l,remaining(p,l,mins),d);
+    const no=p.items.filter(i=>fit.map[i.id]&&fit.map[i.id].state==="no"&&!itemDone(i,d,T,l));
+    if(no.length)sec.append(el("p",{class:"note",style:"margin:8px 0 0"},"Not enough time left today for: "+no.map(i=>i.prep?i.title.replace("Prep · ","").split(" · ")[0]+" topics":itemLabel(i,T)).join(", ")+". It moves forward."))}
+  return sec;
+}
+function timetableSection(d,p,T,l,isToday,mins){
+  const sec=el("section",{}),B=l.blocks||{};
+  sec.append(el("div",{class:"section-h"},el("h3",{},"Timetable"),el("span",{class:"note"},p.start.set?"":"Model day from "+hm(p.start.s))));
+  const ul=el("ul",{class:"tt"}),hasEve=p.segs.some(s=>s.k==="block"&&s.t>=1140);
+  p.segs.forEach(sg=>{
+    if(sg.k==="break"){const live=isToday&&mins>=sg.t&&mins<sg.e;
+      ul.append(el("li",{class:"br"+(live?" live":"")},el("span",{class:"tm"},hmS(sg.t)),el("span",{class:"nm"},sg.label,sg.edited?el("span",{class:"hint"}," · changed"):null),canWrite?el("button",{class:"mini",onclick:()=>openSlotEdit(d,sg)},"Edit"):el("span")));
+      if(!hasEve&&/^Dinner/.test(sg.label)&&sg.t<1260)ul.append(blockRow(d,{id:"evening",name:"Extra study",t:null,e:null},B,l,isToday,mins));
+      return}
+    ul.append(blockRow(d,sg,B,l,isToday,mins));
+  });
+  ul.append(el("li",{class:"br"},el("span",{class:"tm"},hmS(p.lights)),el("span",{class:"nm"},"Lights out",(l.lightsAt!=null)?el("span",{class:"hint"}," · changed"):null),canWrite?el("button",{class:"mini",onclick:()=>openSlotEdit(d,{id:"__lights",t:p.lights,label:"Lights out"})},"Edit"):el("span")));
+  sec.append(ul);
+  const extra=Object.entries(B).filter(([k])=>k!=="evening"&&!p.segs.some(s=>s.id===k));
+  if(extra.length)sec.append(el("ul",{class:"loglist",style:"margin-top:10px"},extra.map(([k,r])=>logLi(d,k,r))));
+  if(canWrite)sec.append(el("div",{class:"row",style:"margin-top:12px"},el("button",{class:"mini",onclick:()=>openBlockLog(d,null)},"+ Log other study")));
+  return sec;
+}
+function blockRow(d,sg,B,l,isToday,mins){
+  const rec=B[sg.id],lost=(l.lost||{})[sg.id],light=(l.light||{})[sg.id],stopped=l.stopAt!=null&&sg.t!=null&&sg.t>=l.stopAt;
+  const live=isToday&&sg.t!=null&&mins>=sg.t&&mins<sg.e;
+  const hint=light?"light work":sg.hint;
+  const nm=el("span",{class:"nm"},el("b",{},sg.name),el("span",{class:"hint"},(hint?" · "+hint:"")+(sg.t!=null?" · "+dur(sg.e-sg.t):" · optional")));
+  if(rec)nm.append(el("span",{class:"sum"},"✓ "+(rec.what||"logged")+" · "+hrs(rec.hours||0)+(rec.nostudy?" · not study":"")));
+  else if(lost||stopped)nm.append(el("span",{class:"sum miss"},lost?"Lost":"Stopped"));
+  let act=el("span");
+  if(canWrite&&lost)act=el("button",{class:"mini",onclick:()=>{const o=Object.assign({},l.lost);delete o[sg.id];patchLog(d,{lost:o})}},"Undo");
+  else if(canWrite&&!stopped)act=el("span",{class:"row",style:"gap:6px;flex-wrap:nowrap"},sg.t!=null?el("button",{class:"mini","aria-label":"Change time of "+sg.name,onclick:()=>openSlotEdit(d,sg)},"Time"):null,el("button",{class:"mini"+(rec?"":live?" accent":""),onclick:()=>openBlockLog(d,sg)},rec?"Edit":sg.role==="paper"?"Written?":"Log"));
+  return el("li",{class:"bl"+(live?" live":"")+(sg.role==="paper"?" paper":"")},el("span",{class:"tm"},sg.t!=null?hmS(sg.t):"After 7"),nm,act);
+}
+function untimedSection(d,p,T,l){
+  const sec=el("section",{}),B=l.blocks||{};
+  sec.append(el("div",{class:"section-h"},el("h3",{},"Log")),
+    Object.keys(B).length?el("ul",{class:"loglist"},Object.entries(B).map(([k,r])=>logLi(d,k,r))):el("p",{class:"note",style:"margin:0"},"No timetable today. Log what you do."),
+    canWrite?el("div",{class:"row",style:"margin-top:12px"},el("button",{class:"mini primary",onclick:()=>openBlockLog(d,null)},"+ Log study")):null);
+  return sec;
+}
+function logLi(d,k,r){return el("li",{},el("span",{class:"tm"},r.t!=null?hmS(r.t)+"–"+hmS(r.e):"Other"),el("span",{},el("span",{class:"nm"},r.name),(r.what||"")+(r.nostudy?" (not study)":""),canWrite&&r.t==null?el("button",{class:"mini",style:"margin-left:8px",onclick:()=>openBlockLog(d,{id:k,name:r.name,t:null,e:null,k:"extra"})},"Edit"):null),el("b",{},hrs(r.hours||0)))}
+
+/* ---------- writes from Today ---------- */
+function patchLog(d,patch){
+  const before=dayHours(d)||0;
+  const lg=Object.assign({},logs[d]||{});Object.keys(patch).forEach(k=>{if(patch[k]==null)delete lg[k];else lg[k]=patch[k]});
+  lg.savedAt=Date.now();logs[d]=lg;saveLocal();
+  if(db){const body=JSON.parse(JSON.stringify(lg));writing=writing.then(()=>db.doc("logs/"+d).set(body)).catch(e=>sync("Couldn't save ("+(e&&e.code||"error")+"). Kept on this device."))}
+  render();
+  const after=dayHours(d)||0;
+  const tier=[RULES.treatH,RULES.prizeH,RULES.rewardH].findIndex(H=>before<H&&after>=H);
+  if(tier>=0)setTimeout(()=>showReward(d,2-tier),120);
+}
+/* ---------- the reward for a big day ---------- */
+const bigDay=d=>(dayHours(d)||0)>=RULES.rewardH;
+const bigDays=()=>DAYS.filter(bigDay).length;
+function showReward(d,tier,pv){
+  /* tier 0: 10 h, plain trophy. 1: 11 h, the prize (animated trophy + confetti). 2: 12 h, prize + the treat. */
+  const H=[RULES.rewardH,RULES.prizeH,RULES.treatH][tier],h=pv?H:dayHours(d)||0;
+  const k=DAYS.filter(x=>(dayHours(x)||0)>=H).length;
+  const nextH=tier<2?[RULES.prizeH,RULES.treatH][tier]:null;
+  const cup=el("div",{class:"cup"+(tier?" prize":""),"aria-hidden":"true"},tier?el("span",{class:"rays"}):null,el("span",{class:"tro"},"🏆"));
+  openSheet([cup,
+    el("span",{class:"label"},pv?"Preview · nothing is logged":nice(d)+" · "+hrs(h)+" logged"),
+    el("h3",{},tier===2?hrs(H)+" day. Treat earned.":tier===1?hrs(H)+" day. Prize won.":hrs(H)+" day. Done."),
+    tier===2?el("p",{class:"what"},RULES.reward):el("p",{class:"what"},hrs(Math.max(0,nextH-h))+" more today "+(tier===0?"wins the prize.":"earns tonight's treat.")),
+    pv?null:el("p",{class:"note",style:"margin:0"},k===1?"Your first "+H+"-hour day of the run.":"That's "+k+" days of "+H+" hours since 9 Nov."),
+    el("div",{class:"btns"},el("button",{class:"primary",onclick:closeSheet},"Claim it"))],"Reward");
+  SHB.classList.add("reward");
+  if(tier)confetti();
+}
+function confetti(){
+  if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const old=$("confetti");if(old)old.remove();
+  const c=el("canvas",{id:"confetti","aria-hidden":"true"});document.body.append(c);
+  const x=c.getContext("2d"),W=c.width=innerWidth,H=c.height=innerHeight;
+  const cs=getComputedStyle(document.documentElement),col=["--accent","--gs1","--gs2","--gs3","--gs4","--law"].map(v=>cs.getPropertyValue(v).trim()||"#F2A300");
+  const P=Array.from({length:140},()=>({x:Math.random()*W,y:-20-Math.random()*H*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*3,r:Math.random()*6,s:4+Math.random()*5,c:col[Math.floor(Math.random()*col.length)]}));
+  const t0=performance.now();
+  (function f(t){x.clearRect(0,0,W,H);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.04;p.r+=.1;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore()});
+    if(t-t0<3200)requestAnimationFrame(f);else c.remove()})(t0);
+}
+function setStart(d,m,how,a){const patch={start:m,startHow:how,startAt:Date.now()};if(a!==undefined)patch.asleep=a;patchLog(d,patch)}
+function toggleDone(d,id,on){if(!canWrite)return;const set=new Set((logs[d]||{}).done||[]);on?set.add(id):set.delete(id);patchLog(d,{done:[...set]})}
+function tickItem(d,i,on){
+  if(i.paper){setField(i.paper,{done:on,writtenOn:on?todayIST():null});return}
+  if(i.upload){setField(i.upload,{uploaded:on,uploadedOn:on?todayIST():null});return}
+  toggleDone(d,i.id,on);

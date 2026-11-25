@@ -1,0 +1,330 @@
+  };
+  const eveStudy=a=>{if(gdisp){blk(a,1110);br(1110,1140,"Gurbani")}else if(1140-a>150){blk(a,a+90);br(a+90,a+105,"Short break");blk(a+105,1140)}else blk(a,1140)};
+  const closeNormal=()=>{
+    if(sh){br(1140,1260,"Dinner, walk, phone");br(1260,1275,"Log the day","log");lights=1290;return}
+    br(1140,1200,"Dinner, walk, phone");blk(1200,1300,{role:"eve",name:"Evening session"});br(1300,1310,"Log the day","log");lights=1320;
+  };
+  /* the paper and everything after it, for essay days and one-essay days */
+  const essayTail=(Pt)=>{
+    const dur=half?90:180;
+    blk(Pt,Pt+dur,{role:"paper",name:half?"The essay (one essay)":"The essay paper"});
+    const shd=Pt-870;
+    if(half){
+      br(Pt+dur,Pt+dur+60,"Fruit and break, no phone");
+      eveStudy(Pt+dur+60);closeNormal();return;
+    }
+    if(gdisp){br(1050+shd,1080+shd,"Break");br(1080+shd,1110+shd,"Gurbani")}
+    else br(1050+shd,1110+shd,"Break");
+    br(1110+shd,1170+shd,"Dinner");
+    if(sh){blk(1170+shd,1230,{role:"light",name:"Light block",hint:"CA notes only"});br(1230,1260,"Wind down");br(1260,1275,"Log the day","log");lights=1290}
+    else if(late){const end=s>=600?1320:1305;blk(1170+shd,end);br(1320,1335,"Log the day","log");lights=RULES.lateLights}
+    else{blk(1170+shd,1260);br(1260,1275,"Log the day","log");lights=1290}
+  };
+
+  if(kind==="gstest"){
+    let Pt=870;const rEnd=sh?720:750;
+    if(!late){
+      const gymOK=!!o.gym&&s<=375,mEnd=gymOK?525:570;
+      const a0=earlyGur();
+      if(s<300){
+        if(450-a0>150){const m=a0+r15((450-a0-15)/2);blk(a0,m,{role:"rev",name:"Revision 1"});br(m,m+15,"Short break");blk(m+15,450,{role:"rev",name:"Revision 2"})}
+        else blk(a0,450,{role:"rev",name:"Revision 2"});
+        br(450,465,SNACK);blk(465,mEnd,{role:"rev",name:"Revision 3"});
+      }else blk(a0,mEnd,{role:"rev",name:"Revision 1"});
+      if(gymOK)br(mEnd,600,"Walk and gym","gym");else br(570,600,"Break, slow walk");
+      blk(600,630,{role:"news",name:"Breakfast and newspaper"});
+      blk(630,rEnd,{role:"rev",name:s<300?"Revision 4":"Revision 2"});
+      if(sh){br(720,765,"Lunch and shower");br(765,855,"Sleep");br(855,870,"Desk ready")}
+      else br(750,870,"Lunch, shower, rest");
+    }else if(s<660){
+      /* late test day: breakfast stays at 10:00, revision to 1:30 with a 10-min break, sleep 1:30-2:30 */
+      gdisp=true;let rn=0;const rv=()=>({role:"rev",name:"Revision "+(++rn)});
+      if(600-s>=20)blk(s,600,rv());
+      const bS=Math.max(600,s);blk(bS,bS+30,{role:"news",name:"Breakfast and newspaper"});
+      const a=bS+30;
+      if(810-a>120){blk(a,720,rv());br(720,730,"Short break");blk(730,810,rv())}
+      else blk(a,810,rv());
+      br(810,870,"Sleep");
+    }else{
+      gdisp=true;
+      blk(s,s+30,{role:"news",name:"Breakfast and newspaper"});const a=s+30;
+      if(sh&&a<=765){if(765-a>=20)blk(a,765,{role:"rev",name:"Fixes and flagged notes"});br(765,855,"Sleep");br(855,870,"Desk ready")}
+      else if(!sh&&855-a>=20){blk(a,855,{role:"rev",name:"Fixes and flagged notes"});br(855,870,"Desk ready")}
+      else Pt=Math.max(870,a);
+    }
+    if(o.eve){
+      if(1050-Pt>=20)blk(Pt,1050,{role:"rev",name:"Revision before the paper"});
+      br(1050,1110,gdisp?"Gurbani and a light snack":"Light snack, no phone");
+      blk(1110,1290,{role:"paper",name:"The paper"});
+      br(1290,1320,"Dinner");
+      br(1320,1335,"Log the day","log");lights=1350;
+    }else{
+    blk(Pt,Pt+180,{role:"paper",name:"The paper"});
+    const shd=Pt-870;
+    if(gdisp){br(1050+shd,1080+shd,"Break");br(1080+shd,1110+shd,"Gurbani")}
+    else br(1050+shd,1110+shd,"Break, phone time");
+    blk(1110+shd,1170+shd,{role:"eve",name:"Evening block 1",hint:"CA or Law"});
+    br(1170+shd,1230+shd,"Dinner");
+    if(sh){blk(1230+shd,1290,{role:"eve",name:"Evening block 2",hint:"the next test"});br(1290,1305,"Log the day","log");lights=1320}
+    else{blk(1230+shd,1350,{role:"eve",name:"Evening block 2",hint:"the next test"});br(1350,1365,"Log the day","log");lights=1365}
+    }
+  }else if(kind==="essay"&&!half){
+    if(!late){
+      const m=morningNL(PREP);
+      if(m.newsDone)blk(630,735);
+      else{blk(600,660,{role:"news",name:"Breakfast and newspaper"});if(sh)blk(660,735);else blk(660,750)}
+      if(sh){br(735,765,"Lunch and shower");br(765,855,"Sleep")}else br(750,855,"Lunch, shower, rest");
+      br(855,870,"Desk ready");
+      essayTail(870);
+    }else{
+      let first=true;const hint=()=>{if(first){first=false;return{hint:PREP}}return{}};
+      let t=morningLate(hint),Pt=870;
+      const lEnd=sh?735:855;
+      if(lEnd-t>=20){if(sh)blk(t,lEnd,hint());else stretch(t,lEnd,hint())}
+      if(sh&&t<=735){br(735,765,"Lunch and shower");br(765,855,"Sleep");br(855,870,"Desk ready")}
+      else if(!sh&&t<=855)br(855,870,"Desk ready");
+      else Pt=Math.max(870,t);
+      essayTail(Pt);
+    }
+  }else if(kind==="essay"){
+    if(!late){
+      const m=morningNL();
+      if(m.newsDone)blk(630,660);else blk(600,660,{role:"news",name:"Breakfast and newspaper"});
+      if(sh){br(660,750,"Sleep");br(750,780,"Shower and reset");blk(780,870,{hint:HALFH})}
+      else{br(660,720,"Rest, no phone");blk(720,870,{hint:HALFH})}
+    }else{
+      let t=morningLate();
+      if(sh&&t<=750){br(t,t+90,"Sleep");t+=90;br(t,t+30,"Shower and reset");t+=30}
+      if(870-t>=20){if(sh||870-t<=150)blk(t,870,{hint:HALFH});else stretch(t,870,{hint:HALFH})}
+    }
+    essayTail(870);
+  }else if(!late){
+    const m=morningNL();
+    if(m.newsDone)blk(630,660);else blk(600,660,{role:"news",name:"Breakfast and newspaper"});
+    if(sh){br(660,750,"Sleep");blk(750,900)}else{br(660,720,"Rest, no phone");if(m.homeWO){blk(720,850);br(850,900,"Home workout","gym")}else{blk(720,810);br(810,825,"Short break");blk(825,900)}}
+    br(900,960,"Shower and fruit");eveStudy(960);closeNormal();
+  }else{
+    let t=morningLate();
+    if(sh&&t+90<=960){br(t,t+90,"Sleep");t+=90}
+    const sw=(!sh&&t<=780)?60:30;
+    if(t<900){const L=900-t;if(sh||L<=150)blk(t,900);else if(L<=240){blk(t,t+90);br(t+90,t+120,"Rest, no phone");blk(t+120,900)}else stretch(t,900)}
+    if(t<=900){br(900,900+sw,"Shower and fruit");blk(900+sw,1110)}else blk(t,1110);
+    if(t<=1110)br(1110,1140,"Gurbani");
+    closeNormal();
+  }
+  return{segs:out,lights,late};
+}
+
+/* ---------- your own changes to a day's slots: times, names, break -> study ---------- */
+function applySlots(segs,ov){
+  if(!ov||!Object.keys(ov).length)return segs;
+  let out=segs.map(s=>{const o=ov[s.id];if(!o)return s;
+    const n=Object.assign({},s,{t:o.t,e:o.e,edited:true});
+    if(o.label){if(n.k==="break")n.label=o.label;else n.name=o.label}
+    if(o.study&&n.k==="break"){n.k="block";n.role="study";n.name=o.label||s.label;n.hint="";n.tick=null}
+    return n});
+  const ed=out.filter(x=>x.edited);
+  out=out.flatMap(x=>{if(x.edited)return[x];
+    let pc=[[x.t,x.e]];
+    ed.forEach(y=>{pc=pc.flatMap(([a,b])=>{if(y.e<=a||y.t>=b)return[[a,b]];const r=[];if(y.t>a)r.push([a,y.t]);if(y.e<b)r.push([y.e,b]);return r})});
+    pc=pc.filter(([a,b])=>b-a>=5).sort((p,q)=>(q[1]-q[0])-(p[1]-p[0]));
+    if(pc.length)return[Object.assign({},x,{t:pc[0][0],e:pc[0][1]})];
+    if(x.k==="break"&&x.e-x.t<=30){const at=Math.max(...ed.filter(y=>y.t<x.e&&y.e>x.t).map(y=>y.e));return[Object.assign({},x,{t:at,e:at+(x.e-x.t)})]}
+    return[]});
+  return out.sort((a,b)=>a.t-b.t);
+}
+function openSlotEdit(d,seg){
+  if(!canWrite)return;
+  const l=logs[d]||{},isL=seg.id==="__lights",ov=isL?null:(l.slots||{})[seg.id];
+  const nm=el("input",{type:"text",id:"slName",value:ov&&ov.label?ov.label:(seg.name||seg.label||"")});
+  const t0=el("input",{type:"time",id:"slFrom",value:toTime(seg.t),style:"width:auto"});
+  const t1=isL?null:el("input",{type:"time",id:"slTo",value:toTime(seg.e),style:"width:auto"});
+  const conv=seg.k==="break"||(ov&&ov.study);
+  const st=conv&&!isL?el("input",{type:"checkbox",id:"slStudy",checked:!!(ov&&ov.study)}):null;
+  const msg=el("p",{class:"note",style:"margin:0"});
+  const save=()=>{
+    const a=fromTime(t0.value);if(a==null){msg.textContent="Pick a time.";return}
+    if(isL){closeSheet();patchLog(d,{lightsAt:a});return}
+    let b=fromTime(t1.value);if(b==null){msg.textContent="Pick an end time.";return}
+    if(b<=a){msg.textContent="The end has to be after the start.";return}
+    const o={t:a,e:b};const lab=nm.value.trim();if(lab&&lab!==(seg.name||seg.label))o.label=lab;if(st&&st.checked)o.study=true;
+    closeSheet();patchLog(d,{slots:Object.assign({},l.slots,{[seg.id]:o})});
+  };
+  const reset=()=>{closeSheet();if(isL){patchLog(d,{lightsAt:null});return}const sl=Object.assign({},l.slots);delete sl[seg.id];patchLog(d,{slots:Object.keys(sl).length?sl:null})};
+  const btns=el("div",{class:"btns"});
+  if(isL?l.lightsAt!=null:ov)btns.append(el("button",{onclick:reset},"Back to plan"));
+  btns.append(el("button",{onclick:closeSheet},"Cancel"),el("button",{class:"primary",onclick:save},"Save"));
+  openSheet([el("div",{},el("span",{class:"label"},nice(d)),el("h3",{},isL?"Lights out":"Change this slot")),
+    isL?null:el("div",{class:"field"},el("label",{class:"label",for:"slName"},"Name"),nm),
+    el("div",{class:"row"},el("label",{class:"note",for:"slFrom"},isL?"At":"From"),t0,isL?null:el("label",{class:"note",for:"slTo"},"to"),t1),
+    st?el("label",{class:"row",for:"slStudy",style:"gap:10px"},st,el("span",{},"Use this time for study (it gets its own block to log)")):null,
+    el("p",{class:"note",style:"margin:0"},isL?"Only today changes.":"Only today changes. Anything this overlaps gets trimmed around it; the fixed times on other days stay as they are."),
+    msg,btns],"Change this slot");
+}
+
+/* ---------- the work list: what to do, separate from when ---------- */
+let MEMO=new WeakMap(),ALLOC=new WeakMap();
+function memoFor(T){let m=MEMO.get(T);if(!m){m={};MEMO.set(T,m)}return m}
+function dayPlan(d,T){
+  const m=memoFor(T);if(m[d])return m[d];
+  const kind=dayKind(d,T),st=startOf(d,T);
+  const timed=kind==="normal"||kind==="gstest"||kind==="essay";
+  const lg=logs[d]||{};
+  const short=!!(st.set&&lg.asleep!=null&&!lg.noNap&&sleepMins(lg.asleep,st.s)<360);
+  const et=kind==="essay"?testOn(d,T):null,half=!!(et&&et.half);
+  const gt=kind==="gstest"?testOn(d,T):null,eve=!!(gt&&gt.eve);
+  const cu=lg.custom||null;
+  const AI=aiOf(lg);
+  const b=AI?{segs:aiSegs(AI),lights:AI.lights,late:false}:cu?buildCustom(cu):timed?buildDay(kind==="essay"&&half?"normal":kind,st.s,{short,half,eve,gym:!!lg.gym}):null;
+  const segs=b?(AI?b.segs:applySlots(b.segs,lg.slots)):null;
+  if(b){if(lg.lightsAt!=null)b.lights=lg.lightsAt;else if(segs.length){const last=Math.max(...segs.map(x=>x.e));if(last>b.lights)b.lights=last}}
+  const studyMin=segs?segs.filter(x=>x.k==="block"&&STUDY_ROLES[x.role]).reduce((s,x)=>s+x.e-x.t,0):UNTIMED[kind]||0;
+  const schedMin=segs?studyMin+segs.filter(x=>x.k==="block"&&x.role==="news").reduce((s,x)=>s+x.e-x.t,0):studyMin;
+  const p={d,kind,start:st,late:!!(b&&b.late),short,half,segs,lights:b?b.lights:null,studyMin,schedMin,custom:!!cu||!!AI};
+  m[d]=p;
+  p.items=workItems(d,T,p);
+  p.planned=p.items.reduce((s,i)=>s+(i.paper?0:i.min||0),0);
+  return p;
+}
+function copyDue(T){return T.filter(t=>t.back&&!t.fix&&!t.skipped).sort((a,b)=>a.date<b.date?-1:1)[0]||null}
+function workItems(d,T,p){
+  const out=[],I=o=>{out.push(Object.assign({pri:1,min:0,kind:"daily"},o))};
+  const kind=p.kind,segs=p.segs,tt=testOn(d,T);
+  const pending=T.filter(t=>!t.done&&!t.opt);
+  const nextGS=pending.filter(t=>t.kind!=="essay"&&t.date>d);
+  const blockMin=role=>segs?segs.filter(x=>x.k==="block"&&x.role===role).reduce((s,x)=>s+x.e-x.t,0):0;
+  const sunday=dow(d)===0;
+  if(kind==="off"||kind==="light")return out;
+  if(kind==="centre"){if(tt)I({id:"w-"+tt.id,title:"Write "+tt.name,detail:"At the centre. Follow its clock; attempt all 20.",min:180,pri:0,kind:tt.kind,paper:tt.id});return out}
+  if(kind==="gstest"&&tt){
+    I({id:"w-"+tt.id,title:"Write "+tt.name,detail:"Attempt all 20. Pens down at three hours.",min:180,pri:0,kind:tt.kind,paper:tt.id});
+    I({id:"rv-"+tt.id,title:"Revise for "+tt.name,detail:"Unticked topics first. Tick a topic once you've been through it.",min:blockMin("rev"),pri:0,kind:tt.kind,rev:tt.id});
+    I({id:"news",title:"Newspaper",min:blockMin("news")||RULES.news});
+    const ev=blockMin("eve");
+    if(ev>0){const cl=Math.min(RULES.eveCA,ev);I({id:"cl",title:"CA notes or Law Optional, your pick",detail:behindNote(d),min:cl,kind:"law"});
+      const nx=nextGS[0];if(nx&&ev-cl>=15)I({id:"p-"+nx.id,title:"Start "+nx.name,min:ev-cl,pri:0,kind:nx.kind,prep:nx.id})}
+    if(sunday)I({id:"review",title:"Sunday review",detail:"15 minutes on the Weeks tab",min:15,pri:2});
+    return out;
+  }
+  let cap=p.studyMin;
+  if(kind==="essay"&&tt&&tt.half){
+    I({id:"w-"+tt.id,title:"Write "+tt.name,detail:"One essay, 90 minutes, hard timer, whenever you're ready.",min:90,pri:0,kind:"essay",paper:tt.id});
+    I({id:"ep-"+tt.id,title:"Essay research",detail:"About 2 hours from your study blocks: pick the topic, research, outline.",min:120,pri:0,kind:"essay",essay:tt.id});
+    cap-=210;
+  }else if(kind==="essay"&&tt){
+    I({id:"w-"+tt.id,title:"Write "+tt.name,detail:"Two essays, equal time.",min:180,pri:0,kind:"essay",paper:tt.id});
+    const b1=segs.find(x=>x.k==="block"&&x.hint&&x.role==="study");const em=b1?b1.e-b1.t:60;
+    I({id:"ep-"+tt.id,title:"Essay prep for today's paper",detail:"Likely themes, two outlines, examples and quotes.",min:em,pri:0,kind:"essay",essay:tt.id});
+    cap-=em;
+  }
+  const away=kind==="travel"||kind==="wedding";
+  if(away){I({id:"news",title:"Newspaper",detail:kind==="travel"?"On the move":"",min:30});cap-=30}
+  else{
+    I({id:"news",title:"Newspaper",detail:"With breakfast",min:RULES.news});
+    const gs=segs&&segs.find(x=>x.tick==="gym");
+    if(gs)I({id:"gym",title:/home/i.test(gs.label)?"Home workout":"Gym",detail:"Skipped it? That hour is rest.",pri:2});
+  }
+  const eve=pending.find(t=>t.kind==="essay"&&t.date===add(d,1));
+  if(eve&&!eve.half&&!(tt&&tt.kind==="essay")){const m=Math.min(RULES.essayEve,Math.max(cap,0));if(m>0){I({id:"ep-"+eve.id,title:"Essay prep for tomorrow",detail:"Pick a likely theme, outline it, refresh examples.",min:m,pri:0,kind:"essay",essay:eve.id});cap-=m}}
+  if(!away){
+    const cb=copyDue(T);if(cb){I({id:"cr-"+cb.id,title:"Review the "+cb.name.split(" · ")[0]+" copy",detail:"Read the feedback, compare with the model answer, rewrite the weakest answer, then log marks and one fix.",min:RULES.copy,kind:cb.kind,copy:cb.id});cap-=RULES.copy}
+    if(d>=RULES.lawFrom){const nl=nextLaw();if(nl){I({id:"law",title:"Law Optional",detail:"Next: "+nl,min:RULES.law,kind:"law"});cap-=RULES.law}}
+    const caLight=false;
+    const cs=caStage();if(cs)I({id:"ca",title:"CA notes",detail:cs[1]+(caLight?" · goes in tonight's light block":""),min:RULES.ca,ca:cs[0]});
+    if(sunday){I({id:"review",title:"Sunday review",detail:"15 minutes on the Weeks tab",min:15,pri:2});cap-=15}
+  }
+  cap=Math.max(0,cap);
+  if(nextGS.length&&cap>=15){
+    const a=nextGS[0],b=nextGS[1];
+    const PR=(t,m,lab)=>I({id:"p-"+t.id,title:(lab||"Prep · ")+t.name,min:m,pri:0,kind:t.kind,prep:t.id});
+    if(b&&diff(a.date,b.date)<=2&&!away){const ma=r15(cap*.6);PR(a,ma);PR(b,cap-ma)}
+    else PR(a,cap,away?"Light revision · ":"Prep · ");
+  }
+  return out;
+}
+function behindNote(d){
+  let lawGap=0;
+  if(d>RULES.lawFrom&&RULES.lawFrom<END){const span=diff(RULES.lawFrom,END)+1,el=Math.min(span,diff(RULES.lawFrom,d));lawGap=Math.floor(LAW_TOTAL*el/span)-(LAW_TOTAL-lawLeft())}
+  const cs=caStage(),caLeft=cs?diff(d,cs[2]):99;
+  const caBad=cs&&caLeft<=5;
+  if(lawGap>=1&&caBad)return "Both are behind: Law by "+lawGap+(lawGap===1?" topic":" topics")+", CA "+cs[1].split(" (")[0]+" due "+short(cs[2])+".";
+  if(lawGap>=1)return "Law is further behind: "+lawGap+(lawGap===1?" topic":" topics")+" behind pace.";
+  if(caBad)return "CA is further behind: "+cs[1].split(" (")[0]+(caLeft<0?" was due ":" is due ")+short(cs[2])+".";
+  return "Neither is behind. Your pick.";
+}
+
+/* ---------- topics ---------- */
+function missedTopic(Ft,T,n){
+  const secs=T.filter(t=>!t.flt&&t.kind===Ft.kind);
+  if(Ft.kind==="gs1"&&n==="5")return !(secs.some(s=>ticks(s.id)["5a"])&&secs.some(s=>ticks(s.id)["5b"]));
+  return !secs.some(s=>s.topics.includes(n)&&ticks(s.id)[n]);
+}
+function topicMin(t,T,n){return t.flt?(missedTopic(t,T,n)?RULES.fltStudy:RULES.fltRevise):RULES.topicMin}
+function topicText(t,T,n){const b=(GS[t.kind]||{})[n]||"";return t.flt?(missedTopic(t,T,n)?"Study (missed earlier): ":"Revise: ")+b:b}
+function prepMin(d,tid,T){return dayPlan(d,T).items.filter(i=>i.prep===tid).reduce((s,i)=>s+i.min,0)}
+function allocate(t,T){
+  const today=clampDay(todayIST()),tk=ticks(t.id),dr=drops(t.id),out={};
+  const days=[];for(let d=today;d<t.date&&d<=END;d=add(d,1)){const m=prepMin(d,t.id,T);if(m>0)days.push([d,m])}
+  if(!days.length)return out;
+  const act=t.topics.filter(n=>!dr[n]);
+  const doneToday=act.filter(n=>tk[n]&&tk[n]>=today),pend=act.filter(n=>!tk[n]);
+  const W=n=>topicMin(t,T,n);
+  const totW=doneToday.concat(pend).reduce((s,n)=>s+W(n),0),totM=days.reduce((s,x)=>s+x[1],0);
+  if(days[0][0]===today){const allT=act.filter(n=>!tk[n]||tk[n]>=today),tg=totW*days[0][1]/totM;let w=0,k=0;
+    while(k<allT.length&&(days.length===1||w+W(allT[k])/2<=tg)){w+=W(allT[k]);k++}
+    Object.defineProperty(out,"_k",{value:k,enumerable:false})}
+  let accM=0,accW=0,idx=0;
+  days.forEach(([d,m],i)=>{accM+=m;const last=i===days.length-1,target=totW*accM/totM;const list=[];
+    if(d===today)doneToday.forEach(n=>{list.push(n);accW+=W(n)});
+    while(idx<pend.length&&(last||accW+W(pend[idx])/2<=target)){list.push(pend[idx]);accW+=W(pend[idx]);idx++}
+    out[d]=act.filter(n=>list.includes(n))});
+  return out;
+}
+function allocFor(t,T){let m=ALLOC.get(T);if(!m){m={};ALLOC.set(T,m)}if(!m[t.id])m[t.id]=allocate(t,T);return m[t.id]}
+function topicsFor(i,d,T){
+  const tid=i.prep||i.rev,t=T.find(x=>x.id===tid);if(!t)return[];
+  const tk=ticks(tid),dr=drops(tid);
+  if(i.rev)return t.topics.filter(n=>!dr[n]).sort((a,b)=>(!!tk[a])-(!!tk[b]));
+  if(d<clampDay(todayIST()))return t.topics.filter(n=>tk[n]===d);
+  return allocFor(t,T)[d]||[];
+}
+function itemDone(i,d,T,l){
+  if(i.paper){const t=T.find(x=>x.id===i.paper);return !!(t&&t.written)}
+  if(i.upload){const t=T.find(x=>x.id===i.upload);return !!(t&&t.uploaded)}
+  if(i.prep){const list=topicsFor(i,d,T),tk=ticks(i.prep);return list.length>0&&list.every(n=>tk[n])}
+  return ((l||{}).done||[]).includes(i.id);
+}
+function itemNeed(i,d,T,l){
+  if(itemDone(i,d,T,l))return 0;
+  if(i.prep){const list=topicsFor(i,d,T),tk=ticks(i.prep);const open=list.filter(n=>!tk[n]).length;return list.length?Math.round(i.min*open/list.length):i.min}
+  return i.min||0;
+}
+const RANK=i=>{const id=i.id;return id.startsWith("w-")?0:id.startsWith("rv-")?1:id.startsWith("up-")?2:id.startsWith("ep-")?3:id.startsWith("p-")?4:id.startsWith("cr-")?5:id==="law"||id==="cl"?6:id==="ca"?7:id==="news"?8:id==="review"?9:10};
+/* study minutes still available today, from now */
+function remaining(p,l,mins){
+  if(!p.segs)return 0;let rem=0;
+  p.segs.forEach(s=>{if(s.k!=="block"||!STUDY_ROLES[s.role])return;
+    if((l.lost||{})[s.id]||(l.blocks||{})[s.id])return;
+    const e=l.stopAt!=null?Math.min(s.e,l.stopAt):s.e,a=Math.max(s.t,mins);if(e>a)rem+=e-a});
+  return rem;
+}
+function fitItems(p,T,l,rem,d){
+  const list=p.items.filter(i=>!i.paper&&!i.upload&&i.id!=="gym"&&i.id!=="news"&&i.id!=="ca").sort((a,b)=>RANK(a)-RANK(b));
+  let left=rem,need=0;const map={};
+  list.forEach(i=>{const n=itemNeed(i,d,T,l);need+=n;if(n<=0)map[i.id]={state:"ok"};else if(n<=left){left-=n;map[i.id]={state:"ok"}}else if(left>=15){map[i.id]={state:"part"};left=0}else map[i.id]={state:"no"}});
+  return{map,need};
+}
+function moveNote(i){return i.prep?"its topics move to the next prep days":i.id==="law"?"the Law pace line updates":i.id.startsWith("cr-")?"it stays on the list tomorrow":i.id.startsWith("ep-")?"squeeze in 20 minutes of outlines":i.id.startsWith("rv-")?"read your fixes list instead":"back tomorrow"}
+/* the next test's prep: does it fit before the date? */
+function todayLeftFrac(T){const d=todayIST();const p=dayPlan(d,T);if(!p.segs||!p.start.set||!p.studyMin)return 1;return Math.min(1,remaining(p,logs[d]||{},nowMins())/p.studyMin)}
+function shortfall(t,T){
+  const today=clampDay(todayIST());if(t.date<=today)return null;
+  const tk=ticks(t.id),dr=drops(t.id);let avail=0;
+  for(let d=today;d<t.date;d=add(d,1)){let m=prepMin(d,t.id,T);if(d===todayIST())m=Math.round(m*todayLeftFrac(T));avail+=m}
+  const pend=t.topics.filter(n=>!tk[n]&&!dr[n]);if(!pend.length)return null;
+  const need=pend.reduce((s,n)=>s+topicMin(t,T,n),0);
+  if(need<=avail+15)return null;
+  let gap=need-avail,k=0;for(const n of pend.slice().reverse()){if(gap<=0)break;gap-=topicMin(t,T,n);k++}
+  return{need,avail,k,pend};
+}
+function prepHours(id,T,from){let s=0;for(let d=from;d<=END;d=add(d,1))s+=prepMin(d,id,T);return s/60}

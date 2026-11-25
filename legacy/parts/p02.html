@@ -1,0 +1,79 @@
+.run p{margin:0;font-size:14.5px}
+.run .meter{margin-top:2px}
+.run.short .meter i{background:var(--late)}
+.run.ok .meter i{background:var(--ok)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{padding:8px 10px;font-size:12.5px}
+.bm{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule)}
+.bm li{display:grid;grid-template-columns:22px minmax(0,1fr) 62px 104px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--rule)}
+.bm label{font-size:14.5px;line-height:1.3;min-width:0}
+.bm input[type=number],.bm input[type=time]{padding:6px 7px;font-size:14px}
+.bm .hd{font:700 11px/1.2 var(--display);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.bmsum{font:700 15px/1.35 var(--display);margin:0}
+
+/* ===== Chambers × Graphite theme ===== */
+:root,:root[data-theme="dark"],:root[data-theme="light"]{
+  --paper:#0B1912; --page:#12241A; --soft:#183022; --rule:#21392B; --ink:#EDE6D6; --muted:#97AA9E;
+  --margin:#C2A26B; --accent:#C2A26B; --accent-ink:#0E1C14; --hero:#12241A; --hero-ink:#EDE6D6; --hero-muted:#97AA9E;
+  --gs1:#B9A0E3; --gs2:#82B9E6; --gs3:#8FCB9B; --gs4:#E3A27C; --essay:#D9B96E; --law:#A3B7F0;
+  --late:#E8857B; --late-bg:#33201D; --ok:#8FCB9B; --ok-bg:#1A3527;
+  --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Inter,system-ui,sans-serif;
+  --body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Inter,system-ui,sans-serif;
+  color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0B1912; --page:#12241A; --soft:#183022; --rule:#21392B; --ink:#EDE6D6; --muted:#97AA9E;
+  --margin:#C2A26B; --accent:#C2A26B; --accent-ink:#0E1C14; --hero:#12241A; --hero-ink:#EDE6D6; --hero-muted:#97AA9E;
+  --gs1:#B9A0E3; --gs2:#82B9E6; --gs3:#8FCB9B; --gs4:#E3A27C; --essay:#D9B96E; --law:#A3B7F0;
+  --late:#E8857B; --late-bg:#33201D; --ok:#8FCB9B; --ok-bg:#1A3527}}
+body{background:var(--paper);font-family:var(--body)}
+body::before{background:var(--paper)}
+h1,h2,h3{font-family:var(--display);font-stretch:100%;font-weight:700;letter-spacing:-.015em}
+.label{font:500 12.5px/1.3 var(--body);letter-spacing:0;text-transform:none;color:var(--muted)}
+button{font:600 14px/1 var(--body);letter-spacing:0;border-radius:12px}
+.page,.cover{border-radius:20px;box-shadow:none}
+.page{background:var(--page)}
+.tabs{background:var(--page);border-radius:14px;box-shadow:none;padding:4px}
+.tabs button{font:500 13px/1 var(--body);text-transform:none;letter-spacing:0;color:var(--muted);border-radius:10px}
+.tabs button[aria-selected="true"]{background:var(--soft);color:var(--ink);box-shadow:inset 0 0 0 1px var(--rule)}
+.alert{border-radius:16px}
+.cell{border-radius:10px}
+.pill{text-transform:none;letter-spacing:0;font:600 11.5px/1 var(--body);border-radius:999px}
+.test .nm,.loglist .nm,.total{font-family:var(--display);font-stretch:100%;text-transform:none;letter-spacing:-.01em}
+.weekdays span{font:600 11px/1 var(--body);letter-spacing:.02em}
+input,textarea,select{background:var(--soft);border-color:var(--rule);border-radius:12px}
+#day .work,#day .plan{background:var(--soft);border-color:var(--rule);border-radius:18px}
+#day .tt li.live{background:color-mix(in srgb,var(--accent) 16%,transparent)}
+/* band */
+.cover{background:var(--hero);padding:16px 16px 14px;gap:12px}
+.bd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.bd .k{font-size:13px;color:var(--hero-muted)}
+.bd h1{font-size:25px;line-height:1.15;margin-top:3px}
+.bd .pre{font-size:13px;color:var(--hero-muted);white-space:nowrap}
+.rings{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ring{background:var(--soft);border-radius:16px;padding:12px;display:flex;align-items:center;gap:12px;min-width:0}
+.ring svg{flex:none}
+.ring b{display:block;font:700 20px/1.1 var(--display);letter-spacing:-.01em}
+.ring span{display:block;font-size:12.5px;color:var(--hero-muted);line-height:1.3}
+.ring span.up{color:var(--ok)}.ring span.down{color:var(--late)}
+.hnow{border-top:1px solid var(--rule)}
+.htag{border-radius:999px;font:600 11.5px/1 var(--body);letter-spacing:0;text-transform:none;padding:5px 9px}
+/* thought card */
+.thought{background:var(--soft);border:1px solid var(--rule);border-radius:18px;padding:14px 16px;margin:0 0 14px}
+.thought .pat{font-size:13.5px;color:var(--muted);margin:0 0 8px}
+.thought .gm{font:600 19px/1.45 "Noto Sans Gurmukhi","Mukta Mahee",var(--body);color:var(--accent);margin:0}
+.thought .tr{font-style:italic;color:var(--ink);margin:2px 0 0;font-size:14.5px}
+.thought .mn{margin:6px 0 0;font-size:14.5px}
+.thought .do{margin:10px 0 0;font-size:14.5px}
+.thought .do b{color:var(--accent);font-weight:600}
+.thought .src{margin:8px 0 0;font-size:12.5px;color:var(--muted)}
+.thought .src a{color:var(--muted)}
+#day .hrbtn{background:none;border:0;padding:4px 2px;font:500 13px/1.3 var(--body);color:var(--muted);text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}
+#day .hrbtn.got{color:var(--accent)}
+#day .mininp{width:68px;padding:6px 8px;font-size:15px}
+#day .tt li{grid-template-columns:48px minmax(0,1fr) auto}
+</style>
+
+<div class="app">
+  <header class="cover" id="band" aria-live="polite"></header>
+  <div id="alerts"></div>
+  <nav class="tabs" role="tablist" aria-label="Sections">

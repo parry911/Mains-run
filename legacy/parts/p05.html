@@ -1,0 +1,330 @@
+
+/* ---------- topper insights, synced to the next paper ---------- */
+const SRC={
+  anuGS:"https://forumias.com/blog/?p=23056",
+  anuEs:"https://www.insightsonindia.com/2018/06/08/anudeep-durishettyessay-strategy-upsc-civil-services-exam-topper-all-india-rank-1-cse-2017/",
+  adi:"https://www.visionias.in/blog/ethics/toppers-ethics-answer-writing-by-aditya-srivastava-air-1-upsc-2023",
+  ish:"https://visionias.in/blog/toppers-strategy/approach-for-excellence-in-upsc-mains-from-ishita-kishores-answer-scripts",
+  sha:"https://vajiramandravi.com/upsc-exam/shakti-dubey-upsc-air-1-2024/"};
+const AD="Anudeep Durishetty, AIR 1 (2017)",AS="Aditya Srivastava, AIR 1 (2023)",IK="Ishita Kishore, AIR 1 (2022)",SD="Shakti Dubey, AIR 1 (2024)";
+const INS=[
+ {k:"gs2",w:AD,s:"anuGS",tip:"He opened polity answers with the relevant Article where one applies, such as Article 153 for Governors.",do:"For each GS2 topic you revise today, write the one Article that should open it. You know these cold; most candidates don't. That is your edge."},
+ {k:"gs2",w:AD,s:"anuGS",tip:"He closed answers with a commission's view: Punchhi on Centre–State relations, the Law Commission on the death penalty, NCRWC on the Constitution.",do:"Build a list of ten commission or committee closers for GS2."},
+ {k:"gs2",w:AD,s:"anuGS",tip:"He used Supreme Court judgments as value addition, for example Shreya Singhal for free speech.",do:"Attach one landmark case to every GS2 topic. Your Law Optional notes already hold them; reuse, don't relearn."},
+ {k:"gs2",w:IK,s:"ish",tip:"Her GS2 answers cited precise 2nd ARC and committee details and tied theory to how it works on the ground.",do:"Pick five 2nd ARC recommendations you can cite accurately, and one real example for each."},
+ {k:"gs2",w:AD,s:"anuGS",tip:"On debatable questions he wrote both sides under subheadings, even when not asked, then gave a balanced view.",do:"In today's practice, use two subheadings on any 'critically examine' question."},
+ {k:"gs3",w:AD,s:"anuGS",tip:"He backed points with recent data from credible bodies such as UNICEF, Lancet or Transparency International.",do:"Note one statistic with source and year for every GS3 topic you revise today."},
+ {k:"gs3",w:IK,s:"ish",tip:"Her GS3 answers paired the fundamental concept with the current development and applied economic concepts directly.",do:"For each topic: one concept line plus one 2026 development. Two lines, not a paragraph."},
+ {k:"gs3",w:AD,s:"anuGS",tip:"He drew simple, accurate diagrams where they fit, such as river linking or the Chabahar route, and valued accuracy over art.",do:"Practise three GS3 flowcharts or diagrams today, two minutes each."},
+ {k:"gs1",w:AD,s:"anuGS",tip:"He practised drawing and labelling the India map until it took under 60 seconds.",do:"Time yourself drawing India three times today."},
+ {k:"gs1",w:IK,s:"ish",tip:"Her history answers tracked timelines, and her freedom-struggle answers compared ideological positions.",do:"Make one timeline and one comparison table from today's GS1 topic."},
+ {k:"gs1",w:IK,s:"ish",tip:"Her society answers used sociological concepts, linked them to each other, and cited the latest data.",do:"List five sociological concepts you can drop into society answers, each with one data point."},
+ {k:"gs1",w:AD,s:"anuGS",tip:"For art and culture he kept drawings simple, for example triangles for figures in Warli art.",do:"Sketch two quick art-form diagrams you could use in an answer."},
+ {k:"gs4",w:AD,s:"anuGS",tip:"In GS4 he aimed for at least 80 marks of questions per hour, gave both sections equal time, and started from Q1, not the case studies.",do:"In practice today, check the clock at each hour mark: 80 marks done?"},
+ {k:"gs4",w:AS,s:"adi",tip:"His case studies opened with the ethical context, then listed stakeholders, then named the issues, such as constitutional morality or Article 21.",do:"Write the stakeholder grid for two case studies today, five minutes each."},
+ {k:"gs4",w:AS,s:"adi",tip:"On quote questions he supported the core idea, then raised counter-arguments and practical limits.",do:"Do one quote answer today in exactly that order."},
+ {k:"gs4",w:AS,s:"adi",tip:"He paired each problem with a real reform or administrator example, such as Kiran Bedi's prison reforms.",do:"Collect ten administrator examples you can reuse across answers."},
+ {k:"gs4",w:AS,s:"adi",tip:"He used thinkers (Kant, Aristotle, the Buddha) and exact terms like crisis of conscience and constitutional morality.",do:"Make a one-page keyword and thinker sheet. Read it the morning of every GS4 test."},
+ {k:"gs4",w:AD,s:"anuGS",tip:"For ethics answers he used a clear definition plus a real example, often from his own experience.",do:"Your court practice is a case-study bank nobody else has. Write down three real dilemmas you have seen."},
+ {k:"essay",w:AD,s:"anuEs",tip:"He said topic choice doesn't change marks, so skip abstract topics you are uncomfortable with. He once misread a term in the topic and scored 112.",do:"Before choosing tomorrow, underline every key term in each topic and define it in one line."},
+ {k:"essay",w:AD,s:"anuEs",tip:"He opened with an anecdote, character or quote, not a dictionary definition, and returned to that character in the conclusion.",do:"Prepare two openings for likely themes, each with a character you can bring back at the end."},
+ {k:"essay",w:AD,s:"anuEs",tip:"Each paragraph carried one argument, backed by an example, statistic, report or constitutional provision, with a link to the next.",do:"Outline tomorrow's essay as one-line arguments, each with its backing."},
+ {k:"essay",w:AD,s:"anuEs",tip:"He gave both essays equal time and didn't rush the second.",do:"Set a hard timer for the halfway point tomorrow."},
+ {k:"gen",w:AD,s:"anuGS",tip:"He said never skip a mock; if you are behind, postpone it a day or two at most.",do:"If you're tempted to move a test this week, this is the argument against it."},
+ {k:"gen",w:AD,s:"anuGS",tip:"On a question he didn't know, he wrote generic but relevant points instead of leaving it, and reckoned it earned 2–3 marks.",do:"Rule for every test: all 20 questions attempted."},
+ {k:"gen",w:AD,s:"anuGS",tip:"He held mocks to strict time limits; taking an extra 10–15 minutes only hurts your own preparation.",do:"Pens down at exactly three hours in your next test."},
+ {k:"gen",w:AD,s:"anuGS",tip:"He started with imperfect answers and improved them, rather than waiting until he felt ready.",do:"Today, write one answer badly rather than none."},
+ {k:"gen",w:SD,s:"sha",tip:"She cleared mains in her fourth attempt but missed the final list, then topped in her fifth.",do:"A missed list is a data point, not a verdict. Use today's hours."}
+];
+
+function insightFor(d,p,T){
+  const tt=testOn(d,T),nx=T.filter(t=>!t.done&&!t.opt&&t.kind!=="essay"&&t.date>d)[0],eve=T.find(t=>!t.done&&t.kind==="essay"&&t.date===add(d,1));
+  let k=tt?tt.kind:eve?"essay":nx?nx.kind:"gen";const i=DAYS.indexOf(d);
+  if(p.kind==="light"||p.kind==="off"||p.kind==="travel"||i%4===3)k="gen";
+  const pool=INS.filter(x=>x.k===k);return pool[(i>=0?i:0)%pool.length];
+}
+const KC=k=>({gs1:"var(--gs1)",gs2:"var(--gs2)",gs3:"var(--gs3)",gs4:"var(--gs4)",essay:"var(--essay)",law:"var(--law)"}[k]||"var(--muted)");
+const KL=k=>({gs1:"GS1",gs2:"GS2",gs3:"GS3",gs4:"GS4",essay:"Essay",law:"Law"}[k]||"");
+function el(tag,attrs,...kids){const e=document.createElement(tag);for(const k in attrs||{}){if(k==="class")e.className=attrs[k];else if(k==="style")e.style.cssText=attrs[k];else if(k.startsWith("on"))e.addEventListener(k.slice(2),attrs[k]);else if(attrs[k]!==false&&attrs[k]!=null)e.setAttribute(k,attrs[k]===true?"":attrs[k])}kids.flat().forEach(c=>{if(c==null||c===false)return;e.append(c.nodeType?c:document.createTextNode(String(c)))});return e}
+function freeDay(T,from){for(let d=from;d<=END;d=add(d,1)){if(!TRAVEL[d]&&!T.some(t=>t.date===d&&!t.done))return d}return from}
+
+/* ---------- render ---------- */
+let TS=null;
+let rq=0;const dirty=new Set();
+function render(){if(rq)return;rq=setTimeout(()=>{rq=0;renderAll()},40)}
+function isShown(v){return view===v||(wideMQ.matches&&v==="today")}
+function drawView(v,T,real){switch(v){case"today":renderDay(T);break;case"log":renderLog(T);break;case"tests":renderTests(T,real);break;case"calendar":renderStrip(T,real);renderWeek(T,real);break;case"law":renderLaw(T,real);break;case"jobs":renderTasks(real);renderRules()}}
+function drawDirty(){if(!TS)return;const real=todayIST();[...dirty].forEach(v=>{if(isShown(v)){dirty.delete(v);drawView(v,TS,real)}})}
+function renderAll(){
+  clearTimeout(rq);rq=0;
+  RULES=Object.assign({},R0,plan.rules||{});
+  TS=tests();MEMO=new WeakMap();ALLOC=new WeakMap();
+  const T=TS,real=todayIST();
+  renderBand(T,real);renderNow();renderAlerts(T,real);
+  ["today","log","tests","calendar","law","jobs"].forEach(v=>{if(isShown(v)){dirty.delete(v);drawView(v,T,real)}else dirty.add(v)});
+}
+function same(a,b){if(a===b)return true;if(!a||!b||typeof a!=="object"||typeof b!=="object")return false;const ka=Object.keys(a),kb=Object.keys(b);return ka.length===kb.length&&ka.every(k=>same(a[k],b[k]))}
+function ringSvg(frac,color){
+  const r=17,c=2*Math.PI*r,f=Math.max(0,Math.min(1,frac||0));
+  const NS="http://www.w3.org/2000/svg",s=document.createElementNS(NS,"svg");s.setAttribute("width","44");s.setAttribute("height","44");s.setAttribute("viewBox","0 0 44 44");s.setAttribute("aria-hidden","true");
+  const mk=(st,da,off)=>{const k=document.createElementNS(NS,"circle");k.setAttribute("cx","22");k.setAttribute("cy","22");k.setAttribute("r",String(r));k.setAttribute("fill","none");k.setAttribute("stroke",st);k.setAttribute("stroke-width","5");if(da){k.setAttribute("stroke-dasharray",String(c));k.setAttribute("stroke-dashoffset",String(c*(1-f)));k.setAttribute("stroke-linecap","round");k.setAttribute("transform","rotate(-90 22 22)")}return k};
+  s.append(mk("var(--rule)"),mk(color,true));return s;
+}
+function avgHours(from,to){let s=0,n=0;for(let d=from;d<=to;d=add(d,1)){s+=dayHours(d)||0;n++}return n?s/n:null}
+const TARGET_H=10;
+function renderBand(T,today){
+  const band=$("band");band.textContent="";
+  const pend=T.filter(t=>!t.done&&!t.opt&&t.date>=today),n=pend[0];
+  const head=el("div",{},el("div",{class:"k"},nice(today)),el("h1",{},n?(n.name.split(" · ")[0]+" "+(()=>{const dd=diff(today,n.date);return dd===0?"today":dd===1?"tomorrow":"in "+dd+" days"})()):"All tests written"));
+  band.append(el("div",{class:"bd"},head,el("span",{class:"pre"},Math.max(0,diff(today,"2027-05-23"))+" days to prelims")));
+  const tp=today>=START&&today<=END?dayPlan(today,T):null;
+  const planned=tp&&tp.segs?tp.segs.filter(x=>x.k==="block"&&(STUDY_ROLES[x.role]||x.role==="paper"||x.role==="news")).reduce((s,x)=>s+x.e-x.t,0)/60:0;
+  const done=dayHours(today)||0;
+  const y=add(today,-1),all=y>=START?avgHours(START,y):null,wk=y>=START?avgHours(add(y,-6)<START?START:add(y,-6),y):null;
+  const r1=el("div",{class:"ring"},ringSvg(planned?done/planned:0,"var(--ok)"),el("div",{},el("b",{},hrs(done)),el("span",{},planned?"of "+dur(planned*60)+" today":"logged today")));
+  const trend=all!=null&&wk!=null?(wk>=all?"up":"down"):"";
+  const r2=el("div",{class:"ring"},ringSvg(all!=null?all/TARGET_H:0,"var(--accent)"),el("div",{},el("b",{},all!=null?(Math.round(all*10)/10)+" h":"–"),
+    el("span",{},"average a day, aim "+TARGET_H+" h"),wk!=null?el("span",{class:trend},"last 7 days "+(Math.round(wk*10)/10)+" h"):null));
+  band.append(el("div",{class:"rings"},r1,r2),el("div",{class:"hnow",id:"nowline"}));
+}
+/* ---------- a thought for the day, picked from how the last days went ---------- */
+const GB={
+ seed:{gm:"ਆਪੇ ਬੀਜਿ ਆਪੇ ਹੀ ਖਾਹੁ ॥",tr:"Aape beej aape hee khaahu",mn:"You sow, and you yourself eat what grows.",src:"Japji Sahib, Pauri 20"},
+ think:{gm:"ਸੋਚੈ ਸੋਚਿ ਨ ਹੋਵਈ ਜੇ ਸੋਚੀ ਲਖ ਵਾਰ ॥",tr:"Sochai soch na hovaee je sochee lakh vaar",mn:"Thinking does not get you there, even if you think a hundred thousand times.",src:"Japji Sahib, Pauri 1"},
+ mind:{gm:"ਮਨਿ ਜੀਤੈ ਜਗੁ ਜੀਤੁ ॥",tr:"Man jeetai jag jeet",mn:"Conquer the mind and you conquer the world.",src:"Japji Sahib, Pauri 28"},
+ living:{gm:"ਸਚਹੁ ਓਰੈ ਸਭੁ ਕੋ ਉਪਰਿ ਸਚੁ ਆਚਾਰੁ ॥",tr:"Sachahu orai sabh ko upar sach aachaar",mn:"Truth is above everything, but higher still is truthful living.",src:"Sri Raag, Ang 62"},
+ light:{gm:"ਮਨ ਤੂੰ ਜੋਤਿ ਸਰੂਪੁ ਹੈ ਆਪਣਾ ਮੂਲੁ ਪਛਾਣੁ ॥",tr:"Man toon jot saroop hai, aapnaa mool pachhaan",mn:"O mind, you are the embodiment of light; recognise your origin.",src:"Raag Aasa, Ang 441"},
+ effort:{gm:"ਘਾਲਿ ਖਾਇ ਕਿਛੁ ਹਥਹੁ ਦੇਇ ॥",tr:"Ghaal khaae kichh hathhu dey",mn:"One who earns by honest effort and gives some of it away.",src:"Sarang ki Vaar, Ang 1245"}};
+function patternFor(d){
+  const H=k=>dayHours(add(d,-k)),y=H(1),past=[1,2,3,4,5,6,7].map(H).filter(v=>v!=null);
+  const avg7=past.length?past.reduce((a,b)=>a+b,0)/past.length:null;
+  const since=Date.parse(d)-7*864e5;let moves=0;Object.values(plan.tests||{}).forEach(o=>(o.moves||[]).forEach(m=>{if(!m.auto&&m.at>=since)moves++}));
+  const starts=[1,2,3,4,5].map(k=>(logs[add(d,-k)]||{}).start).filter(v=>v!=null),late=starts.filter(s=>s>=540).length;
+  const r1=v=>Math.round(v*10)/10;
+  if(moves>=2)return{key:"think",gb:"think",pat:"You've moved tests "+moves+" times in the last week.",do:"Write the next paper on its date, ready or not. A rough copy still shows you what to fix.",tk:"gen"};
+  if(y!=null&&y<6&&avg7!=null)return{key:"seed",gb:"seed",pat:"Yesterday was light ("+r1(y)+" h). One day doesn't decide the run.",do:"Start the first block on time. That's the seed for today.",tk:"gen"};
+  if(starts.length>=3&&late>=3)return{key:"mind",gb:"mind",pat:late+" of your last "+starts.length+" days started after 9 am.",do:"Hold tonight's lights-out. Tomorrow's start is decided tonight.",tk:"gen"};
+  if(avg7!=null&&avg7>=9.5)return{key:"light",gb:"light",pat:"You've averaged "+r1(avg7)+" h over the last week.",do:"Keep this pace. Don't add hours, protect the ones you have.",tk:null};
+  if(avg7!=null&&avg7<8)return{key:"living",gb:"living",pat:"Last 7 days: "+r1(avg7)+" h a day, against a 10 h aim.",do:"The plan is the truth; living it is higher. Finish every block on today's timetable before adding anything.",tk:"gen"};
+  return{key:"effort",gb:"effort",pat:avg7!=null?"Last 7 days: "+r1(avg7)+" h a day.":"Early days of the run.",do:"Honest hours: tick only what you actually did.",tk:null};
+}
+/* ---------- a fresh lift every day: real comebacks, brain science, Gurbani (no repeats before 3 Jan) ---------- */
+const L_ST=[
+ {t:"s",h:"Three prelims failures. Then AIR 1.",body:"Shakti Dubey started in 2018 and failed prelims in her first three attempts. In her fourth she cleared mains but still missed the final list. In her fifth she was AIR 1 of CSE 2024.",take:"One mains result is a data point, not a verdict. She had four of them before rank one.",who:"Shakti Dubey · AIR 1, CSE 2024",url:"https://vajiramandravi.com/upsc-exam/shakti-dubey-upsc-air-1-2024/"},
+ {t:"s",h:"He was already IPS. He kept studying.",body:"Aditya Srivastava left Goldman Sachs, failed prelims in 2021, got AIR 236 and the IPS in 2022, and kept preparing through police training. In 2023 he topped the country.",take:"He studied around a full training schedule. You have the whole day.",who:"Aditya Srivastava · AIR 1, CSE 2023",url:"https://indianmasterminds.com/feature-stories-on-bureaucrats-changemakers/exclusive-meet-ips-officer-trainee-aditya-srivastava-who-topped-upsc-cse-2023-with-air-1"},
+ {t:"s",h:"An athlete, not a bookworm.",body:"Ishita Kishore played national-level football in the Subroto Cup and worked at EY. She failed prelims in her first two attempts, then topped CSE 2022.",take:"An all-rounder can top this exam. Your interests aren't the enemy; drift is.",who:"Ishita Kishore · AIR 1, CSE 2022",url:"https://vajiramandravi.com/upsc-exam/ishita-kishore-upsc-air-1-2022/"},
+ {t:"s",h:"40–45 hours a week. Not 80.",body:"Accounts of Ishita Kishore's AIR 1 preparation describe a disciplined plan of about 40–45 hours a week: steady, not heroic.",take:"Six honest days beat two marathon days and a crash. Protect the rhythm.",who:"Ishita Kishore · AIR 1, CSE 2022",url:"https://www.nextias.com/ishita-kishore-cse-2022"},
+ {t:"s",h:"He wasn't sure he'd crack it.",body:"Shubham Kumar failed his first attempt in 2018, got AIR 290 in 2019, and tried again while in training. After topping CSE 2020 he said he hadn't been sure he would crack it that year.",take:"Doubt isn't a signal to stop. Even AIR 1 felt it. Write anyway.",who:"Shubham Kumar · AIR 1, CSE 2020",url:"https://www.nationalheraldindia.com/national/wasnt-sure-about-cracking-exams-this-time-upsc-topper"},
+ {t:"s",h:"A Sonipat farmer's son. Fourth attempt.",body:"Pradeep Singh, a farmer's son from Sonipat in Haryana, was already an IRS (Customs) officer when he topped CSE 2019. It was his fourth attempt.",take:"From right next door. Fourth attempt, rank one.",who:"Pradeep Singh · AIR 1, CSE 2019",url:"https://www.clearias.com/pradeep-singh-ias-rank-1/"},
+ {t:"s",h:"His father sold their house.",body:"Another Pradeep Singh, from Indore, is the son of a petrol pump worker who sold the family home to fund his preparation. He got AIR 93 in his first attempt, then came back for AIR 26 in CSE 2019.",take:"He cleared it and still came back for better. Every paper this month is a rep toward the rank you want.",who:"Pradeep Singh (Indore) · AIR 26, CSE 2019",url:"https://www.business-standard.com/article/news-ani/indore-son-of-a-petrol-pump-worker-secures-upsc-rank-93-119040600810_1.html"},
+ {t:"s",h:"Missed by one mark.",body:"Anu Kumari quit a nine-year corporate career and lived away from her young son for about two years to prepare. She missed the 2016 cut-off by a single mark, came back, and was AIR 2 in CSE 2017.",take:"One mark. She didn't read it as a verdict, and the next year she was second in India.",who:"Anu Kumari · AIR 2, CSE 2017",url:"https://www.thebetterindia.com/141326/harayana-anu-kumari-second-rank-holder-upsc/"},
+ {t:"s",h:"From rank 849 to rank 1.",body:"Nandini K R failed prelims in her first attempt in 2013, then got AIR 849 and the IRS. She kept going and topped CSE 2016 in her fourth attempt.",take:"Where you stand today says nothing about where you finish.",who:"Nandini K R · AIR 1, CSE 2016",url:"https://www.oneindia.com/india/upsc-topper-kr-nandini-achieves-feat-on-her-fourth-attempt-2451131.html"},
+ {t:"s",h:"She won at the CAT first.",body:"Ira Singhal was selected in 2010 but denied a service posting because of her disability. She took the government to the Central Administrative Tribunal, won, and then topped CSE 2014.",take:"A legal fight and the exam, side by side. You know both arenas, counsellor.",who:"Ira Singhal · AIR 1, CSE 2014",url:"https://indianmasterminds.com/feature-stories-on-bureaucrats-changemakers/from-rejection-to-recognition-legal-battles-of-civil-servants-with-disability-91193/"},
+ {t:"s",h:"Left Hong Kong. Got IPS. Went for AIR 1.",body:"Gaurav Agarwal quit a trading job at Citigroup in Hong Kong, got AIR 244 and the IPS in 2012, and topped CSE 2013 the next year.",take:"He aimed higher while already in. Ambition and a full schedule can coexist.",who:"Gaurav Agarwal · AIR 1, CSE 2013",url:"https://www.dnaindia.com/education/report-meet-ias-gaurav-agrawal-iit-iim-alumnus-who-cracked-upsc-exam-twice-with-air-1-civil-services-exam-cse-3042856"},
+ {t:"s",h:"Six failures. Waiting tables.",body:"K Jayaganesh worked as a waiter in Chennai to pay for coaching and failed the exam six times. In his seventh attempt, in 2008, he got AIR 156.",take:"Whatever today felt like, it isn't a seventh attempt. Show up for the next block.",who:"K Jayaganesh · AIR 156, CSE 2008",url:"https://thebetterindia.com/159961/ias-hero-exam-tamil-nadu-jayaganesh"},
+ {t:"s",h:"Thrown out at 11. AIR 48 at 22.",body:"Govind Jaiswal, a Varanasi rickshaw puller's son, was insulted and thrown out of a rich friend's house at eleven. In Delhi he tutored maths to cover costs, and he got AIR 48 in his first attempt, in 2006.",take:"Use the sting. A bad result can be fuel instead of a brake.",who:"Govind Jaiswal · AIR 48, CSE 2006",url:"https://byjus.com/free-ias-prep/how-a-rickshaw-puller-son-become-ias-officer"},
+ {t:"s",h:"12th fail. Three UPSC failures.",body:"Manoj Kumar Sharma failed class 12 and drove a tempo. He failed the civil services exam three times, got AIR 121 and the IPS on his fourth, and rose to Inspector General.",take:"One bad week doesn't write your story. He had three bad years.",who:"Manoj Kumar Sharma · AIR 121, IPS",url:"https://en.wikipedia.org/wiki/Manoj_Kumar_Sharma"}];
+const L_SC=[
+ {t:"c",h:"Why your best days come right before a paper",body:"The goal-gradient effect: people speed up as a goal gets closer. Coffee-card customers bought faster the nearer they were to a free drink.",take:"Bring the goal closer every day: end each day with two timed answers.",who:"Kivetz, Urminsky & Zheng (2006), Journal of Marketing Research"},
+ {t:"c",h:"Why 'two hours for this topic' always lies",body:"The planning fallacy: people underestimate how long tasks will take, even when they know similar tasks ran over before.",take:"Estimate from what the last similar topic actually took you, then add a buffer.",who:"Buehler, Griffin & Ross (1994), Journal of Personality and Social Psychology"},
+ {t:"c",h:"Close the notes. Then write.",body:"Students who practised recalling a text remembered far more a week later than students who reread it, even though rereading felt more effective.",take:"After each topic, write five points from memory before you look again.",who:"Roediger & Karpicke (2006), Psychological Science"},
+ {t:"c",h:"Ten minutes tomorrow beats an hour today",body:"Spacing reviews over days produces better long-term memory than spending the same time in one sitting; a review of hundreds of experiments confirms it.",take:"Open each day with 10 minutes on yesterday's topic.",who:"Cepeda et al. (2006), Psychological Bulletin"},
+ {t:"c",h:"If X, then Y",body:"Across 94 tests, people who made 'if this happens, I will do that' plans reached their goals far more often: a medium-to-large effect.",take:"Write one if-then for your weakest moment today, like 'If I reach for my phone after lunch, it goes to the other room.'",who:"Gollwitzer & Sheeran (2006), Advances in Experimental Social Psychology"},
+ {t:"c",h:"One quick check costs more than you think",body:"After switching tasks, part of your attention stays stuck on the previous one, and performance on the next task drops. Researchers call it attention residue.",take:"Phone in another room for the whole block, not face-down beside you.",who:"Sophie Leroy (2009), Organizational Behavior and Human Decision Processes"},
+ {t:"c",h:"Fresh starts are real",body:"People are more likely to start pursuing their goals right after temporal landmarks: a new week, a new month, a birthday.",take:"Treat the morning after each paper as a landmark: a clean start, not a recovery day.",who:"Dai, Milkman & Riis (2014), Management Science"},
+ {t:"c",h:"Kindness makes you work harder",body:"After failing a test, people prompted to be self-compassionate studied longer for a retest than people prompted to boost their self-esteem.",take:"After a rough day, talk to yourself the way you'd talk to a friend who's preparing. Then do the next block.",who:"Breines & Chen (2012), Personality and Social Psychology Bulletin"},
+ {t:"c",h:"The 'what the hell' effect",body:"Dieters who believed they'd already broken their diet went on to eat more than those who hadn't. A slip becomes a lost day only through the story you tell about it.",take:"A slip costs one block, not one day. The next block is the comeback.",who:"Herman & Mack (1975), Journal of Personality"},
+ {t:"c",h:"Habits take about two months, and forgive a miss",body:"In a study of real habits, it took a median of 66 days for a new behaviour to become automatic, and missing a single day didn't derail it.",take:"You're building a habit, not a streak. Miss once, never twice.",who:"Lally et al. (2010), European Journal of Social Psychology"},
+ {t:"c",h:"Move before the hard block",body:"A meta-analysis found that a single bout of exercise gives a small boost to cognitive performance afterwards.",take:"Ten minutes of brisk walking or a few hoops before your hardest block.",who:"Chang et al. (2012), Brain Research"},
+ {t:"c",h:"Urges are waves",body:"Cravings rise, peak and fall away if you watch them without acting. Mindfulness-based relapse prevention trains exactly this; it's called urge surfing.",take:"When an urge hits, change rooms and ride it out. It crests and passes.",who:"Bowen & Marlatt (2009), Psychology of Addictive Behaviors"},
+ {t:"c",h:"What you generate, you keep",body:"People remember words they generate themselves better than words they simply read: the generation effect.",take:"Write intros and conclusions in your own words. They'll come back to you in the exam hall.",who:"Slamecka & Graf (1978), Journal of Experimental Psychology"},
+ {t:"c",h:"If it feels hard, it's working",body:"Testing, spacing and mixing topics feel slower and harder than rereading, but they produce learning that lasts. Bjork calls them desirable difficulties.",take:"Struggling through an answer beats gliding through a chapter.",who:"Robert Bjork (1994)"},
+ {t:"c",h:"Why scrolling pulls and reading doesn't",body:"Dopamine neurons fire most for unexpected rewards and the cues that predict them. Feeds are built on unpredictability; a textbook isn't.",take:"Don't fight the pull with willpower. Remove the cue: phone out of the room.",who:"Schultz, Dayan & Montague (1997), Science"},
+ {t:"c",h:"Deadlines you set yourself work",body:"Students who set their own deadlines did better than those given none, and evenly spaced deadlines worked best of all.",take:"Your paper dates are your spaced deadlines. Keep them fixed and they'll carry you.",who:"Ariely & Wertenbroch (2002), Psychological Science"},
+ {t:"c",h:"Write the fear out before the paper",body:"Students who spent 10 minutes writing about their worries just before a high-pressure exam scored higher than those who didn't.",take:"Before each paper: 10 minutes, every worry on paper. Then pick up the pen.",who:"Ramirez & Beilock (2011), Science"},
+ {t:"c",h:"Say 'I'm excited'",body:"People who told themselves 'I am excited' before a stressful performance did better than those who tried to calm down.",take:"Paper day: same racing heart, better label. 'I'm excited.'",who:"Alison Wood Brooks (2014), Journal of Experimental Psychology: General"},
+ {t:"c",h:"Progress is the fuel",body:"In about 12,000 daily diary entries, making progress in meaningful work was the strongest boost to people's motivation and mood.",take:"Log what you covered, not just hours. Seeing progress powers tomorrow.",who:"Amabile & Kramer (2011), The Progress Principle"}];
+const L_GB=[
+ {t:"g",gm:"ੴ ਸਤਿ ਨਾਮੁ ਕਰਤਾ ਪੁਰਖੁ ਨਿਰਭਉ ਨਿਰਵੈਰੁ ਅਕਾਲ ਮੂਰਤਿ ਅਜੂਨੀ ਸੈਭੰ ਗੁਰ ਪ੍ਰਸਾਦਿ ॥",tr:"Ik Oankaar, Sat Naam, Kartaa Purakh, Nirbhau, Nirvair, Akaal Moorat, Ajoonee, Saibhan, Gur Prasaad",mn:"One Creator, whose name is Truth, the creative being, without fear, without hate, timeless, unborn, self-existent, known by the Guru's grace.",take:"Nirbhau: without fear. Recite it before you pick up the pen.",src:"Mool Mantar, Japji Sahib"},
+ {t:"g",gm:"ਆਪੇ ਬੀਜਿ ਆਪੇ ਹੀ ਖਾਹੁ ॥",tr:"Aape beej aape hee khaahu",mn:"You sow, and you yourself eat what grows.",take:"Today's hours are the seeds. The paper is the harvest.",src:"Japji Sahib, Pauri 20"},
+ {t:"g",gm:"ਖੇਤੁ ਜੁ ਮਾਂਡਿਓ ਸੂਰਮਾ ਅਬ ਜੂਝਨ ਕੋ ਦਾਉ ॥",tr:"Khet ju maandio soormaa ab joojhan ko daao",mn:"The battlefield is set, O warrior; now is the time to fight.",take:"You've prepared. When the paper starts, fight.",src:"Bhagat Kabir, Ang 1105"},
+ {t:"g",gm:"ਸੋਚੈ ਸੋਚਿ ਨ ਹੋਵਈ ਜੇ ਸੋਚੀ ਲਖ ਵਾਰ ॥",tr:"Sochai soch na hovaee je sochee lakh vaar",mn:"Thinking does not get you there, even if you think a hundred thousand times.",take:"Thinking about studying isn't studying. Open the first page.",src:"Japji Sahib, Pauri 1"},
+ {t:"g",gm:"ਉਦਮੁ ਕਰੇਦਿਆ ਜੀਉ ਤੂੰ ਕਮਾਵਦਿਆ ਸੁਖ ਭੁੰਚੁ ॥",tr:"Udam karediaa jeeo toon kamaavdiaa sukh bhunch",mn:"Make the effort and truly live; earning through it, enjoy peace.",take:"Peace comes after the effort, not before it. Start.",src:"Guru Arjan Dev Ji, Ang 522"},
+ {t:"g",gm:"ਮਨਿ ਜੀਤੈ ਜਗੁ ਜੀਤੁ ॥",tr:"Man jeetai jag jeet",mn:"Conquer the mind and you conquer the world.",take:"Every urge you ride out is the mind conquered, one more time.",src:"Japji Sahib, Pauri 28"},
+ {t:"g",gm:"ਦੇਹ ਸਿਵਾ ਬਰੁ ਮੋਹਿ ਇਹੈ ਸੁਭ ਕਰਮਨ ਤੇ ਕਬਹੂੰ ਨ ਟਰੋਂ ॥",tr:"Deh Shiva bar mohe ihai, subh karman te kabhoon na taron",mn:"Grant me this boon: that I never turn back from righteous deeds.",take:"Ask for one thing today: never to turn back from the work.",src:"Guru Gobind Singh Ji, Dasam Granth"},
+ {t:"g",gm:"ਹੁਕਮਿ ਰਜਾਈ ਚਲਣਾ ਨਾਨਕ ਲਿਖਿਆ ਨਾਲਿ ॥",tr:"Hukam rajaaee chalnaa Nanak likhiaa naal",mn:"Walk in the way of His command and will, says Nanak.",take:"Do your part fully and leave the result to Him. That frees you to write.",src:"Japji Sahib, Pauri 1"},
+ {t:"g",gm:"ਨ ਡਰੋਂ ਅਰਿ ਸੋ ਜਬ ਜਾਇ ਲਰੋਂ ਨਿਸਚੈ ਕਰਿ ਅਪੁਨੀ ਜੀਤ ਕਰੋਂ ॥",tr:"Na daron ar so jab jaae laron, nischai kar apunee jeet karon",mn:"When I go to fight, I fear no enemy; with certainty I make my victory.",take:"Walk into the paper with nischa: certainty, not hope.",src:"Guru Gobind Singh Ji, Dasam Granth"},
+ {t:"g",gm:"ਸਚਹੁ ਓਰੈ ਸਭੁ ਕੋ ਉਪਰਿ ਸਚੁ ਆਚਾਰੁ ॥",tr:"Sachahu orai sabh ko upar sach aachaar",mn:"Truth is above everything, but higher still is truthful living.",take:"The plan is the truth; living it is higher. Do the next block.",src:"Sri Raag, Ang 62"},
+ {t:"g",gm:"ਮਿਠਤੁ ਨੀਵੀ ਨਾਨਕਾ ਗੁਣ ਚੰਗਿਆਈਆ ਤਤੁ ॥",tr:"Mithat neevee Nanakaa gun changiaaeeaa tat",mn:"Sweetness and humility are the essence of all virtue and goodness.",take:"After a slip, humility, not shame. Then back to the desk.",src:"Asa di Vaar, Ang 470"},
+ {t:"g",gm:"ਮਨ ਤੂੰ ਜੋਤਿ ਸਰੂਪੁ ਹੈ ਆਪਣਾ ਮੂਲੁ ਪਛਾਣੁ ॥",tr:"Man toon jot saroop hai, aapnaa mool pachhaan",mn:"O mind, you are the embodiment of light; recognise your origin.",take:"You are not your worst day. Remember who you are.",src:"Raag Aasa, Ang 441"},
+ {t:"g",gm:"ਜਿਨਿ ਸੇਵਿਆ ਤਿਨਿ ਪਾਇਆ ਮਾਨੁ ॥",tr:"Jin seviaa tin paaiaa maan",mn:"Those who serve Him are honoured.",take:"Serve the work today. The honour follows.",src:"Japji Sahib, Pauri 5"},
+ {t:"g",gm:"ਘਾਲਿ ਖਾਇ ਕਿਛੁ ਹਥਹੁ ਦੇਇ ॥",tr:"Ghaal khaae kichh hathhu dey",mn:"One who earns by honest effort and gives some of it away.",take:"Honest hours only. Earn the day.",src:"Sarang ki Vaar, Ang 1245"},
+ {t:"g",gm:"ਸਭਨਾ ਜੀਆ ਕਾ ਇਕੁ ਦਾਤਾ ਸੋ ਮੈ ਵਿਸਰਿ ਨ ਜਾਈ ॥",tr:"Sabhnaa jeeaa kaa ik daataa so mai visar na jaaee",mn:"There is one Giver of all beings; may I never forget Him.",take:"You're not alone at the desk. Remember the Giver, then work.",src:"Japji Sahib, Pauri 5"}];
+const L_HS=[
+ {t:"s",h:"Ninth, when there were eight places.",body:"A P J Abdul Kalam dreamed of flying fighter jets. At the Indian Air Force selection he finished ninth when there were eight places. He went on to lead India's missile programme and became President.",take:"A missed list can point to a bigger door. Your PCS result isn't the end of the corridor.",who:"A P J Abdul Kalam · Wings of Fire"},
+ {t:"s",h:"A refugee boy. A fraction of a second.",body:"Milkha Singh lost his parents in the violence of Partition and arrived in India as a refugee boy. At the 1960 Rome Olympics he missed a 400 m medal by a fraction of a second, kept racing, and became the Flying Sikh.",take:"The near-miss became part of the legend, not the end of it.",who:"Milkha Singh"},
+ {t:"s",h:"Made to sit apart. Drafted the Constitution.",body:"As a boy, B R Ambedkar was made to sit apart at school and couldn't drink from the common tap. He earned doctorates from Columbia and the London School of Economics, became a barrister, and chaired the drafting of the Constitution you now write answers on.",take:"A lawyer who studied his way past every barrier. That's your lineage at the desk.",who:"B R Ambedkar"},
+ {t:"s",h:"A law degree from a prison cell.",body:"Nelson Mandela kept studying through his 27 years in prison and completed his law degree by correspondence from the University of South Africa in 1989, months before his release.",take:"If a law degree can be finished from a cell, a GS paper can be finished from your desk.",who:"Nelson Mandela"},
+ {t:"s",h:"Thrown off a train at Pietermaritzburg.",body:"In 1893 a young lawyer named M K Gandhi was thrown off a first-class train at Pietermaritzburg. He later described that cold night on the platform as a turning point of his life.",take:"One humiliating night can be the start of the work that defines you.",who:"M K Gandhi"},
+ {t:"s",h:"He lost, and lost, and lost.",body:"Abraham Lincoln lost a race for the Illinois legislature, lost two contests for the US Senate and lost a bid for the vice-presidential nomination before he was elected President in 1860.",take:"Count his losses and you'd have written him off. Count your 8–10 hour days instead.",who:"Abraham Lincoln"},
+ {t:"s",h:"Written off for a decade.",body:"Through most of the 1930s Winston Churchill was out of office, dismissed as finished, his warnings ignored. In 1940, at 65, he became Prime Minister.",take:"Being written off is a phase, not a verdict.",who:"Winston Churchill"},
+ {t:"s",h:"Reading to the very end.",body:"In jail, Bhagat Singh read relentlessly and filled a notebook with notes and quotations from more than a hundred writers, studying right up to the end.",take:"Fierce focus on the page under pressure is a Punjabi inheritance. Claim it.",who:"Bhagat Singh · the jail notebook"},
+ {t:"s",h:"Twins, then an Olympic medal.",body:"After becoming a mother of twins, M C Mary Kom came back to boxing, won more world titles, and took bronze at the 2012 London Olympics.",take:"Life outside the ring didn't end her career; structure around it carried her. Same for your basketball and friends.",who:"Mary Kom"},
+ {t:"s",h:"Surgery, a lost season, then gold.",body:"Neeraj Chopra took up sport as an overweight boy trying to get fit. In 2019 he had elbow surgery and lost most of a season, then won Olympic gold in Tokyo.",take:"A lost stretch isn't a lost season. Rehab, then gold.",who:"Neeraj Chopra"},
+ {t:"s",h:"Tickets by day, cricket around the shifts.",body:"Before he played for India, M S Dhoni worked as a ticket collector at Kharagpur railway station and fitted cricket around his shifts.",take:"He fitted the dream around a job. You have whole days for yours.",who:"M S Dhoni"},
+ {t:"s",h:"Seventh in Athens. Gold in Beijing.",body:"Abhinav Bindra finished seventh at the 2004 Athens Olympics. Four years later in Beijing he won India's first individual Olympic gold.",take:"A disappointing result can be the first draft of the winning one.",who:"Abhinav Bindra"},
+ {t:"s",h:"An emperor talking himself back to work.",body:"Marcus Aurelius wrote the private notes we call Meditations, often while on campaign, reminding himself again and again to get up and do the work in front of him.",take:"Even an emperor had to talk himself back to the task. That's all SOS is.",who:"Marcus Aurelius · Meditations"},
+ {t:"s",h:"Fired from his own company.",body:"In 1985 Steve Jobs was forced out of Apple, the company he had co-founded. He returned in 1997 and led its revival, and later said being fired was one of the best things that ever happened to him.",take:"A setback can reset you for something better. PCS mains might be that reset.",who:"Steve Jobs"},
+ {t:"s",h:"One eye, a teenager, Lahore.",body:"Ranjit Singh lost the sight of one eye to smallpox as a child, and was still a teenager when he took Lahore in 1799. He went on to build the Sikh Empire.",take:"Start young, start imperfect, start anyway.",who:"Maharaja Ranjit Singh"},
+ {t:"s",h:"Player of the Tournament, then chemo.",body:"Yuvraj Singh was Player of the Tournament at the 2011 World Cup while unwell; soon after, he was diagnosed with a rare cancer, went through chemotherapy, and came back to play for India again.",take:"He played through what he didn't yet understand. You know exactly what you're up against; that's an advantage.",who:"Yuvraj Singh"},
+ {t:"s",h:"Brilliant at one thing, failed the rest.",body:"Srinivasa Ramanujan lost his college scholarship because he neglected every subject except mathematics. Years later a letter to G H Hardy took him to Cambridge.",take:"Use your strength, but don't let it carry the rest: S&T can't cover for environment.",who:"Srinivasa Ramanujan"}];
+const LIFT=(()=>{const L=[L_ST,L_HS,L_SC,L_GB],o=[],n=Math.max(...L.map(x=>x.length));for(let i=0;i<n;i++)L.forEach(x=>{if(x[i])o.push(x[i])});return o})();
+const LIFT0="2026-11-23";
+function thoughtCard(d,p,T){
+  const pt=patternFor(d),n=LIFT.length,k=((diff(LIFT0,d)%n)+n)%n,c=LIFT[k];
+  const box=el("aside",{class:"thought","aria-label":"Thought for the day"},el("p",{class:"pat"},pt.pat));
+  if(c.t==="g")box.append(el("p",{class:"gm",lang:"pa"},c.gm),el("p",{class:"tr"},c.tr),el("p",{class:"mn"},c.mn),el("p",{class:"do"},el("b",{},"For you: "),c.take),el("p",{class:"src"},c.src));
+  else box.append(el("p",{class:"tr"},el("b",{},c.h)),el("p",{class:"mn"},c.body),el("p",{class:"do"},el("b",{},"For you: "),c.take),el("p",{class:"src"},c.who,c.url?[" · ",el("a",{href:c.url,target:"_blank",rel:"noopener"},"source")]:null));
+  box.append(el("p",{class:"do"},el("b",{},"Today: "),pt.do));
+  return box;
+}
+
+function renderNow(){
+  const box=$("nowline");if(!box)return;box.textContent="";
+  const d=todayIST();if(d<START||d>END||!TS){box.hidden=true;return}box.hidden=false;
+  const T=TS,p=dayPlan(d,T),l=logs[d]||{},mins=nowMins();
+  const put=(tag,txt,pct)=>{box.append(el("span",{class:"htag"},tag),el("span",{class:"htxt"},txt));if(pct!=null)box.append(el("span",{class:"hbar2"},el("i",{style:"width:"+Math.round(pct*100)+"%"})))};
+  if(!p.segs){put("Today",shortKind(p,d));return}
+  if(l.stopAt!=null&&mins>=l.stopAt){put("Stopped","Rest. The work has moved forward.");return}
+  if(!p.start.set&&mins>=p.start.s-30&&mins<1260){put("Not started","Tap Plan my day below.");return}
+  if(mins<p.start.s){put("Early","Your day starts at "+hm(p.start.s)+".");return}
+  const all=p.segs.concat([{k:"break",t:p.lights,e:null,label:"Lights out"}]);
+  const i=all.findIndex(s=>mins>=s.t&&mins<(s.e??s.t+30));
+  if(i<0){const tm=add(d,1);put("Night",mins>=p.lights?"Lights out. Tomorrow starts at "+hm(tm<=END?dayPlan(tm,T).start.s:300)+".":"Between blocks.");return}
+  const s=all[i],end=s.e??s.t+30,nx=all[i+1];
+  put("Now",(s.name||s.label)+" · "+(end-mins)+" min left"+(nx?" · then "+(nx.name||nx.label)+" at "+hmS(nx.t):""),Math.max(0,Math.min(1,(mins-s.t)/(end-s.t))));
+}
+
+/* ---------- alerts ---------- */
+function renderAlerts(T,today){
+  const box=$("alerts");box.textContent="";
+  T.filter(t=>!t.done&&!t.opt&&t.date<today).forEach(t=>{const sug=freeDay(T,today);
+    box.append(el("div",{class:"alert"},el("p",{},el("b",{},t.name+" was due "+nice(t.date)+". "),"Write it on "+nice(sug)+", the first day without another test, or skip it."),
+      el("div",{class:"row"},canWrite?el("button",{class:"accent",onclick:()=>openMove(t.id,sug)},"Reschedule or skip"):null,canWrite?el("button",{onclick:()=>setField(t.id,{done:true,writtenOn:todayIST()})},"I wrote it"):null)))});
+  const nx=T.filter(t=>!t.done&&!t.opt&&t.kind!=="essay"&&t.date>today).slice(0,2);
+  nx.forEach(t=>{const sf=shortfall(t,T);if(!sf)return;
+    box.append(el("div",{class:"alert"},el("p",{},el("b",{},t.name+": "+sf.k+(sf.k===1?" topic won't":" topics won't")+" get covered. "),
+      "About "+dur(sf.avail)+" of prep is left before "+short(t.date)+"; the "+sf.pend.length+" open topics need about "+dur(sf.need)+". Drop the least likely topics, or move the test."),
+      canWrite?el("div",{class:"row"},el("button",{class:"accent",onclick:()=>openDrop(t.id)},"Pick topics to drop"),t.flt?null:el("button",{onclick:()=>openMove(t.id,add(t.date,1))},"Move the test")):null))});
+  const g=gs1Run(T,today);
+  if(g&&g.tier!=="ok")box.append(el("div",{class:"alert"},el("p",{},el("b",{},g.n>0?"Only "+g.n+(g.n===1?" day":" days")+" for GS1 study. ":"No clear days for GS1 study. "),
+    g.last?g.last.name.split(" · ")[0]+" now ends the sectionals on "+nice(g.last.date)+"; GS1 in Delhi is on "+nice(g.f.date)+". You planned about "+GS1_PLAN+" days.":"")));
+}
+
+/* ---------- Today ---------- */
+function dayNav(today){
+  return el("div",{class:"navbtns"},
+    el("button",{"aria-label":"Previous day",disabled:sel<=START,onclick:()=>go(add(sel,-1),true)},"←"),
+    el("button",{onclick:()=>go(clampDay(today),true),disabled:sel===clampDay(today)},"Today"),
+    el("button",{"aria-label":"Next day",disabled:sel>=END,onclick:()=>go(add(sel,1),true)},"→"));
+}
+function shortKind(p,d){
+  switch(p.kind){
+    case "normal":return p.late?"Late day":"Normal day";
+    case "gstest":return "Test day · paper "+hmS((p.segs.find(s=>s.role==="paper")||{t:870}).t);
+    case "essay":return p.half?"Essay day · write it when you're ready":"Essay day · paper "+hmS((p.segs.find(s=>s.role==="paper")||{t:870}).t);
+    case "centre":return "Delhi test · centre's clock";
+    case "travel":return TRAVEL[d]||"Travel day";
+    case "wedding":return "Wedding day";
+    case "off":return "Off";
+    case "light":return "Light Sunday, earned";
+  }return "";
+}
+/* ---------- the day planner: questions in, a timetable out, changes in plain words ---------- */
+let SAMPLE;
+const BOOK0=`Wake and sleep
+- Breakfast with the newspaper is at 10:00, about 1 hour (30 min on heavy days). If I wake after 9:30, breakfast and newspaper come first.
+- Lights out is the time I give today; normally about 10 pm.
+- After a short night (under 6 h), add a 60–90 min sleep after lunch only if I ask for it.
+
+Gurbani
+- 30 min, first thing after waking. If I say it's done, leave it out. If a late wake pushes it out, put it around 6:30 pm.
+
+Gym
+- Walk and gym, 1 h, around 9:00–10:00, only if I've had about 2 h of study before it. Woke 6:16–7:00: gym at 9:05. Woke 7–8: no morning gym; a 50-min home workout before the afternoon shower. Woke later: no gym unless I ask.
+
+Study blocks and breaks
+- Study blocks of 1.5–2.5 h. Never two long blocks back to back; breaks are 10–30 min and boring (no phone).
+- Shower and fruit in the afternoon, around 3–4 pm.
+- Dinner, a short walk and phone around 7–8 pm (40–60 min), then an evening study session.
+- I crash around 5–6 pm unless the day has some rest; on long days put a rest or short sleep in the early afternoon.
+
+Test days
+- Revise the test's topics in the blocks before the paper. The paper slot is exactly 3 h (one essay: 90 min; two essays: 3 h) at the time I give; default 2:30 pm. No gym unless I ask. Rest before an afternoon paper.
+- After the paper: a 10–30 min break, then CA or Law, then the next test's topics.
+
+Essay days
+- Normal blocks; take about 2 h of them for essay research, then the essay.
+
+What goes in the blocks
+- The next test's open topics first, then CA notes (30 min a day), then Law Optional (45 min a day once it has started).
+- Never schedule uploading copies or "log the day".
+
+How hard
+- Normal: about 9–10 h of study. Hard: 10–12 h. Max: as much as fits, with short breaks but never none.`;
+const bookText=()=>(plan.book&&plan.book.trim())||BOOK0;
+const aiOf=l=>l&&l.ai&&Array.isArray(l.ai.segs)&&l.ai.segs.length?l.ai:null;
+function aiSegs(ai){return ai.segs.map(s=>s.type==="break"?{k:"break",t:s.t,e:s.e,label:s.label,id:s.id,hint:s.note}:{k:"block",t:s.t,e:s.e,role:s.type==="paper"?"paper":s.type==="news"?"news":"study",name:s.label,id:s.id,hint:s.note})}
+const isWork=s=>s.type!=="break";
+const parseHM=v=>{const m=/(\d{1,2})[:.](\d{2})/.exec(String(v||""));return m?(+m[1])*60+(+m[2]):null};
+const t24=m=>{m=((Math.round(m)%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0")};
+function aiContext(d){
+  const T=TS,tt=testOn(d,T),pend=T.filter(t=>!t.done&&!t.opt),L=[];
+  L.push("Date: "+nice(d));
+  if(tt)L.push("Test today: "+tt.name+(tt.kind==="essay"?(tt.half?" (one essay, 90 min)":" (two essays, 3 h)"):" (3-hour paper)")+(tt.delhi?", at the Delhi centre":""));
+  const nx=pend.filter(t=>t.date>d&&t.kind!=="essay")[0];
+  if(nx){const tk=ticks(nx.id),dr=drops(nx.id),open=nx.topics.filter(n=>!tk[n]&&!dr[n]);
+    L.push("Next GS test: "+nx.name+" on "+nice(nx.date)+" ("+diff(d,nx.date)+" days away). Open topics: "+(open.length?open.map(n=>n+" "+((GS[nx.kind]||{})[n]||"")).join("; "):"none"))}
+  const ne=pend.find(t=>t.kind==="essay"&&t.date>d);if(ne)L.push("Next essay: "+ne.name+" on "+nice(ne.date));
+  if(TRAVEL[d])L.push(TRAVEL[d]);
+  const cs=caStage();if(cs)L.push("CA notes in progress: "+cs[1]+", due "+short(cs[2]));
+  if(d>=RULES.lawFrom){const nl=nextLaw();if(nl)L.push("Law Optional has started. Next: "+nl)}else L.push("Law Optional starts "+short(RULES.lawFrom)+"; leave it out today.");
+  return L.join("\n");
+}
+const OUT_SPEC=`Reply with JSON only, no prose:
+{"lights":"HH:MM","slots":[{"id":"keep an existing id when you keep or move a slot; omit for new","start":"HH:MM","end":"HH:MM","label":"short label","type":"study|break|paper|news","note":"optional, under 8 words"}],"summary":"one short sentence on the shape of the day"}
+- 24-hour times. Slots in order, no overlaps, and no gaps from the start to lights out, except time he asks to leave out.
+- type: study = any study block. Label every study block exactly "Study block" with no note: Perry decides what to study in each, so never assign subjects or topics to blocks. news = breakfast and newspaper; paper = a test or essay being written; break = everything else (meals, Gurbani, gym, shower, sleep, rest).
+- No "log the day" slot and no upload slot.`;
+async function askAI(prompt){
+  let s=SAMPLE;
+  if(!s){const c=window.claude;s=c&&c.use?await c.use("sample"):null;SAMPLE=s}
+  if(!s)throw{code:"not_granted"};
+  return await s.json(prompt,{modelTier:"default",cache:false});
+}
+function cleanPlan(v,from,keep,old){
+  if(!v||!Array.isArray(v.slots))throw{code:"bad_plan"};
+  let segs=v.slots.map(x=>({t:parseHM(x.start),e:parseHM(x.end),label:String(x.label||"").trim().slice(0,60)||"Study",type:["study","break","paper","news"].includes(x.type)?x.type:"break",note:x.note?String(x.note).trim().slice(0,70):"",id:x.id?String(x.id):""})).filter(x=>x.t!=null&&x.e!=null);
+  segs.forEach(x=>{if(x.t<from-180)x.t+=1440;if(x.e<=x.t)x.e+=1440});
+  if(old){const used=new Set(segs.map(x=>x.id).filter(Boolean));segs.forEach(x=>{if(x.id)return;const m=old.find(o=>!used.has(o.id)&&o.label===x.label&&o.t===x.t)||old.find(o=>!used.has(o.id)&&o.label===x.label);if(m){x.id=m.id;used.add(m.id)}})}
+  if(keep&&keep.length){const cut=keep[keep.length-1].e;segs=keep.concat(segs.filter(x=>x.e>cut).map(x=>Object.assign(x,{t:Math.max(x.t,cut)})))}
+  segs.sort((a,b)=>a.t-b.t);
+  const out=[],seen=new Set();
+  segs.forEach(x=>{const p=out[out.length-1];if(p&&x.t<p.e)x.t=p.e;if(x.e-x.t<5)return;if(!x.id||seen.has(x.id))x.id="s"+Math.random().toString(36).slice(2,8);seen.add(x.id);out.push(x)});
+  if(!out.length)throw{code:"bad_plan"};
+  let lights=parseHM(v.lights);if(lights==null)lights=out[out.length-1].e;if(lights<from-180)lights+=1440;
+  lights=Math.max(lights,out[out.length-1].e);
+  return{segs:out,lights,summary:String(v.summary||"").slice(0,200)};
+}
+const aiErr=e=>e&&e.code==="not_granted"?"Planning isn't available in this view of the page.":e&&e.code==="rate_limited"?"Too many requests just now. Try again in a minute.":e&&e.code==="bad_plan"?"That plan came back garbled. Try again.":"Couldn't plan right now. Check your connection and try again.";
+let aiBusy={},aiAsk={},aiDraft={};
+function suggestions(d){
+  const T=TS,tt=testOn(d,T),pend=T.filter(t=>!t.done&&!t.opt),out=[];
+  if(tt)out.push("Write "+tt.name.split(" · ")[0]+(tt.kind==="essay"?"":", revise before it"));
+  const nx=pend.filter(t=>t.date>d&&t.kind!=="essay")[0];
+  if(nx)out.push("Prep "+nx.name.replace(" topics "," "));
+  const ne=pend.find(t=>t.kind==="essay"&&t.date===add(d,1));if(ne)out.push("Essay research for tomorrow");
+  if(caStage())out.push("CA notes catch-up");
+  if(d>=RULES.lawFrom&&nextLaw())out.push("Law Optional");
+  return out.slice(0,5);
+}
