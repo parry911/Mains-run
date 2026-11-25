@@ -1,5 +1,6 @@
 /* ---------- context from the page's own data ---------- */
-function studyHours(lg){if(!lg||!lg.blocks)return 0;return Object.values(lg.blocks).reduce((s,b)=>{const n=(b.name||"")+" "+(b.what||"");if(/newspaper|breakfast/i.test(n)||b.nostudy)return s;return s+(+b.hours||0)},0)}
+/* the same count as the page: his real-hours figure if set, otherwise every logged block (newspaper included) except "not study" */
+function studyHours(lg){if(!lg)return 0;if(lg.realH!=null)return +lg.realH;const b=Object.values(lg.blocks||{});if(b.length)return b.reduce((s,x)=>x.nostudy?s:s+(+x.hours||0),0);return lg.hours!=null?+lg.hours:0}
 function effDate(st,id){const o=(st.tests||{})[id];const after=o&&(o.moves||[]).some(m=>m.at>=REPLAN);
   if(o&&o.done)return null;if(o&&o.skipped&&after)return null;return after?o.date:BASE[id]}
 async function context(){

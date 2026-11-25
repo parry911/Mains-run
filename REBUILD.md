@@ -17,7 +17,7 @@ Live page version 1795624616-3cfc, 2551 lines. Parts are copied from reads at mi
   backup incl. the 22:30 coach writes) into its own db, plan/state last.
 - TODO after Perry opens the trial: db_list the trial to confirm 24 records, then republish without seed.json (remove).
 - Switch (step 4): publish dist/index.html onto d0f18cb9-e778-4b34-aaeb-18c53ea168ca with publish_files (keep contract 0.2.96,
-  outside guests -> may need shared_live per refusal), quiet time, not near 22:30. Old version = 1795624616-3cfc (restore).
+  outside guests -> may need shared_live per refusal), quiet time, not near 22:30. Old version = 1795629511-837b (restore; = 3cfc + edits_D).
 
 ## Behaviour changes in the rebuild (all tested)
 - One shared step (finishDay) after every timetable source; one timetable screen (timetableView) for every day.
@@ -40,3 +40,6 @@ Live page version 1795624616-3cfc, 2551 lines. Parts are copied from reads at mi
   into logs/<date>.blocks (slot id from ai.segs, or "x<ms>" Other study), clear realH like the page does, ask on mismatches,
   and note "Page issue: <date>: ..." in coach/memory notes; the Sunday review lists the week's page issues.
 - Until the switch, the old page's whole-doc saves can overwrite a coach-added block if a stale copy is open (Perry told).
+- 25 Nov 23:30: live page edited (edits_D): in-page chats count hours like the page (realH, else all blocks except nostudy;
+  newspaper counts). Live version now 1795629511-837b; legacy/assemble.py reproduces it. Sunday review told newspaper counts.
+  Trial republished 1795629609-ea82.
