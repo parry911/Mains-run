@@ -8,6 +8,27 @@ Live page version 1795624616-3cfc, 2551 lines. Parts are copied from reads at mi
 - p01 1-300 @3cfc, p02 301-379 @3cfc, p03 380-639 @5e8d (needs li edit), p04 640-969 @4fb1 (needs dayPlan edit), p05 970-1299 @4fb1 (needs aiSegs/aiContext/cleanPlan edits)
 - p06-p09 done. legacy/assemble.py re-applies edits_A/B/C.json (each must match once) -> legacy/index.html = live 3cfc: 2551 lines, 253,369 bytes, both scripts parse. DONE 25 Nov 22:45 IST.
 
+## Status, 25 Nov ~23:15 IST
+- src/ split; tools/build.py -> dist/index.html (2,470 lines). 27 tests in test/test_app.py pass on dist; 10 fail on legacy
+  (7 = features that never existed on Plan-my-day days, 3 = the stale-copy overwrite bugs).
+- Same-timetable check: legacy vs new Copy-timetable text identical for all 56 days (read-only mode).
+- Trial artifact: slug 01741787-5ba7-4bb8-bf61-39b8163715b4, https://claude.ai/artifact/1BQnAuAmJyUSNoUKNfzcdy
+  (contract 0.2.99, db/dictation/sample/user, NO mcp so no calendar). First open copies dist/trial/seed.json (24 records,
+  backup incl. the 22:30 coach writes) into its own db, plan/state last.
+- TODO after Perry opens the trial: db_list the trial to confirm 24 records, then republish without seed.json (remove).
+- Switch (step 4): publish dist/index.html onto d0f18cb9-e778-4b34-aaeb-18c53ea168ca with publish_files (keep contract 0.2.96,
+  outside guests -> may need shared_live per refusal), quiet time, not near 22:30. Old version = 1795624616-3cfc (restore).
+
+## Behaviour changes in the rebuild (all tested)
+- One shared step (finishDay) after every timetable source; one timetable screen (timetableView) for every day.
+- Plan-my-day days: tap a row to log topics/time (openBlockLog) or change a slot (written into ai.segs, Undo works);
+  lights out editable (after-midnight handled); paper tick opens "Did you write?" and marks the test written;
+  "+ Log other study"; logged blocks no longer in the plan are listed.
+- Field-level saves (DOCS/diffOps/applyOps/saveDoc in 29-writes): fresh get, apply this page's changes, update touched fields.
+- Food/journal/study/coach-memory writes keep fields they don't know.
+- SOS button hidden while a sheet is open (it covered Save).
+- Removed unreachable code: dayLine, openBuild, openReplan, setStart, idealText, asleepDraft, defaultAsleep, idealStart.
+
 ## Next
 1. test/ harness: stub window.claude (db with get/set/update/onSnapshot, user.isOwner, sample, mcp, dictation=null) seeded from backup/; Playwright at 393x852 with clock fixed.
 2. src/: split legacy into modules + tools/build.py that concatenates them back; first prove build(src) == legacy byte-for-byte.
