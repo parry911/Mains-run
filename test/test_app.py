@@ -180,9 +180,9 @@ def test_reward_when_the_day_crosses_10_hours():
         hrs.first.fill("3")
         if hrs.count() > 1:
             hrs.nth(1).fill("0")
-        box.locator("button.primary", has_text="Save").click(); app.settle(600)
-        assert app.store("logs/2026-11-25")["blocks"]
-        assert not app.page.locator("#sheetOv").is_hidden()   # the reward sheet
+        box.locator("button.primary", has_text="Save").click()
+        app.page.wait_for_selector("#sheetOv:not([hidden]) #sheetBody.reward", timeout=5000)   # the reward sheet
+        app.page.wait_for_function("Object.keys(window.__T.store.get('logs/2026-11-25').blocks).length===6", timeout=5000)
         assert app.errors == []
 
 
