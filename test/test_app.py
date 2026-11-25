@@ -411,3 +411,19 @@ def test_past_rule_day_logs_through_the_same_screen():
         assert len(after["blocks"]) == len(before["blocks"])
         assert after["slots"] == before["slots"] and after["asleep"] == before["asleep"]
         assert "Planned 10h" in app.text("#day")
+
+
+# ---------- the trial copy ----------
+
+def test_trial_copies_the_backup_into_its_own_database_once():
+    root = pathlib.Path(__file__).parent.parent
+    seed = (root / "dist/trial/seed.json").read_text()
+    with App(html="dist/trial/index.html", seed={}, files={"seed.json": seed}) as app:
+        app.page.wait_for_function("window.__T.store.has('plan/state')", timeout=8000); app.settle(800)
+        assert "Trial copy" in app.text(".trialbar")
+        n = len(json.loads(seed))
+        assert len(app.page.evaluate("[...window.__T.store.keys()]")) == n
+        assert app.store("logs/2026-11-25")["blocks"]["r1630"]["hours"] == 2.5
+        assert "Planned 8h 30m" in app.text("#day")
+        assert app.writes()[-1]["path"] == "plan/state"          # written last, so a cut-off copy reruns
+        assert len([w for w in app.writes() if w["path"] == "plan/state"]) == 1

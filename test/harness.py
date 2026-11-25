@@ -31,10 +31,10 @@ def load_seed(folder=BACKUP):
 
 
 class App:
-    def __init__(self, html=None, now="2026-11-25 22:30", seed=None, edit=None, size=(393, 852), replies=None, owner=True, hash=""):
+    def __init__(self, html=None, now="2026-11-25 22:30", seed=None, edit=None, size=(393, 852), replies=None, owner=True, hash="", files=None):
         import os
         html = html or os.environ.get("BUILD", "dist/index.html")
-        self.owner, self.hash = owner, hash
+        self.owner, self.hash, self.files = owner, hash, files or {}
         self.html = (ROOT / html).read_text(encoding="utf-8")
         self.now = dt.datetime.strptime(now, "%Y-%m-%d %H:%M").replace(tzinfo=IST)
         self.seed = load_seed() if seed is None else seed
@@ -45,8 +45,15 @@ class App:
         self.browser = _pw().chromium.launch()
         self.ctx = self.browser.new_context(viewport={"width": self.size[0], "height": self.size[1]}, device_scale_factor=2)
         self.ctx.grant_permissions(["clipboard-read", "clipboard-write"], origin="https://app.local")
-        self.ctx.route("**/*", lambda r: r.fulfill(body=self.html, content_type="text/html")
-                       if r.request.url.startswith("https://app.local/") else r.abort())
+        def serve(r):
+            u = r.request.url
+            if not u.startswith("https://app.local/"):
+                return r.abort()
+            name = u.split("https://app.local/", 1)[1].split("#")[0].split("?")[0]
+            if name in self.files:
+                return r.fulfill(body=self.files[name], content_type="application/json")
+            r.fulfill(body=self.html, content_type="text/html")
+        self.ctx.route("**/*", serve)
         self.page = self.ctx.new_page()
         self.page.on("pageerror", lambda e: self.errors.append(str(e)))
         self.page.on("console", lambda m: m.type == "error" and self.errors.append(m.text))
