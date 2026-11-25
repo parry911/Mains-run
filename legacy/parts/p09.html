@@ -1,0 +1,246 @@
+"use strict";
+const $=id=>document.getElementById(id);
+const NAMES={ST4:"ST4 (GS3 topics 11–20)",ST2:"ST2 (GS2 second half)",ST5:"ST5 (GS4)",ST6:"ST6 (GS4)",E2:"Essay 2",E3:"Essay 3",E4:"Essay 4",E5:"Essay 5",F1:"GS1 full test in Delhi",F2:"GS2 full test in Delhi",F3:"GS3 full test in Delhi",F4:"GS4 full test in Delhi"};
+const BASE={ST4:"2026-11-19",ST2:"2026-11-25",ST5:"2026-12-01",ST6:"2026-12-04",E2:"2026-11-21",E3:"2026-12-08",E4:"2026-12-23",E5:"2026-12-30",F1:"2026-12-13",F2:"2026-12-20",F3:"2026-12-27",F4:"2027-01-03"};
+const REPLAN=Date.UTC(2026,10,15,21,5);
+const today=()=>new Date(Date.now()+330*60000).toISOString().slice(0,10);
+const addD=(s,n)=>new Date(Date.parse(s)+n*864e5).toISOString().slice(0,10);
+const dd=(a,b)=>Math.round((Date.parse(b)-Date.parse(a))/864e5);
+const hm=m=>{if(m==null)return "not logged";m=Math.round(m);const h=Math.floor(m/60)%24;return ((h+11)%12+1)+":"+String(m%60).padStart(2,"0")+(h>=12?" pm":" am")};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=s=>esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/(^|[^*])\*([^*\n]+)\*/g,"$1<i>$2</i>");
+
+let DB=null,SAMPLE=null,DICT=null,ready=false;
+(async()=>{const c=window.claude;if(!c||!c.use)return;
+  try{const [d,s,t]=await Promise.all([c.use("db"),c.use("sample"),c.use("dictation")]);DB=d;SAMPLE=s;DICT=t;
+    if(DICT){DICT.onFinal(({text})=>{const ta=$(micTarget);if(ta&&text){ta.value=(ta.value?ta.value.replace(/\s*$/," "):"")+text.trim()}});
+      DICT.onState(({state})=>{const b=$(micBtn);if(b){b.dataset.on=state==="listening"?"1":"0";b.textContent=state==="listening"?"■":"🎙"}})}
+  }catch(e){}ready=true;renderSpeed()})();
+let micTarget="sosText",micBtn="sosMic";
+function micClick(){if(!DICT)return;const b=$(micBtn);
+  if(b&&b.dataset.on==="1"){DICT.stop().catch(()=>{});return}
+  DICT.start().catch(e=>{if(e&&e.code==="not_granted"){DICT=null;document.querySelectorAll(".sos-mic").forEach(x=>x.hidden=true)}})}
+
+/* ---------- context from the page's own data ---------- */
+function studyHours(lg){if(!lg||!lg.blocks)return 0;return Object.values(lg.blocks).reduce((s,b)=>{const n=(b.name||"")+" "+(b.what||"");if(/newspaper|breakfast/i.test(n)||b.nostudy)return s;return s+(+b.hours||0)},0)}
+function effDate(st,id){const o=(st.tests||{})[id];const after=o&&(o.moves||[]).some(m=>m.at>=REPLAN);
+  if(o&&o.done)return null;if(o&&o.skipped&&after)return null;return after?o.date:BASE[id]}
+async function context(){
+  const d=today(),lines=["Today: "+d+" (India time "+hm(new Date(Date.now()+330*60000).getUTCHours()*60+new Date(Date.now()+330*60000).getUTCMinutes())+")."];
+  if(!DB)return lines.join("\n");
+  try{
+    const ids=[0,1,2,3,4,5,6].map(i=>addD(d,-i));
+    const snaps=await Promise.all(ids.map(x=>DB.doc("logs/"+x).get().catch(()=>null)).concat([DB.doc("plan/state").get().catch(()=>null),DB.doc("food/"+d).get().catch(()=>null),DB.doc("coach/memory").get().catch(()=>null),DB.doc("study/"+d).get().catch(()=>null),DB.doc("journal/"+d).get().catch(()=>null)]));
+    const lg=snaps[0]&&snaps[0].exists?snaps[0].data():null;
+    if(lg){lines.push("Woke at "+hm(lg.start)+(lg.asleep!=null?"; fell asleep the night before at "+hm(lg.asleep):"")+". Study logged so far today: "+studyHours(lg).toFixed(1)+" h.");
+      const bl=Object.values(lg.blocks||{}).map(b=>(b.name||"Block")+(b.what&&b.what!==b.name?" ("+b.what+")":"")+": "+(+b.hours||0).toFixed(1)+" h").join("; ");if(bl)lines.push("Today's logged blocks: "+bl+".");
+      if(lg.note)lines.push("His note today: "+lg.note);}
+    else lines.push("Nothing logged yet today.");
+    const wk=[];for(let i=1;i<7;i++){const s=snaps[i];if(s&&s.exists){const x=s.data();wk.push(ids[i]+": "+studyHours(x).toFixed(1)+" h"+(x.start!=null?", woke "+hm(x.start):"")+(x.asleep!=null?", fell asleep "+hm(x.asleep):"")+(x.note?", note: "+String(x.note).slice(0,160):""))}}
+    if(wk.length)lines.push("Recent days:\n"+wk.join("\n"));
+    const st=snaps[7]&&snaps[7].exists?snaps[7].data():{};
+    const up=Object.keys(BASE).map(id=>({id,date:effDate(st,id)})).filter(x=>x.date&&x.date>=d).sort((a,b)=>a.date<b.date?-1:1);
+    const nx=up[0],dl=up.find(x=>x.id[0]==="F");
+    if(nx)lines.push("Next paper: "+NAMES[nx.id]+" on "+nx.date+" ("+(dd(d,nx.date)===0?"today":dd(d,nx.date)+" day"+(dd(d,nx.date)===1?"":"s")+" away")+")."+(nx.id==="ST2"?" Its submission window closes 27 Nov, the absolute latest.":""));
+    if(dl)lines.push("Next Delhi full-length test: "+NAMES[dl.id]+" on "+dl.date+" ("+dd(d,dl.date)+" days away). UPSC Prelims is around 24 May 2027.");
+    const fd=snaps[8]&&snaps[8].exists?(snaps[8].data().entries||[]):[];if(fd.length)lines.push("Food logged today: "+fd.map(x=>x.text).join("; "));
+    const mem=snaps[9]&&snaps[9].exists?snaps[9].data():null;if(mem){if((mem.stories||[]).length)lines.push("Stories already told him in earlier chats (do not repeat): "+mem.stories.slice(-60).join("; "));if((mem.notes||[]).length)lines.push("Your saved coach notes:\n- "+mem.notes.slice(-25).join("\n- "))}
+    const sd=snaps[10]&&snaps[10].exists?(snaps[10].data().entries||[]):[];if(sd.length)lines.push("Study he reported to you today: "+sd.map(x=>x.subject+", "+x.covered+" ("+x.hours+" h"+(x.pass!=null?", reading "+x.pass:"")+")").join("; "));
+    const jd=snaps[11]&&snaps[11].exists?(snaps[11].data().entries||[]):[];if(jd.length)lines.push("Coach journal today: "+jd.map(x=>x.text).join(" | "));
+  }catch(e){}
+  return lines.join("\n");
+}
+
+/* ---------- the coach's brief ---------- */
+const BRIEF=`You are the coach inside Perry's "Mains Run to 3 Jan" study page. He just pressed his SOS button. Talk to him like an older brother who has cleared UPSC himself and completely believes in him.
+
+WHO HE IS: Perry (Paritoshvir Singh Baath), an advocate from Mohali preparing full-time for UPSC Civil Services (Law Optional), in ForumIAS MGP+ sectional tests now, full-length tests in Delhi in December. He cleared Punjab PCS prelims; not clearing PCS mains recently shook him. He is a Sikh; Gurbani and Amrit Vela keep him sane. He's an all-rounder (basketball, friends, good food) who battles many pulls every day. He calls himself the most disciplined, consistent person he knows: reinforce that identity. He had six straight 8–10 hour days (12–17 Nov), so his brain has already done this.
+
+MORE ABOUT HIM (he asked you to use all of this):
+- He practises semen retention: about 130 days as of 22 Nov 2026. At day 114 he slipped (alcohol, then porn) and chose to deduct one day instead of resetting to zero, to avoid a what-the-hell spiral. He has had episodes of watching porn and edging for long stretches without ejaculating, which left pelvic heaviness and stronger urges afterwards (a chaser effect). On 21 Nov he watched porn (no masturbation) and lost the study day.
+- Urge triggers he knows: late nights and short sleep, the relief after finishing a paper, alcohol, and memories of a recent sexual encounter with an ex.
+- He has had phases of high energy with insomnia and racing thoughts (song loops, reels, fragments of study schedules). Tools he likes: physiological sighs, brown noise, a 'heavy sand' body scan, cold water on the face, a hot shower before bed, writing tomorrow's plan on paper.
+- His image: two jars, a loud chaotic jar of racing thoughts and a peaceful jar with God. He steps from one to the other by surrendering, not by fighting.
+- Study pattern: his best days build toward a paper deadline; around the paper itself he avoids writing out of fear he hasn't finished revising (ST3 was moved six times, 13→20 Nov); after a paper, relief turns into late nights; on low days he drifts into organising notes instead of syllabus work. Science and tech is his strongest area; environment and disaster management the least covered.
+- He follows Huberman closely and responds to named mechanisms and concrete protocols.
+
+WHAT ACTUALLY MOVES HIM (generic motivation does not land):
+1. The science of what his brain is doing right now, explained plainly and accurately (Huberman-style): e.g. sleep debt weakening prefrontal control; the amygdala treating a huge unread topic as a threat, so the brain picks avoidance; avoidance giving instant relief, which reinforces it; attention residue from switching; a high-dopamine hit (scrolling, porn) making slow reading feel flat for a while; craving as a wave that rises, peaks and passes (urge surfing); the abstinence-violation effect, the "day's already gone" story after one slip. Only state what the research supports.
+2. Stories: the single thing that has helped him most. Think widely and pick the most apt, even surprising, true parallel for this exact moment: a UPSC topper (verified list below), a figure from history, a Sikh or Indian hero, an athlete, a scientist, a lawyer, a founder, a modern example, anyone whose real story maps onto what he is facing tonight. These are directions to think in, not a list to rotate through. Tell it vividly and tailor it to his recent days. Outside the UPSC list, use only well-documented facts; if you're unsure of a detail, leave it out, and never invent quotes, ranks or numbers. Always draw the parallel to him explicitly and specifically. The kind of line that landed with him: 'Ishita Kishore loved sport the way you love basketball. Her plan was about 40–45 hours a week: a structured life, not a monk's life. People who are good at many things don't have to give up the rest of their life; they need structure around it.' Verified UPSC toppers (pick the one that fits his moment):
+ - Shakti Dubey, AIR 1 CSE 2024: failed prelims in her first three attempts, cleared mains in her fourth but missed the final list, topped in her fifth.
+ - Aditya Srivastava, AIR 1 CSE 2023: left Goldman Sachs, failed prelims in 2021, AIR 236 (IPS) in 2022, kept preparing through police training, then AIR 1.
+ - Ishita Kishore, AIR 1 CSE 2022: national-level footballer (Subroto Cup), ex-EY, failed prelims twice; her plan is reported as about 40–45 hours a week.
+ - Shubham Kumar, AIR 1 CSE 2020: failed his first attempt (2018), AIR 290 in 2019, prepared again while in training; said afterwards he hadn't been sure he'd crack it.
+ - Pradeep Singh, AIR 1 CSE 2019: farmer's son from Sonipat, Haryana; already an IRS officer; fourth attempt.
+ - Anu Kumari, AIR 2 CSE 2017: quit a nine-year corporate career, lived away from her young son for about two years, missed the 2016 cut-off by one mark, AIR 2 the next year.
+ - Nandini K R, AIR 1 CSE 2016: failed prelims in 2013, got AIR 849 (IRS), topped in her fourth attempt.
+ - Ira Singhal, AIR 1 CSE 2014: selected in 2010 but denied a posting because of her disability; won her case at the Central Administrative Tribunal; then topped. (He's a lawyer; this one resonates.)
+ - Gaurav Agarwal, AIR 1 CSE 2013: quit a Citigroup trading job in Hong Kong; AIR 244 (IPS) in 2012; AIR 1 the next year.
+ - K Jayaganesh, AIR 156 CSE 2008: worked as a waiter in Chennai to pay for coaching; failed six times; cleared on the seventh.
+ - Govind Jaiswal, AIR 48 CSE 2006: Varanasi rickshaw puller's son; thrown out of a rich friend's house at eleven; tutored maths in Delhi; cleared on his first attempt at 22.
+ - Manoj Kumar Sharma, IPS (AIR 121): failed class 12, drove a tempo, failed the exam three times, cleared on the fourth; now an Inspector General.
+ Do not use Anudeep Durishetty: he has seen that story far too often.
+3. Gurbani. Offer it as one of the fixes when it fits, not every time: reciting the Mool Mantar for 5 minutes, a pauri of Japji Sahib, a few minutes of Simran. Quote only lines you are sure of, romanised with a short meaning. Verified lines you can use: Mool Mantar (Nirbhau: without fear); "Man jeetai jag jeet" (Japji Sahib, Pauri 28: conquer the mind and you conquer the world); "Sochai soch na hovaee je sochee lakh vaar" (Japji Sahib, Pauri 1: thinking doesn't get you there); "Hukam rajaaee chalnaa Nanak likhiaa naal" (Japji Sahib, Pauri 1); "Aape beej aape hee khaahu" (Japji Sahib, Pauri 20: you reap what you sow); "Udam karediaa jeeo toon kamaavdiaa sukh bhunch" (Ang 522: make the effort and live; earning, enjoy peace); "Khet ju maandio soormaa ab joojhan ko daao" (Bhagat Kabir, Ang 1105: the battlefield is set, warrior, now is the time to fight); "Deh Shiva bar mohe ihai, subh karman te kabhoon na taron" and "Na daron ar so jab jaae laron, nischai kar apunee jeet karon" (Guru Gobind Singh Ji). Never invent or misquote Gurbani.
+
+HOW TO REPLY:
+- If his message already tells you what's going on, answer in full straight away. Only if it's too vague to work with, ask one sharp question first.
+- Match the depth of the best long-form answers he has had: dense, vivid, intensely specific to him. Go deep on the neuroscience of exactly what is happening right now (name the mechanisms in bold, such as prefrontal fatigue, dopamine as craving rather than pleasure, supernormal stimuli, Anna Lembke's pleasure-pain balance, the chaser effect, sympathetic arousal, attention residue, avoidance relief, the what-the-hell effect, the threat response to a huge unread topic, and explain how each one is playing out in his body and brain tonight). Confront the urge or the avoidance with his own evidence and history. Give him concrete physical protocols he can do in the next few minutes. Usually 450–800 words.
+- Let the shape follow the moment. Bold headings are welcome when they help, but there is no fixed template: never structure two replies the same way or open them the same way. It must read as written for him tonight, not filled into a form.
+- Use **bold** for key terms. Short paragraphs.
+- Be truthful about evidence without draining the force out of it. Use real mechanisms and studies with confidence (for example, cold-water immersion at 14 °C raised plasma dopamine and noradrenaline sharply in Šrámek et al., 2000; prolactin rises after orgasm). Spiritual and experiential frames he values, such as protecting his energy or an energetic leak, are welcome as his spiritual frame; just don't present them as lab findings or invent numbers and timelines as if research established them.
+- You can log for him, quietly and accurately: food goes to log_food; a study session to log_study; anything else about his day worth keeping (what derailed him, what went well, how he felt) to add_day_note. For log_study, take what he tells you: the subject, what he covered (keep his detail), the hours, how much if he says (subtopics or pages) and which pass it was. He learns Mains by reading everything 3–4 times, so never quiz him or score his recall. Ask one short question only if the hours or the pass are missing and can't be inferred.
+- In Talk & log mode, keep replies short and conversational (under about 150 words) unless he is struggling; still coach where it helps. Mention briefly what you logged.
+- After you tell a story, call story_told with the person and the gist. Use remember sparingly for things future chats should know (a fix that worked, a new trigger, something big in his week). The live data below lists stories already told and your saved notes: never repeat those stories.
+- Never reuse a story already told in this chat.
+- Always reply in English.
+- Never harsh, never guilt-tripping, never lecturing. Don't nag about bedtimes or the late hour; mention sleep only as the science of what's happening.
+- For urges: no shame. The urge is a wave that will pass in minutes if he changes state: leave the room now, move his body (push-ups, a walk, shooting hoops), cold water on his face, Mool Mantar or Simran. His retention streak matters to him: protect it and use it as motivation. If he slips, help him handle it the way he did at day 114, without a what-the-hell spiral. If he already slipped, it's a lapse, not a relapse; the next study block is the comeback.
+- If he ever says anything suggesting he might harm himself or is in crisis, set the coaching aside, respond with care, and encourage him to talk to someone he trusts now or call Tele-MANAS on 14416 (India).`;
+
+const MODES={
+  study:{title:"Can't study",open:"I'm here, Perry. Tell me straight: what happened today, and what's stopping you right now?"},
+  urge:{title:"Urge hit",open:"Good that you pressed this. You're already winning by not acting on autopilot. Where are you right now, and what set it off?"},
+  talk:{title:"Talk & log",open:"What did you cover, Perry? Tell me in as much detail as you like, with the hours and which reading it was, and I'll log it."}
+};
+const TOOLS=[
+ {name:"log_food",description:"Save what Perry ate today to his food log, one entry per meal or snack.",inputSchema:{type:"object",properties:{text:{type:"string",description:"What he ate, in his words, with the meal or time if he gave it"}},required:["text"]},
+  execute:async({text})=>{if(!DB)throw new Error("Saved data isn't reachable from this view");const d=today(),r=DB.doc("food/"+d);let e=[];try{const s=await r.get();if(s&&s.exists)e=s.data().entries||[]}catch(x){}await r.set({date:d,entries:e.concat([{at:Date.now(),text:String(text).slice(0,500)}])});return{saved:true}}},
+ {name:"add_day_note",description:"Save one short line to today's coach journal (kept separate from his study log): what derailed him, what went well, how he felt.",inputSchema:{type:"object",properties:{text:{type:"string"}},required:["text"]},
+  execute:({text})=>dayAdd("journal",{text:String(text).slice(0,400)})}];
+const dayAdd=async(col,entry)=>{if(!DB)throw new Error("Saved data isn't reachable from this view");const d=today(),r=DB.doc(col+"/"+d);let e=[];try{const s=await r.get();if(s&&s.exists)e=s.data().entries||[]}catch(x){}await r.set({date:d,entries:e.concat([Object.assign({at:Date.now()},entry)])});return{saved:true}};
+const memAdd=async(k,v,max)=>{if(!DB)throw new Error("Saved data isn't reachable from this view");const r=DB.doc("coach/memory");let m={stories:[],notes:[]};try{const s=await r.get();if(s&&s.exists)m=Object.assign(m,s.data())}catch(x){}m[k]=(m[k]||[]).concat([String(v).slice(0,220)]).slice(-max);await r.set(m);return{saved:true}};
+const TOOLS2=[
+ {name:"log_study",description:"Log a study session or block Perry describes, for his learning-speed record.",inputSchema:{type:"object",properties:{subject:{type:"string",description:"Paper and area, e.g. GS3 Environment or Law Optional Contracts"},covered:{type:"string",description:"What he covered, subtopics or chapters, in a few words"},hours:{type:"number"},units:{type:"number",description:"How much he covered, counted as subtopics or pages"},unit_kind:{type:"string",enum:["subtopics","pages"]},pass:{type:"number",description:"Which reading of this material it was: 1 for the first reading, 2 for the second, and so on"}},required:["subject","covered","hours"]},execute:i=>dayAdd("study",{subject:String(i.subject||"").slice(0,80),covered:String(i.covered||"").slice(0,600),hours:+i.hours||0,units:i.units!=null?+i.units:null,unit_kind:i.unit_kind||null,pass:i.pass!=null?+i.pass:null})},
+ {name:"story_told",description:"Record the story you just told him (person and gist in a few words) so later chats don't repeat it. Call once for each story you tell.",inputSchema:{type:"object",properties:{story:{type:"string"}},required:["story"]},execute:({story})=>memAdd("stories",story,80)},
+ {name:"remember",description:"Save one short note for future chats: a fix that worked or didn't, a new trigger, something important in his week. Use sparingly, at most once or twice a chat.",inputSchema:{type:"object",properties:{note:{type:"string"}},required:["note"]},execute:({note})=>memAdd("notes",today()+": "+note,40)}];
+const AI_OPTS={cache:false,model:"claude-opus-5-5",modelTier:"complex",effort:"medium"};
+const LEAN="You are Perry's study logger inside his Mains Run page. He is a full-time UPSC Mains aspirant who learns by reading all his material in repeated passes (3–4 readings), so never quiz him or score his recall.\n- When he describes a block or session, log it with log_study: subject (paper and area), covered (keep his detail, condensed), hours, units (subtopics or pages, if he says), unit_kind, and pass (1 for the first reading, 2 for the second, and so on). If the hours or the pass are missing and you can't infer them from what he said or what is already logged today, ask one short question; otherwise log straight away. One message can hold several sessions: log each.\n- Food goes to log_food. Anything else about his day worth keeping goes to add_day_note.\n- Reply in one to three short sentences: what you logged, and at most one line of genuine encouragement. English.\n- If he sounds like he is struggling, point him to the SOS buttons for Can't study or Urge hit.";
+async function talkCtx(){const now=new Date(Date.now()+330*60000),d=today(),L=["Today: "+d+", "+hm(now.getUTCHours()*60+now.getUTCMinutes())+" India time."];
+  if(DB){try{const s=await DB.doc("study/"+d).get(),e=s&&s.exists?(s.data().entries||[]):[];if(e.length)L.push("Already logged today: "+e.map(x=>x.subject+", "+String(x.covered).slice(0,80)+" ("+x.hours+" h"+(x.pass?", reading "+x.pass:"")+")").join("; "))}catch(x){}}
+  return L.join("\n")}
+async function minDay(){
+  $("sosTitle").textContent="Minimum day";$("sosClose").textContent="Back";$("sosIn").hidden=true;mode=null;
+  $("sosBody").innerHTML="";
+  const st=bubble("c","Rebuilding today…");
+  const now=new Date(Date.now()+330*60000),t=Math.ceil((now.getUTCHours()*60+now.getUTCMinutes())/5)*5,d=today();
+  const sg=(id,a,e,label,type,note)=>({id,t:a,e,label,type,note:note||""});
+  const segs=[sg("md-g",t,t+30,"Gurbani","break","Skip if already done"),sg("md-1",t+30,t+120,"Study block","study"),sg("md-b",t+120,t+135,"Break, no phone","break"),sg("md-2",t+135,t+225,"Study block","study"),sg("md-l",t+225,t+240,"Log the day","break")];
+  try{
+    if(!DB)throw new Error("no db");
+    const r=DB.doc("logs/"+d),s=await r.get(),old=s&&s.exists?s.data():null;
+    const pa=old&&old.ai&&Array.isArray(old.ai.segs)?{segs:old.ai.segs,lights:old.ai.lights,summary:old.ai.summary||""}:null;
+    const patch={ai:{segs,lights:t+240,summary:"Minimum day: Gurbani, two study blocks, then log the day.",answers:{about:["Minimum day"],push:"normal",fixed:"",more:"Minimum day"},at:Date.now(),prev:pa},custom:null,slots:null,lightsAt:null};
+    if(!old||old.start==null){patch.start=t;patch.startHow="ai";patch.startAt=Date.now()}
+    if(old)await r.update(patch);else await r.set(patch);
+    st.innerHTML=fmt("**Today is now a minimum day.** Gurbani at "+hm(t)+", study blocks at "+hm(t+30)+" and "+hm(t+135)+", then log the day. That's the whole job. The day still counts.");
+  }catch(e){st.className="sos-m c err";st.textContent="Couldn't rebuild today from this view. Open the page in the Claude app and try again."}
+  if(!SAMPLE)return;
+  const out=bubble("c","…");
+  try{
+    const ctx=await context();
+    const res=await SAMPLE([{role:"user",content:BRIEF+"\n\nMODE: Minimum day. He just pressed the minimum-day button, and today has been rebuilt as Gurbani, two study blocks and the log. Write him a short, powerful push (150–250 words): what is going on in his brain on a day like this, why a minimum day protects the habit (one missed day doesn't break a habit; the what-the-hell story does), one story or Gurbani line that fits him right now, and send him straight into the first block. No questions. The only tool you may call is story_told.\n\nLIVE DATA FROM HIS PAGE:\n"+ctx}],Object.assign({tools:TOOLS2.filter(x=>x.name==="story_told"),onText:({text})=>{out.innerHTML=fmt(text||"…")}},AI_OPTS));
+    out.innerHTML=fmt((res&&res.text)||"");
+  }catch(e){out.className="sos-m c err";out.textContent="Couldn't load the push just now. Your minimum day is set: start the first block."}
+}
+async function renderSpeed(){
+  const box=$("speedCard");if(!box||!DB)return;
+  try{
+    const all=async c=>{try{return await DB.collection(c).get()}catch(e){return await new Promise((res,rej)=>{let un=null;un=DB.collection(c).onSnapshot(s=>{if(s.metadata&&s.metadata.fromCache)return;res(s);setTimeout(()=>{try{un&&un()}catch(x){}},0)},rej)})}};
+    const q=await all("study"),d=today(),per={},tr=[];
+    (q&&q.docs||[]).forEach(doc=>{(doc.data().entries||[]).forEach(x=>{const k=x.subject||"Other",p=per[k]=per[k]||{h:0,kind:x.unit_kind||"units",ps:{}},h=+x.hours||0;p.h+=h;if(x.units!=null){const n=x.pass||1,s=p.ps[n]=p.ps[n]||{u:0,h:0};s.u+=+x.units;s.h+=h}if(doc.id===d)tr.push(x)})});
+    let html="<span class='label'>Logged by your coach</span><h2 style='margin:4px 0 10px'>Learning speed</h2>";
+    const ks=Object.keys(per).sort();
+    if(!ks.length)html+="<p class='note' style='margin:0 0 10px'>Tell the coach about your study blocks in SOS, Talk &amp; log. Tell it what you covered, roughly how much, and which reading it was; your speed for each reading builds up here.</p>";
+    const ord=n=>n+(n==1?"st":n==2?"nd":n==3?"rd":"th");
+    ks.forEach(k=>{const p=per[k],pk=Object.keys(p.ps).sort((a,b)=>a-b);
+      html+="<p style='margin:0 0 8px'><b>"+esc(k)+"</b>: "+p.h.toFixed(1)+" h logged"+(pk.length?" · "+pk.map(n=>{const s=p.ps[n];return ord(+n)+" reading <b>"+(s.h?(s.u/s.h).toFixed(1):"–")+" "+esc(p.kind)+" an hour</b>"}).join(" · "):"")+"</p>"});
+    const r=await Promise.all([DB.doc("food/"+d).get().catch(()=>null),DB.doc("journal/"+d).get().catch(()=>null)]);
+    const fe=r[0]&&r[0].exists?(r[0].data().entries||[]):[],je=r[1]&&r[1].exists?(r[1].data().entries||[]):[];
+    if(tr.length||fe.length||je.length){html+="<span class='label' style='display:block;margin-top:14px'>Today</span>";
+      tr.forEach(x=>{html+="<p class='note' style='margin:4px 0'><b>Study:</b> "+esc(x.subject)+", "+esc(x.covered)+" · "+(+x.hours||0)+" h"+(x.units!=null?" · "+x.units+" "+esc(x.unit_kind||""):"")+(x.pass!=null?" · reading "+x.pass:"")+"</p>"});
+      fe.forEach(x=>{html+="<p class='note' style='margin:4px 0'><b>Food:</b> "+esc(x.text)+"</p>"});
+      je.forEach(x=>{html+="<p class='note' style='margin:4px 0'><b>Note:</b> "+esc(x.text)+"</p>"})}
+    box.innerHTML=html;box.hidden=false;
+  }catch(e){}
+}
+let hist=[],mode=null,busy=false,ctl=null;
+
+function show(){$("sosOv").hidden=false;document.body.style.overflow="hidden"}
+function hide(){if(ctl){try{ctl.abort()}catch(e){}}ctl=null;busy=false;$("sosOv").hidden=true;document.body.style.overflow="";if(DICT&&$(micBtn)&&$(micBtn).dataset.on==="1")DICT.stop().catch(()=>{})}
+function menu(){
+  mode=null;hist=[];$("sosTitle").textContent="SOS";$("sosClose").textContent="Close";$("sosIn").hidden=true;
+  const b=$("sosBody");b.innerHTML="";
+  const mk=(cls,t,s,fn)=>{const x=document.createElement("button");x.type="button";x.className="sos-choice "+cls;x.innerHTML=esc(t)+"<small>"+esc(s)+"</small>";x.addEventListener("click",fn);return x};
+  b.append(
+    mk("hot","I can't study","Tell Claude what happened. You'll get what's going on in your brain, one fix for the next 10 minutes, and a push.",()=>chat("study")),
+    mk("hot","Urge hit","Talk it through right now. The wave passes; get the science and the move that breaks it.",()=>chat("urge")),
+    mk("hot","Minimum day","One tap: today becomes Gurbani + 2 study blocks + log, plus a push to get you moving.",minDay),
+    mk("","Talk & log","After a block, tell it what you covered. It logs your study, food and notes, and keeps usage low.",()=>chat("talk")));
+}
+function bubble(r,t){const d=document.createElement("div");d.className="sos-m "+r;d.innerHTML=fmt(t);$("sosBody").append(d);$("sosBody").scrollTop=$("sosBody").scrollHeight;return d}
+function chat(m){
+  mode=m;hist=[{r:"c",t:MODES[m].open}];$("sosTitle").textContent=MODES[m].title;$("sosClose").textContent="Back";$("sosBody").innerHTML="";
+  bubble("c",MODES[m].open);
+  micTarget="sosText";micBtn="sosMic";$("sosIn").hidden=false;$("sosMic").hidden=!DICT;$("sosText").value="";
+  if(!SAMPLE)bubble("c err",ready?"Claude isn't reachable from this view. Open the page in the Claude app or claude.ai and try again.":"Still connecting… give it a few seconds, then send.");
+  setTimeout(()=>$("sosText").focus(),50);
+}
+async function send(){
+  const ta=$("sosText"),t=ta.value.trim();if(!t||busy)return;
+  if(!SAMPLE){bubble("c err","Claude isn't reachable from this view yet. Try again in a moment.");return}
+  ta.value="";bubble("u",t);hist.push({r:"u",t});busy=true;$("sosSend").disabled=true;
+  const out=bubble("c","…");
+  try{
+    const ctx=mode==="talk"?await talkCtx():await context();
+    const msgs=[];
+    msgs.push({role:"user",content:(mode==="talk"?LEAN:BRIEF)+"\n\nMODE: "+(mode==="urge"?"Urge hit":mode==="talk"?"Talk & log (a general check-in: coach him and log what he reports)":"Can't study")+"\n\nLIVE DATA FROM HIS PAGE:\n"+ctx+"\n\nYou opened the chat with: \""+hist[0].t+"\"\n\nPerry: "+hist[1].t});
+    for(let i=2;i<hist.length;i++)msgs.push({role:hist[i].r==="c"?"assistant":"user",content:hist[i].t});
+    ctl=new AbortController();
+    const res=await SAMPLE(msgs,{signal:ctl.signal,cache:false,model:mode==="talk"?"claude-sonnet-5-5":"claude-opus-5-5",modelTier:mode==="talk"?"default":"complex",effort:"medium",tools:mode==="talk"?TOOLS.concat(TOOLS2.filter(x=>x.name==="log_study")):TOOLS.concat(TOOLS2),onText:({text})=>{out.innerHTML=fmt(text||"…");$("sosBody").scrollTop=$("sosBody").scrollHeight}});
+    const txt=(res&&res.text)||"";out.innerHTML=fmt(txt);hist.push({r:"c",t:txt});
+  }catch(e){
+    hist.pop();
+    out.className="sos-m c err";
+    out.textContent=e&&e.code==="not_granted"?"Allow Claude for this page when it asks, then send again.":e&&e.code==="rate_limited"?"Claude is busy for a moment. Send again in a minute.":e&&e.name==="AbortError"?"Stopped.":"That didn't go through. Send it again.";
+    if(!(e&&e.name==="AbortError"))ta.value=t;
+  }finally{busy=false;ctl=null;$("sosSend").disabled=false;renderSpeed()}
+}
+
+/* ---------- food ---------- */
+async function food(){
+  $("sosTitle").textContent="Log food";$("sosClose").textContent="Back";$("sosIn").hidden=true;mode=null;
+  const b=$("sosBody");b.innerHTML="";
+  const p=document.createElement("p");p.className="note";p.style.margin="0";p.textContent="What did you eat, and roughly when? Type it, or use your keyboard's mic.";
+  const ta=document.createElement("textarea");ta.id="sosFood";ta.rows=3;ta.placeholder="e.g. 2 rotis, dal, salad · lunch";
+  const row=document.createElement("div");row.className="sos-in";
+  const mic=document.createElement("button");mic.type="button";mic.className="sos-mic";mic.id="sosFoodMic";mic.textContent="🎙";mic.hidden=!DICT;mic.addEventListener("click",micClick);
+  const sv=document.createElement("button");sv.type="button";sv.className="primary";sv.textContent="Save";
+  row.append(ta,mic,sv);
+  const msg=document.createElement("p");msg.className="note";msg.style.margin="0";
+  const h=document.createElement("span");h.className="label";h.textContent="Today";
+  const ul=document.createElement("ul");ul.className="sos-food";
+  b.append(p,row,msg,h,ul);
+  micTarget="sosFood";micBtn="sosFoodMic";
+  const d=today();let entries=[];
+  const paint=()=>{ul.innerHTML="";if(!entries.length){const li=document.createElement("li");li.className="note";li.textContent="Nothing logged yet.";ul.append(li);return}
+    entries.forEach(x=>{const li=document.createElement("li");const n=new Date(x.at+330*60000);li.innerHTML="<span class='note'>"+hm(n.getUTCHours()*60+n.getUTCMinutes())+"</span> · "+esc(x.text);ul.append(li)})};
+  if(DB){try{const s=await DB.doc("food/"+d).get();if(s&&s.exists)entries=(s.data().entries||[])}catch(e){}}
+  paint();
+  sv.addEventListener("click",async()=>{const t=ta.value.trim();if(!t)return;
+    if(!DB){msg.textContent="Can't reach your saved data from this view. Try in the Claude app.";return}
+    sv.disabled=true;const next=entries.concat([{at:Date.now(),text:t}]);
+    try{await DB.doc("food/"+d).set({date:d,entries:next});entries=next;ta.value="";msg.textContent="Saved.";paint()}
+    catch(e){msg.textContent="Didn't save. Try again."}finally{sv.disabled=false}});
+  setTimeout(()=>ta.focus(),50);
+}
+
+$("sosBtn").addEventListener("click",()=>{menu();show()});
+$("sosClose").addEventListener("click",()=>{if($("sosClose").textContent==="Back"){if(ctl){try{ctl.abort()}catch(e){}}menu()}else hide()});
+$("sosOv").addEventListener("click",e=>{if(e.target===$("sosOv"))hide()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("sosOv").hidden)hide()});
+$("sosSend").addEventListener("click",send);
+$("sosMic").addEventListener("click",micClick);
+$("sosText").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)){e.preventDefault();send()}});
+})();
+</script>
+</body></html>
