@@ -11,16 +11,26 @@ function dayPlan(d,T){
   const gt=kind==="gstest"?testOn(d,T):null,eve=!!(gt&&gt.eve);
   const cu=lg.custom||null;
   const AI=aiLive(aiOf(lg),d,T);
-  const b=AI?{segs:aiSegs(AI),lights:AI.lights,late:false}:cu?customLive(buildCustom(cu),d,T):timed?buildDay(kind==="essay"&&half?"normal":kind,st.s,{short,half,eve,gym:!!lg.gym}):null;
-  const segs=b?(AI?b.segs:applySlots(b.segs,lg.slots)):null;
-  if(b){if(lg.lightsAt!=null)b.lights=lg.lightsAt;else if(segs.length){const last=Math.max(...segs.map(x=>x.e));if(last>b.lights)b.lights=last}}
+  /* three ways a day gets its timetable: Plan my day (AI), an older Build my day (custom), or the day rules */
+  const b=AI?{src:"ai",segs:aiSegs(AI),lights:AI.lights,late:false}:cu?Object.assign({src:"custom"},customLive(buildCustom(cu),d,T)):timed?Object.assign({src:"rules"},buildDay(kind==="essay"&&half?"normal":kind,st.s,{short,half,eve,gym:!!lg.gym})):null;
+  const f=b?finishDay(b,lg):null,segs=f?f.segs:null;
   const studyMin=segs?segs.filter(x=>x.k==="block"&&STUDY_ROLES[x.role]).reduce((s,x)=>s+x.e-x.t,0):UNTIMED[kind]||0;
   const schedMin=segs?studyMin+segs.filter(x=>x.k==="block"&&x.role==="news").reduce((s,x)=>s+x.e-x.t,0):studyMin;
-  const p={d,kind,start:st,late:!!(b&&b.late),short,half,segs,lights:b?b.lights:null,studyMin,schedMin,custom:!!cu||!!AI};
+  const p={d,kind,start:st,late:!!(b&&b.late),short,half,segs,lights:f?f.lights:null,studyMin,schedMin,custom:!!cu||!!AI,src:b?b.src:null,ai:AI||null};
   m[d]=p;
   p.items=workItems(d,T,p);
   p.planned=p.items.reduce((s,i)=>s+(i.paper?0:i.min||0),0);
   return p;
+}
+/* The one shared step. Whichever way the day was made, the same facts land here: your slot changes, lights out,
+   numbered study blocks. The timetable, the Now line, the rings and the to-do list all read this one result.
+   (Test moves are applied before this, in aiLive and customLive; the day rules are built from the Tests tab.)
+   Plan-my-day changes are written into the plan itself, so slot overrides only apply to the other two. */
+function finishDay(b,lg){
+  let segs=b.src==="ai"?b.segs:applySlots(b.segs,lg.slots),lights=b.lights;
+  if(lg.lightsAt!=null)lights=lg.lightsAt;else if(segs.length){const last=Math.max(...segs.map(x=>x.e));if(last>lights)lights=last}
+  if(b.src==="ai"){let n=0;segs=segs.map(s=>s.k==="block"&&s.role==="study"?Object.assign({},s,{name:s.name==="Study block"?"Study block "+(++n):(n++,s.name)}):s)}
+  return{segs,lights};
 }
 function copyDue(T){return T.filter(t=>t.back&&!t.fix&&!t.skipped).sort((a,b)=>a.date<b.date?-1:1)[0]||null}
 function workItems(d,T,p){

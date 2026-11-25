@@ -41,7 +41,9 @@ function aiLive(ai,d,T){if(!ai)return ai;let ch=false;
   const segs=ai.segs.map(s=>{if(s.type!=="paper"||!paperIsStale(s.label,d,T))return s;ch=true;return Object.assign({},s,{type:"study",label:"Study block",note:"",was:"was the paper slot: "+movedNote(s.label,T)})});
   return ch?Object.assign({},ai,{segs}):ai}
 function customLive(b,d,T){if(testOn(d,T))return b;b.segs=b.segs.map(s=>s.role==="paper"?Object.assign({},s,{role:"study",name:"Study block",hint:"was the paper slot: no paper today"}):s);return b}
-function aiSegs(ai){return ai.segs.map(s=>s.type==="break"?{k:"break",t:s.t,e:s.e,label:s.label,id:s.id,hint:s.note}:{k:"block",t:s.t,e:s.e,role:s.type==="paper"?"paper":s.type==="news"?"news":"study",name:s.label,id:s.id,hint:s.note})}
+function aiSegs(ai){return ai.segs.map(s=>s.type==="break"?{k:"break",t:s.t,e:s.e,label:s.label,id:s.id,hint:s.note}:{k:"block",t:s.t,e:s.e,role:s.type==="paper"?"paper":s.type==="news"?"news":"study",name:s.label,id:s.id,hint:s.note,was:s.was})}
+/* back from the page's slot shape to the Plan-my-day shape, for changes written into the plan itself */
+function segToAi(s){const brk=s.k==="break";return{id:s.id,t:s.t,e:s.e,label:brk?s.label:s.name,type:brk?"break":s.role==="paper"?"paper":s.role==="news"?"news":"study",note:s.was?"":s.hint||""}}
 const isWork=s=>s.type!=="break";
 const parseHM=v=>{const m=/(\d{1,2})[:.](\d{2})/.exec(String(v||""));return m?(+m[1])*60+(+m[2]):null};
 const t24=m=>{m=((Math.round(m)%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0")};
@@ -130,33 +132,31 @@ function askCard(d,T,l){
     el("div",{class:"row"},go,aiOf(l)?el("button",{onclick:()=>{delete aiAsk[d];renderDay(TS)}},"Cancel"):null),msg);
 }
 function workHours(seg){return (seg.e-seg.t)/60}
-function aiDayView(d,T,l,isToday,mins){
-  const ai=aiLive(aiOf(l),d,T),B=l.blocks||{},sec=el("section",{class:"plan"});let sn=0;
-  const planned=ai.segs.filter(isWork).reduce((s,x)=>s+x.e-x.t,0);
-  const done=dayHours(d)||0;
+/* One timetable screen for every day, whichever way it was made. Tap a row to log what you covered or change its time. */
+function timetableView(d,p,T,l,isToday,mins){
+  const ai=p.src==="ai"?p.ai:null,B=l.blocks||{},sec=el("section",{class:"plan"});
+  const planned=p.segs.filter(s=>s.k==="block").reduce((s,x)=>s+x.e-x.t,0),done=dayHours(d)||0;
   sec.append(el("div",{class:"section-h"},el("h3",{},"Timetable"),el("span",{class:"sumline"},"Planned ",el("b",{},dur(planned))," · done ",el("b",{},hrs(done)))));
-  const wasP=ai.segs.find(s=>s.was);
-  if(ai.summary&&!wasP)sec.append(el("p",{class:"note",style:"margin:0 0 8px"},ai.summary));
+  if(!ai&&!p.start.set)sec.append(el("p",{class:"note",style:"margin:0 0 8px"},"Model day from "+hm(p.start.s)+"."));
+  const wasP=p.segs.find(s=>s.was);
+  if(ai&&ai.summary&&!wasP)sec.append(el("p",{class:"note",style:"margin:0 0 8px"},ai.summary));
   if(wasP)sec.append(el("p",{class:"note",style:"margin:0 0 8px"},"The paper slot is now study time ("+wasP.was.replace("was the paper slot: ","")+")."));
-  {const tt=testOn(d,T);if(tt&&!tt.written&&!tt.delhi&&!ai.segs.some(s=>s.type==="paper"))sec.append(el("div",{class:"banner",style:"margin:0 0 10px"},el("span",{},tt.name.split(" · ")[0]+" is on this day now, but this timetable has no paper slot."),canWrite&&d>=todayIST()?el("button",{class:"mini",onclick:()=>{aiAsk[d]=true;renderDay(TS)}},"Plan again"):null))}
-  const ul=el("ul",{class:"tt"});
-  ai.segs.forEach(s=>{const live=isToday&&mins>=s.t&&mins<s.e,work=isWork(s),lab=s.type==="study"?"Study block "+(++sn):s.label,nt=s.was?s.was:s.type==="study"?"":s.note;
-    const nm=el("span",{class:"nm"},work?el("b",{},lab):lab,nt?el("span",{class:"hint"}," · "+nt):null);
-    let right=el("span");
-    if(work){const cid="ai-"+s.id,on=!!B[s.id];
-      const pm=s.e-s.t,rm=on?Math.round((+B[s.id].hours||0)*60):null,diffd=on&&rm!==pm;
-      const setMin=m=>{const nb=Object.assign({},B);if(m>0)nb[s.id]={name:lab,what:lab,t:s.t,e:s.e,hours:m/60,at:Date.now()};else delete nb[s.id];patchLog(d,{blocks:nb,realH:null})};
-      const hb=el("button",{class:"hrbtn"+(diffd?" got":""),type:"button",disabled:!canWrite,"aria-label":"Minutes studied in "+lab,onclick:()=>{
-        const inp=el("input",{type:"number",min:"0",max:String(pm+120),step:"5",inputmode:"numeric",value:String(rm!=null?rm:pm),"aria-label":"Minutes studied in "+lab,class:"mininp"});
-        const ok=el("button",{class:"mini",type:"button",onclick:()=>{const v=Number(inp.value);if(inp.value===""||isNaN(v)||v<0)return;setMin(Math.round(v))}},"Save");
-        inp.addEventListener("keydown",e=>{if(e.key==="Enter")ok.click()});
-        const li=hb.closest("li");if(li.querySelector(".minrow"))return;li.append(el("div",{class:"row minrow",style:"grid-column:1/-1;gap:8px;justify-content:flex-end;padding-top:6px"},el("span",{class:"tm"},"Studied"),inp,el("span",{class:"tm"},"min"),ok));inp.focus();inp.select()}},diffd?dur(rm)+" of "+dur(pm):dur(pm));
-      right=el("span",{class:"row",style:"gap:10px;flex-wrap:nowrap"},hb,
-        el("input",{type:"checkbox",id:cid,checked:on,disabled:!canWrite,"aria-label":"Done: "+lab,onchange:e=>setMin(e.target.checked?pm:0)}))}
-    ul.append(el("li",{class:(work?"bl":"br")+(live?" live":"")+(s.type==="paper"?" paper":"")},el("span",{class:"tm"},hmS(s.t)),nm,right))});
-  ul.append(el("li",{class:"br"},el("span",{class:"tm"},hmS(ai.lights)),el("span",{class:"nm"},"Lights out"),el("span")));
+  {const tt=testOn(d,T);if(tt&&!tt.written&&!tt.delhi&&p.src!=="rules"&&!p.segs.some(s=>s.role==="paper"))sec.append(el("div",{class:"banner",style:"margin:0 0 10px"},el("span",{},tt.name.split(" · ")[0]+" is on this day now, but this timetable has no paper slot."),canWrite&&d>=todayIST()?el("button",{class:"mini",onclick:()=>{aiAsk[d]=true;renderDay(TS)}},"Plan again"):null))}
+  const tap=(node,fn,label)=>{if(!canWrite)return node;node.classList.add("tap");node.setAttribute("role","button");node.setAttribute("tabindex","0");node.setAttribute("aria-label",label);
+    node.addEventListener("click",e=>{if(e.target.closest("button,input"))return;fn()});node.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target===node)fn()});return node};
+  const ul=el("ul",{class:"tt"}),noEve=!ai&&!p.segs.some(s=>s.k==="block"&&s.t>=1140);
+  p.segs.forEach(s=>{const live=isToday&&mins>=s.t&&mins<s.e;
+    if(s.k==="break"){
+      const nm=el("span",{class:"nm"},s.label,s.edited?el("span",{class:"hint"}," · changed"):s.hint?el("span",{class:"hint"}," · "+s.hint):null);
+      ul.append(tap(el("li",{class:"br"+(live?" live":"")},el("span",{class:"tm"},hmS(s.t)),nm,el("span")),()=>openSlotEdit(d,s),"Change "+s.label));
+      if(noEve&&/^Dinner/.test(s.label)&&s.t<1260)ul.append(extraRow(d,B));
+      return}
+    ul.append(blockRow(d,s,B,l,live,tap,p.src))});
+  ul.append(tap(el("li",{class:"br"},el("span",{class:"tm"},hmS(p.lights)),el("span",{class:"nm"},"Lights out",l.lightsAt!=null?el("span",{class:"hint"}," · changed"):null),el("span")),()=>openSlotEdit(d,{id:"__lights",t:p.lights,label:"Lights out"}),"Change lights out"));
   sec.append(ul);
-  if(canWrite&&d>=todayIST()){
+  const extra=Object.entries(B).filter(([k])=>k!=="evening"&&!p.segs.some(s=>s.id===k));
+  if(extra.length)sec.append(el("ul",{class:"loglist",style:"margin-top:10px"},extra.map(([k,r])=>logLi(d,k,r))));
+  if(canWrite&&ai&&d>=todayIST()){
     const inp=el("input",{type:"text",id:"aiChange",placeholder:"studied 4:30–7:30 · make 3 to 4 a break · lights out 11"});
     const msg=el("p",{class:"note",style:"margin:6px 0 0"});
     const btn=el("button",{class:"primary",onclick:async()=>{
@@ -164,21 +164,25 @@ function aiDayView(d,T,l,isToday,mins){
       btn.disabled=true;btn.textContent="Changing…";msg.textContent="";
       const now=isToday?mins:0,keep=ai.segs.filter(s=>B[s.id]);
       const cur=ai.segs.map(s=>({id:s.id,start:t24(s.t),end:t24(s.e),label:s.label,type:s.type,note:s.note||undefined,done:!!B[s.id]||undefined}));
-      const prompt="You adjust Perry's study plan for today. Make exactly the change he asks for and only what it forces; keep everything else as it is. Keep his rules where the change allows.\n\nHIS RULES:\n"+bookText()+"\n\nTODAY:\n"+aiContext(d)+"\n\nCURRENT PLAN (lights out "+t24(ai.lights)+"):\n"+JSON.stringify(cur)+"\n\n"+(isToday?"It is now "+t24(now)+".\n":"")+"HOW TO APPLY THE CHANGE:\n- Do exactly what he asks. You may remove, move or replace any slot, including ones that already ended, except slots marked done:true: those stay exactly as they are.\n- If he gives a new window (for example 'from 4 pm to 12:15 am'), the replanned part runs from that start to that end, and lights out is that end. Times after midnight are fine (write 00:15).\n- Removed slots that already ended are simply left out; don't fill that time.\n- Slots he didn't mention that ended before now and aren't done: keep them as they are.\n- If he tells you what he actually did (for example 'studied 12:30 to 2, slept till 4:30, studied 4:30 to 7:30'), rewrite that part of the day to match what really happened, with his real times, and add \"done\":true to every study slot he says he actually studied. If he says he studied less than the slot (for example '2 h 30 min from 4:30 to 7:30'), also add \"studied_min\" with the minutes (150). Never mark a slot done that he didn't say he did. Then plan from the end of what he describes, or from now if that is later, to lights out.\n- Keep studying blocks labelled exactly \"Study block\".\n\nHIS CHANGE: "+req+"\n\n"+OUT_SPEC+"\n- In this reply, slots may also carry \"done\":true and \"studied_min\":number, as described above.";
+      const prompt="You adjust Perry's study plan for today. Make exactly the change he asks for and only what it forces; keep everything else as it is. Keep his rules where the change allows.\n\nHIS RULES:\n"+bookText()+"\n\nTODAY:\n"+aiContext(d)+"\n\nCURRENT PLAN (lights out "+t24(p.lights)+"):\n"+JSON.stringify(cur)+"\n\n"+(isToday?"It is now "+t24(now)+".\n":"")+"HOW TO APPLY THE CHANGE:\n- Do exactly what he asks. You may remove, move or replace any slot, including ones that already ended, except slots marked done:true: those stay exactly as they are.\n- If he gives a new window (for example 'from 4 pm to 12:15 am'), the replanned part runs from that start to that end, and lights out is that end. Times after midnight are fine (write 00:15).\n- Removed slots that already ended are simply left out; don't fill that time.\n- Slots he didn't mention that ended before now and aren't done: keep them as they are.\n- If he tells you what he actually did (for example 'studied 12:30 to 2, slept till 4:30, studied 4:30 to 7:30'), rewrite that part of the day to match what really happened, with his real times, and add \"done\":true to every study slot he says he actually studied. If he says he studied less than the slot (for example '2 h 30 min from 4:30 to 7:30'), also add \"studied_min\" with the minutes (150). Never mark a slot done that he didn't say he did. Then plan from the end of what he describes, or from now if that is later, to lights out.\n- Keep studying blocks labelled exactly \"Study block\".\n\nHIS CHANGE: "+req+"\n\n"+OUT_SPEC+"\n- In this reply, slots may also carry \"done\":true and \"studied_min\":number, as described above.";
       try{const v=await askAI(prompt);const c=cleanPlan(v,ai.segs[0].t,keep,ai.segs);
         /* study he says he actually did is logged straight onto those blocks */
         const nb=Object.assign({},B);let sn2=0,got=0;
         c.segs.forEach(s=>{if(s.type==="study")sn2++;if(s.done&&isWork(s)&&!nb[s.id]){const full=s.e-s.t,m=s.sm!=null?Math.min(s.sm,full+120):full;if(m>0){const nm=s.type==="study"?"Study block "+sn2:s.label;nb[s.id]={name:nm,what:nm,t:s.t,e:s.e,hours:m/60,at:Date.now()};got+=m}}delete s.done;delete s.sm});
-        const patch={ai:Object.assign({},ai,{segs:c.segs,lights:c.lights,summary:c.summary||ai.summary,at:Date.now(),prev:{segs:ai.segs,lights:ai.lights,summary:ai.summary||""}})};
+        const patch={ai:Object.assign({},ai,{segs:c.segs,lights:c.lights,summary:c.summary||ai.summary,at:Date.now(),prev:{segs:ai.segs,lights:p.lights,summary:ai.summary||""}}),lightsAt:null};
         if(got){patch.blocks=nb;patch.realH=null}
         patchLog(d,patch);
       }catch(e){btn.disabled=false;btn.textContent="Change";msg.textContent=aiErr(e)}
     }},"Change");
     inp.addEventListener("keydown",e=>{if(e.key==="Enter")btn.click()});
-    sec.append(el("div",{class:"row",style:"margin-top:14px;flex-wrap:nowrap"},inp,btn),el("p",{class:"note",style:"margin:6px 0 0"},"Tell it what you actually did and it logs those blocks, or what to change and it re-plans the rest."),msg);
+    sec.append(el("div",{class:"row",style:"margin-top:14px;flex-wrap:nowrap"},inp,btn),el("p",{class:"note",style:"margin:6px 0 0"},"Tell it what you actually did and it logs those blocks, or what to change and it re-plans the rest. Tap a row to log topics or change its time."),msg);
     sec.append(el("div",{class:"row",style:"margin-top:8px"},
-      ai.prev?el("button",{class:"mini",onclick:()=>patchLog(d,{ai:Object.assign({},ai,{segs:ai.prev.segs,lights:ai.prev.lights,summary:ai.prev.summary,prev:null})})},"Undo last change"):null,
-      el("button",{class:"mini",onclick:()=>{aiAsk[d]=true;renderDay(TS)}},"Plan again from questions")));
+      ai.prev?el("button",{class:"mini",onclick:()=>patchLog(d,{ai:Object.assign({},ai,{segs:ai.prev.segs,lights:ai.prev.lights,summary:ai.prev.summary,prev:null}),lightsAt:null})},"Undo last change"):null,
+      el("button",{class:"mini",onclick:()=>{aiAsk[d]=true;renderDay(TS)}},"Plan again from questions"),
+      el("button",{class:"mini",onclick:()=>openBlockLog(d,null)},"+ Log other study")));
+  }else if(canWrite){
+    sec.append(el("p",{class:"note",style:"margin:12px 0 0"},"Tap a row to log what you covered or change its time."),
+      el("div",{class:"row",style:"margin-top:8px"},el("button",{class:"mini",onclick:()=>openBlockLog(d,null)},"+ Log other study")));
   }
   if(canWrite&&d<=todayIST()){
     const ri=el("input",{type:"number",id:"aiReal",min:"0",max:"20",step:"0.25",inputmode:"decimal",style:"width:90px",placeholder:(Math.round(done*4)/4).toString()});
@@ -187,6 +191,34 @@ function aiDayView(d,T,l,isToday,mins){
       el("button",{class:"mini",onclick:()=>{const v=ri.value===""?null:Number(ri.value);if(v!=null&&(isNaN(v)||v<0))return;patchLog(d,{realH:v})}},"Save")));
   }
   return sec;
+}
+/* a study, news or paper row: minutes and a tick, the logged summary, and a tap for topics and time */
+function blockRow(d,s,B,l,live,tap,src){
+  const rec=B[s.id],lost=(l.lost||{})[s.id],light=(l.light||{})[s.id],stopped=l.stopAt!=null&&s.t>=l.stopAt;
+  const hint=s.was?s.was:light?"light work":src==="ai"&&s.role==="study"?"":s.hint;
+  const nm=el("span",{class:"nm"},el("b",{},s.name),hint?el("span",{class:"hint"}," · "+hint):null);
+  if(rec&&((rec.items||[]).length||Object.keys(rec.topics||{}).length||rec.text||rec.nostudy))nm.append(el("span",{class:"sum"},"✓ "+rec.what+(rec.nostudy?" · not study":"")));
+  else if(!rec&&(lost||stopped))nm.append(el("span",{class:"sum miss"},lost?"Lost":"Stopped"));
+  let right=el("span");
+  const paper=s.role==="paper",pm=s.e-s.t,rm=rec?Math.round((+rec.hours||0)*60):null,diffd=!!rec&&rm!==pm;
+  if(canWrite&&lost)right=el("button",{class:"mini",onclick:()=>{const o=Object.assign({},l.lost);delete o[s.id];patchLog(d,{lost:Object.keys(o).length?o:null})}},"Undo");
+  else if(!stopped||rec){
+    const setMin=m=>{if(m>0){const r=Object.assign({},rec||{},{name:s.name,t:s.t,e:s.e,hours:m/60,at:Date.now()});if(!r.what)r.what=s.name;patchLog(d,{blocks:Object.assign({},B,{[s.id]:r}),realH:null})}else if(rec)patchLog(d,Object.assign(blockRemoval(l,s.id),{realH:null}))};
+    const hb=el("button",{class:"hrbtn"+(diffd?" got":""),type:"button",disabled:!canWrite,"aria-label":"Minutes studied in "+s.name,onclick:()=>{
+      if(paper){openBlockLog(d,s);return}
+      const li=hb.closest("li");if(li.querySelector(".minrow"))return;
+      const inp=el("input",{type:"number",min:"0",max:String(pm+120),step:"5",inputmode:"numeric",value:String(rm!=null?rm:pm),"aria-label":"Minutes studied in "+s.name,class:"mininp"});
+      const ok=el("button",{class:"mini",type:"button",onclick:()=>{const v=Number(inp.value);if(inp.value===""||isNaN(v)||v<0)return;setMin(Math.round(v))}},"Save");
+      inp.addEventListener("keydown",e=>{if(e.key==="Enter")ok.click()});
+      li.append(el("div",{class:"row minrow",style:"grid-column:1/-1;gap:8px;justify-content:flex-end;padding-top:6px"},el("button",{class:"mini",type:"button",onclick:()=>openBlockLog(d,s)},"Topics and time"),el("span",{class:"tm"},"Studied"),inp,el("span",{class:"tm"},"min"),ok));inp.focus();inp.select()}},diffd?dur(rm)+" of "+dur(pm):dur(pm));
+    right=el("span",{class:"row",style:"gap:10px;flex-wrap:nowrap"},hb,
+      el("input",{type:"checkbox",id:"blk-"+s.id,checked:!!rec,disabled:!canWrite,"aria-label":"Done: "+s.name,onchange:e=>{if(paper){e.target.checked=!!rec;openBlockLog(d,s);return}setMin(e.target.checked?(rm||pm):0)}}))}
+  const li=el("li",{class:"bl"+(live?" live":"")+(paper?" paper":"")},el("span",{class:"tm"},hmS(s.t)),nm,right);
+  return stopped&&!rec?li:tap(li,()=>openBlockLog(d,s),(paper?"Paper: ":"Log ")+s.name);
+}
+function extraRow(d,B){const rec=B.evening;
+  return el("li",{class:"bl"},el("span",{class:"tm"},"After 7"),el("span",{class:"nm"},el("b",{},"Extra study"),el("span",{class:"hint"}," · optional"),rec?el("span",{class:"sum"},"✓ "+(rec.what||"logged")+" · "+hrs(rec.hours||0)):null),
+    canWrite?el("button",{class:"mini",onclick:()=>openBlockLog(d,{id:"evening",name:"Extra study",t:null,e:null})},rec?"Edit":"Log"):el("span"));
 }
 function rng(a,b){
   const f=m=>{m=Math.round(m);const h=Math.floor(m/60)%24,mm=m%60;return{t:((h+11)%12+1)+(mm?":"+String(mm).padStart(2,"0"):""),p:h>=12?"pm":"am"}};
@@ -210,73 +242,18 @@ function copyDay(d,btn){
 }
 function renderDay(T){
   const box=$("day");box.textContent="";
-  const real=todayIST(),isToday=sel===real,mins=nowMins(),p=dayPlan(sel,T),l=logs[sel]||{},ai=aiOf(l);
+  const real=todayIST(),isToday=sel===real,mins=nowMins(),p=dayPlan(sel,T),l=logs[sel]||{};
+  const ask=sel>=real&&canWrite&&(!p.ai||aiAsk[sel]);
   box.append(el("div",{class:"dayhead"},el("div",{},el("div",{class:"label"},isToday?"Today":sel<real?"Past day":"Coming up"),el("h2",{},nice(sel))),dayNav(real)));
-  if(p.segs&&!(sel>=real&&canWrite&&(!ai||aiAsk[sel]))){const cb=el("button",{class:"mini"},"Copy timetable");cb.onclick=()=>copyDay(sel,cb);box.append(el("div",{class:"row",style:"margin:0 0 12px"},cb))}
+  if(p.segs&&!ask){const cb=el("button",{class:"mini"},"Copy timetable");cb.onclick=()=>copyDay(sel,cb);box.append(el("div",{class:"row",style:"margin:0 0 12px"},cb))}
   if(isToday)box.append(thoughtCard(sel,p,T));
   if(testOn(sel,T)){const fixes=T.filter(t=>t.done&&t.fix).sort((a,b)=>a.date<b.date?1:-1).slice(0,4);
     if(fixes.length)box.append(el("aside",{class:"fixes"},el("div",{class:"label"},"Fixes for today's paper"),el("ul",{},fixes.map(t=>el("li",{},t.fix)))))}
-  if(sel>=real&&canWrite&&(!ai||aiAsk[sel]))box.append(askCard(sel,T,l));
-  else if(ai)box.append(aiDayView(sel,T,l,isToday,mins));
-  else{const tt2=testOn(sel,T);
-    if(p.custom&&p.segs&&tt2&&!tt2.written&&!tt2.delhi&&!p.segs.some(s=>s.role==="paper"))box.append(el("div",{class:"banner",style:"margin:0 0 12px"},el("span",{},tt2.name.split(" · ")[0]+" is on this day now, but your timetable has no paper slot."),canWrite?el("button",{class:"mini",onclick:()=>openBuild(sel)},"Edit my timetable"):null));
-    box.append(p.segs?timetableSection(sel,p,T,l,isToday,mins):untimedSection(sel,p,T,l))}
+  if(ask)box.append(askCard(sel,T,l));
+  else box.append(p.segs?timetableView(sel,p,T,l,isToday,mins):untimedSection(sel,p,T,l));
   box.append(todoSection(sel,p,T,l,isToday,mins));
 }
 
-function dayLine(d,p,T,isToday){
-  const wrap=el("div",{class:"dayopts"}),lg=logs[d]||{};
-  if(p.segs&&isToday&&!p.start.set&&canWrite){
-    const ti=el("input",{type:"time",id:"startAt","aria-label":"Time you started",value:toTime(nowMins())});
-    const ai=el("input",{type:"time",id:"asleepAt","aria-label":"Fell asleep at",value:toTime(defaultAsleep(d)),style:"width:auto"});
-    const note=el("p",{class:"note",id:"idealNote",style:"margin:6px 0 0"});
-    const getA=()=>{const a=fromTime(ai.value);return a==null?null:a};
-    const upd=()=>{const a=getA(),sm=fromTime(ti.value);note.textContent=a==null||sm==null?"":idealText(a,sm)};
-    ai.addEventListener("input",()=>{const a=getA();if(a!=null)asleepDraft[d]=a;upd()});ti.addEventListener("input",upd);upd();
-    wrap.append(el("div",{class:"startrow"},el("button",{class:"accent big",onclick:()=>{if(getA()!=null)asleepDraft[d]=getA();openBuild(d)}},"Build my day"),
-      el("button",{onclick:()=>setStart(d,nowMins(),"tap",getA())},"Standard day"),
-      el("span",{class:"note"},"standard day, started at"),ti,el("button",{class:"mini",onclick:()=>{const v=fromTime(ti.value);if(v!=null)setStart(d,v,"set",getA())}},"Set")),
-      el("div",{class:"row",style:"margin-top:8px"},el("label",{class:"note",for:"asleepAt"},"Fell asleep at"),ai),note);
-  }
-  const info=[];
-  if(p.segs&&p.start.set)info.push("Started "+hm(p.start.s));
-  else if(p.segs&&!(isToday&&canWrite))info.push("Model start "+hm(p.start.s));
-  if(p.segs&&p.start.set&&lg.asleep!=null)info.push("slept "+dur(sleepMins(lg.asleep,p.start.s))+(p.short?", short night":""));
-  info.push(p.custom?"Your own timetable":shortKind(p,d));
-  if(p.late)info.push("no gym, lights out "+hmS(p.lights));
-  const row=el("div",{class:"startline"},el("span",{},info.join(" · ")));
-  if(canWrite&&isToday&&p.segs&&p.start.set&&(logs[d]||{}).stopAt==null)row.append(el("button",{class:"mini",onclick:()=>openReplan(d)},"Re-plan"));
-  if(canWrite&&d>=todayIST()&&(logs[d]||{}).stopAt==null&&!(isToday&&p.segs&&!p.start.set&&!p.custom))row.append(el("button",{class:"mini"+(p.custom?"":" accent"),onclick:()=>openBuild(d)},p.custom?"Edit my timetable":"Build my day"));
-  if(canWrite){
-    const ti=el("input",{type:"time",id:"chgStart",value:toTime(p.start.s),style:"width:auto"});
-    const ai2=el("input",{type:"time",id:"chgAsleep",value:toTime(lg.asleep!=null?lg.asleep:defaultAsleep(d)),style:"width:auto"});
-    const ov=(plan.days||{})[d]||"auto";
-    const typeSel=el("select",{id:"dayType",onchange:e=>{const v=e.target.value;plan.days=Object.assign({},plan.days);if(v==="auto")delete plan.days[d];else plan.days[d]=v;savePlan()}},
-      [["auto","Auto ("+KIND_LABEL[autoKind(d,T)].toLowerCase()+")"],["normal","Normal day"],["travel","Travel day"],["wedding","Wedding"],["off","Off (sick / emergency)"]].map(([k,t])=>el("option",{value:k,selected:k===ov},t)));
-    const et=testOn(d,T);let essayRow=null;
-    if(dayKind(d,T)==="gstest"&&p.segs&&p.start.s<=375){
-      const gs=el("select",{id:"tgym",onchange:e=>patchLog(d,{gym:e.target.value==="gym"?true:null})},
-        [["no","Walk, then breakfast"],["gym","Gym 9–10, then breakfast"]].map(([k,t])=>el("option",{value:k,selected:(k==="gym")===!!lg.gym},t)));
-      essayRow=el("div",{class:"row"},el("label",{for:"tgym",class:"note"},"Morning"),gs);
-    }
-    let paperRow=null;
-    if(et&&et.kind!=="essay"&&!et.written&&dayKind(d,T)==="gstest"){
-      const ps=el("select",{id:"paperAt",onchange:e=>setField(et.id,{eve:e.target.value==="eve"?true:null})},
-        [["aft","2:30 pm (exam timing)"],["eve","6:30 pm"]].map(([k,t])=>el("option",{value:k,selected:(k==="eve")===!!et.eve},t)));
-      paperRow=el("div",{class:"row"},el("label",{for:"paperAt",class:"note"},"Paper at"),ps);
-    }
-    row.append(el("details",{class:"chg"},el("summary",{},"Change"),el("div",{class:"chgbox"},
-      p.segs&&d<=todayIST()?el("div",{class:"row"},el("label",{for:"chgStart",class:"note"},"Start time"),ti,el("button",{class:"mini",onclick:()=>{const v=fromTime(ti.value);if(v!=null)setStart(d,v,"set")}},"Save")):null,
-      p.segs&&d<=todayIST()?el("div",{class:"row"},el("label",{for:"chgAsleep",class:"note"},"Fell asleep at"),ai2,el("button",{class:"mini",onclick:()=>{const v=fromTime(ai2.value);if(v!=null)patchLog(d,{asleep:v})}},"Save")):null,
-      essayRow,paperRow,
-      el("div",{class:"row"},el("label",{for:"dayType",class:"note"},"Type of day"),typeSel))));
-  }
-  wrap.append(row);
-  if(p.segs&&p.start.set&&lg.asleep!=null){const shortN=sleepMins(lg.asleep,p.start.s)<360;
-    wrap.append(el("p",{class:"note",style:"margin:6px 0 0"},lg.noNap&&shortN?"Short night, but you chose the full day with no afternoon sleep. ":idealText(lg.asleep,p.start.s)+" ",
-      shortN&&canWrite?el("button",{class:"mini",onclick:()=>patchLog(d,{noNap:lg.noNap?null:true})},lg.noNap?"Add the sleep back":"I'm fresh, skip the sleep"):null))}
-  return wrap;
-}
 function itemLabel(i,T){
   const tn=id=>{const t=T.find(x=>x.id===id);return t?t.name.split(" · ")[0]:""};
   if(i.paper){const tt=T.find(x=>x.id===i.paper);return "Write "+tn(i.paper)+(tt&&tt.half?", 90 min":"")}
@@ -320,36 +297,6 @@ function todoSection(d,p,T,l,isToday,mins){
     const no=p.items.filter(i=>fit.map[i.id]&&fit.map[i.id].state==="no"&&!itemDone(i,d,T,l));
     if(no.length)sec.append(el("p",{class:"note",style:"margin:8px 0 0"},"Not enough time left today for: "+no.map(i=>i.prep?i.title.replace("Prep · ","").split(" · ")[0]+" topics":itemLabel(i,T)).join(", ")+". It moves forward."))}
   return sec;
-}
-function timetableSection(d,p,T,l,isToday,mins){
-  const sec=el("section",{}),B=l.blocks||{};
-  sec.append(el("div",{class:"section-h"},el("h3",{},"Timetable"),el("span",{class:"note"},p.start.set?"":"Model day from "+hm(p.start.s))));
-  const ul=el("ul",{class:"tt"}),hasEve=p.segs.some(s=>s.k==="block"&&s.t>=1140);
-  p.segs.forEach(sg=>{
-    if(sg.k==="break"){const live=isToday&&mins>=sg.t&&mins<sg.e;
-      ul.append(el("li",{class:"br"+(live?" live":"")},el("span",{class:"tm"},hmS(sg.t)),el("span",{class:"nm"},sg.label,sg.edited?el("span",{class:"hint"}," · changed"):null),canWrite?el("button",{class:"mini",onclick:()=>openSlotEdit(d,sg)},"Edit"):el("span")));
-      if(!hasEve&&/^Dinner/.test(sg.label)&&sg.t<1260)ul.append(blockRow(d,{id:"evening",name:"Extra study",t:null,e:null},B,l,isToday,mins));
-      return}
-    ul.append(blockRow(d,sg,B,l,isToday,mins));
-  });
-  ul.append(el("li",{class:"br"},el("span",{class:"tm"},hmS(p.lights)),el("span",{class:"nm"},"Lights out",(l.lightsAt!=null)?el("span",{class:"hint"}," · changed"):null),canWrite?el("button",{class:"mini",onclick:()=>openSlotEdit(d,{id:"__lights",t:p.lights,label:"Lights out"})},"Edit"):el("span")));
-  sec.append(ul);
-  const extra=Object.entries(B).filter(([k])=>k!=="evening"&&!p.segs.some(s=>s.id===k));
-  if(extra.length)sec.append(el("ul",{class:"loglist",style:"margin-top:10px"},extra.map(([k,r])=>logLi(d,k,r))));
-  if(canWrite)sec.append(el("div",{class:"row",style:"margin-top:12px"},el("button",{class:"mini",onclick:()=>openBlockLog(d,null)},"+ Log other study")));
-  return sec;
-}
-function blockRow(d,sg,B,l,isToday,mins){
-  const rec=B[sg.id],lost=(l.lost||{})[sg.id],light=(l.light||{})[sg.id],stopped=l.stopAt!=null&&sg.t!=null&&sg.t>=l.stopAt;
-  const live=isToday&&sg.t!=null&&mins>=sg.t&&mins<sg.e;
-  const hint=light?"light work":sg.hint;
-  const nm=el("span",{class:"nm"},el("b",{},sg.name),el("span",{class:"hint"},(hint?" · "+hint:"")+(sg.t!=null?" · "+dur(sg.e-sg.t):" · optional")));
-  if(rec)nm.append(el("span",{class:"sum"},"✓ "+(rec.what||"logged")+" · "+hrs(rec.hours||0)+(rec.nostudy?" · not study":"")));
-  else if(lost||stopped)nm.append(el("span",{class:"sum miss"},lost?"Lost":"Stopped"));
-  let act=el("span");
-  if(canWrite&&lost)act=el("button",{class:"mini",onclick:()=>{const o=Object.assign({},l.lost);delete o[sg.id];patchLog(d,{lost:o})}},"Undo");
-  else if(canWrite&&!stopped)act=el("span",{class:"row",style:"gap:6px;flex-wrap:nowrap"},sg.t!=null?el("button",{class:"mini","aria-label":"Change time of "+sg.name,onclick:()=>openSlotEdit(d,sg)},"Time"):null,el("button",{class:"mini"+(rec?"":live?" accent":""),onclick:()=>openBlockLog(d,sg)},rec?"Edit":sg.role==="paper"?"Written?":"Log"));
-  return el("li",{class:"bl"+(live?" live":"")+(sg.role==="paper"?" paper":"")},el("span",{class:"tm"},sg.t!=null?hmS(sg.t):"After 7"),nm,act);
 }
 function untimedSection(d,p,T,l){
   const sec=el("section",{}),B=l.blocks||{};

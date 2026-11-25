@@ -1,7 +1,33 @@
-/* ---------- writes ---------- */
+/* ---------- writes: only what changed, onto the latest saved copy ---------- */
+/* Every record (plan/state, logs/<date>) keeps the copy last seen from the store and the changes not yet confirmed.
+   A save works out what this page changed, reads the record fresh, applies just those changes and writes back only
+   the fields it touched. A test move by the Sunday review, a note from the nightly coach or a minimum day from the
+   SOS chat a moment earlier survives, even if this phone was still showing an older copy. */
+const DOCS=new Map();
+const clone=v=>v===undefined?undefined:JSON.parse(JSON.stringify(v));
+const isObj=v=>!!v&&typeof v==="object"&&!Array.isArray(v);
+function docState(path,seed){let s=DOCS.get(path);if(!s){s={base:clone(seed)||{},pending:[]};DOCS.set(path,s)}return s}
+function diffOps(a,b,depth,pre){const out=[];pre=pre||[];a=isObj(a)?a:{};b=isObj(b)?b:{};
+  new Set(Object.keys(a).concat(Object.keys(b))).forEach(k=>{const x=a[k],y=b[k],p=pre.concat([k]);
+    if(depth>1&&isObj(y)&&(isObj(x)||x==null))out.push(...diffOps(x||{},y,depth-1,p));
+    else if(y==null){if(x!=null)out.push({p,del:true})}
+    else if(!same(x,y))out.push({p,v:clone(y)})});
+  return out}
+function applyOps(o,ops){o=clone(o)||{};ops.forEach(({p,v,del})=>{let c=o;for(let i=0;i<p.length-1;i++){if(!isObj(c[p[i]]))c[p[i]]={};c=c[p[i]]}const k=p[p.length-1];if(del)delete c[k];else c[k]=clone(v)});return o}
+/* what the page shows when the store sends a record: the store's copy with this page's unsent changes on top */
+function fromStore(path,data){const s=docState(path,data),v=s.pending.length?applyOps(data,s.pending):clone(data)||{};s.base=clone(v);return v}
+function saveDoc(path,local){const s=docState(path,{}),ops=diffOps(s.base,local,3);s.base=clone(local)||{};if(!ops.length)return;s.pending.push(...ops);flushDoc(path)}
+function flushDoc(path){if(!db)return;
+  writing=writing.then(async()=>{const s=DOCS.get(path);if(!s||!s.pending.length)return;const ops=s.pending.slice(),r=db.doc(path);
+    const snap=await r.get(),had=!!(snap&&snap.exists),merged=applyOps(had?snap.data():{},ops);
+    if(had){const u={};new Set(ops.map(o=>o.p[0])).forEach(k=>{u[k]=merged[k]===undefined?null:merged[k]});await r.update(u)}else await r.set(merged);
+    s.pending.splice(0,ops.length);
+  }).catch(e=>{const c=e&&e.code||"error";
+    if(path==="plan/state"){if(c==="invalid_argument"){canWrite=false;(DOCS.get(path)||{}).pending=[];render()}sync("Couldn't save to the shared store ("+c+"). Saved on this device.")}
+    else sync("Couldn't save ("+c+"). Kept on this device.")})}
 function savePlan(noRender){
   saveLocal();if(!noRender)render();if(!calSelf)calSoon();
-  if(db){const snap=JSON.parse(JSON.stringify(plan));writing=writing.then(()=>db.doc("plan/state").set(snap)).catch(e=>{if(e&&e.code==="invalid_argument"){canWrite=false;render()}sync("Couldn't save to the shared store ("+(e&&e.code||"error")+"). Saved on this device.")})}
+  saveDoc("plan/state",plan);
 }
 function setField(id,f,noRender){const o=Object.assign({},plan.tests[id]||{});Object.keys(f).forEach(k=>{if(f[k]==null)delete o[k];else o[k]=f[k]});plan.tests=Object.assign({},plan.tests,{[id]:o});savePlan(noRender)}
 

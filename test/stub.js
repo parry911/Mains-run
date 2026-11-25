@@ -26,6 +26,8 @@
     notify(path); return Promise.resolve();
   };
   T.ext = (path, data, merge) => { store.set(path, merge ? Object.assign({}, store.get(path), clone(data)) : clone(data)); notify(path); };
+  /* the same, but this page never hears about it: a phone that missed the update */
+  T.extSilent = (path, data, merge) => { store.set(path, merge ? Object.assign({}, store.get(path), clone(data)) : clone(data)); };
   const doc = path => ({
     id: path.split("/").pop(), path,
     get: () => Promise.resolve(snapDoc(path)),
@@ -42,7 +44,7 @@
       return () => colSubs.set(name, (colSubs.get(name) || []).filter(x => x !== cb)); }
   });
   const db = Object.freeze({ doc, collection });
-  const user = Object.freeze({ isOwner: async () => true, id: async () => "perry", name: async () => "Perry" });
+  const user = Object.freeze({ isOwner: async () => window.__OWNER !== false, id: async () => "perry", name: async () => "Perry" });
   const sample = Object.freeze({ json: async (prompt, opts) => { T.prompts.push(prompt);
       const r = T.sampleReplies.shift(); if (r === undefined) throw { code: "no_reply_queued" };
       return typeof r === "function" ? r(prompt) : clone(r); } });

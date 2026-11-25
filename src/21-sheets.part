@@ -65,9 +65,10 @@ function openPaperLog(d,seg,T,prev){
     el("p",{class:"note",style:"margin:0"},""),
     el("div",{class:"field"},el("label",{class:"label",for:"lgHrs"},"Time"),hrsIn.box),btns],"Paper written");
 }
-function removeBlockLog(d,id){
-  const l=logs[d]||{},blocks=Object.assign({},l.blocks),prev=blocks[id];if(!prev)return;delete blocks[id];
-  const done=new Set(l.done||[]);(prev.items||[]).forEach(x=>{if(!Object.values(blocks).some(b=>(b.items||[]).includes(x)))done.delete(x)});
-  patchLog(d,{blocks,done:[...done]});
+function blockRemoval(l,id){
+  const blocks=Object.assign({},l.blocks),prev=blocks[id];delete blocks[id];
+  const done=new Set(l.done||[]);((prev||{}).items||[]).forEach(x=>{if(!Object.values(blocks).some(b=>(b.items||[]).includes(x)))done.delete(x)});
+  return{blocks,done:[...done]};
 }
+function removeBlockLog(d,id){const l=logs[d]||{};if(!(l.blocks||{})[id])return;patchLog(d,blockRemoval(l,id))}
 

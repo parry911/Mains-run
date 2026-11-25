@@ -1,9 +1,10 @@
 /* ---------- writes from Today ---------- */
 function patchLog(d,patch){
   const before=dayHours(d)||0;
+  docState("logs/"+d,logs[d]);
   const lg=Object.assign({},logs[d]||{});Object.keys(patch).forEach(k=>{if(patch[k]==null)delete lg[k];else lg[k]=patch[k]});
   lg.savedAt=Date.now();logs[d]=lg;saveLocal();
-  if(db){const body=JSON.parse(JSON.stringify(lg));writing=writing.then(()=>db.doc("logs/"+d).set(body)).catch(e=>sync("Couldn't save ("+(e&&e.code||"error")+"). Kept on this device."))}
+  saveDoc("logs/"+d,lg);
   render();
   const after=dayHours(d)||0;
   const tier=[RULES.treatH,RULES.prizeH,RULES.rewardH].findIndex(H=>before<H&&after>=H);

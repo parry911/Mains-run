@@ -16,9 +16,13 @@ function applySlots(segs,ov){
     return[]});
   return out.sort((a,b)=>a.t-b.t);
 }
+/* On a Plan-my-day day a slot or lights-out change is written into the plan itself, so the change box,
+   Undo last change and the Now line all see it. Other days keep it as an override in "slots". */
+function editAiDay(d,ch){const l=logs[d]||{},ai=aiOf(l);if(!ai)return;
+  patchLog(d,{ai:Object.assign({},ai,ch,{at:Date.now(),prev:{segs:ai.segs,lights:ai.lights,summary:ai.summary||""}}),lightsAt:null})}
 function openSlotEdit(d,seg){
   if(!canWrite)return;
-  const l=logs[d]||{},isL=seg.id==="__lights",ov=isL?null:(l.slots||{})[seg.id];
+  const l=logs[d]||{},isL=seg.id==="__lights",ai=aiOf(l),ov=isL||ai?null:(l.slots||{})[seg.id];
   const nm=el("input",{type:"text",id:"slName",value:ov&&ov.label?ov.label:(seg.name||seg.label||"")});
   const t0=el("input",{type:"time",id:"slFrom",value:toTime(seg.t),style:"width:auto"});
   const t1=isL?null:el("input",{type:"time",id:"slTo",value:toTime(seg.e),style:"width:auto"});
@@ -26,12 +30,16 @@ function openSlotEdit(d,seg){
   const st=conv&&!isL?el("input",{type:"checkbox",id:"slStudy",checked:!!(ov&&ov.study)}):null;
   const msg=el("p",{class:"note",style:"margin:0"});
   const save=()=>{
-    const a=fromTime(t0.value);if(a==null){msg.textContent="Pick a time.";return}
-    if(isL){closeSheet();patchLog(d,{lightsAt:a});return}
-    let b=fromTime(t1.value);if(b==null){msg.textContent="Pick an end time.";return}
+    /* times after midnight belong to the end of this day, not its start */
+    const dp=dayPlan(d,TS),first=dp.segs&&dp.segs.length?dp.segs[0].t:300,late=m=>m!=null&&m<first-180?m+1440:m;
+    const a=late(fromTime(t0.value));if(a==null){msg.textContent="Pick a time.";return}
+    if(isL){closeSheet();if(ai)editAiDay(d,{lights:a});else patchLog(d,{lightsAt:a});return}
+    let b=late(fromTime(t1.value));if(b==null){msg.textContent="Pick an end time.";return}
     if(b<=a){msg.textContent="The end has to be after the start.";return}
     const o={t:a,e:b};const lab=nm.value.trim();if(lab&&lab!==(seg.name||seg.label))o.label=lab;if(st&&st.checked)o.study=true;
-    closeSheet();patchLog(d,{slots:Object.assign({},l.slots,{[seg.id]:o})});
+    closeSheet();
+    if(ai){if(o.study&&!o.label)o.label="Study block";const live=aiLive(ai,d,TS);editAiDay(d,{segs:applySlots(aiSegs(live),{[seg.id]:o}).map(segToAi)});return}
+    patchLog(d,{slots:Object.assign({},l.slots,{[seg.id]:o})});
   };
   const reset=()=>{closeSheet();if(isL){patchLog(d,{lightsAt:null});return}const sl=Object.assign({},l.slots);delete sl[seg.id];patchLog(d,{slots:Object.keys(sl).length?sl:null})};
   const btns=el("div",{class:"btns"});

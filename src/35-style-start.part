@@ -21,6 +21,8 @@
 .sos-mic[data-on="1"]{background:var(--margin);border-color:var(--margin);color:#fff}
 .sos-food li{padding:8px 0;border-bottom:1px solid var(--rule);font-size:15px}
 .sos-food{list-style:none;margin:0;padding:0}
+/* the SOS button never covers a sheet's Save button */
+body:has(.overlay:not([hidden])) #sosBtn{display:none}
 </style>
 <button id="sosBtn" type="button" aria-label="SOS: get help right now">SOS</button>
 <div id="sosOv" hidden><div id="sosSheet" role="dialog" aria-modal="true" aria-labelledby="sosTitle">

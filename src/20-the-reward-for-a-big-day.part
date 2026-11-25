@@ -27,7 +27,6 @@ function confetti(){
   (function f(t){x.clearRect(0,0,W,H);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.04;p.r+=.1;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore()});
     if(t-t0<3200)requestAnimationFrame(f);else c.remove()})(t0);
 }
-function setStart(d,m,how,a){const patch={start:m,startHow:how,startAt:Date.now()};if(a!==undefined)patch.asleep=a;patchLog(d,patch)}
 function toggleDone(d,id,on){if(!canWrite)return;const set=new Set((logs[d]||{}).done||[]);on?set.add(id):set.delete(id);patchLog(d,{done:[...set]})}
 function tickItem(d,i,on){
   if(i.paper){setField(i.paper,{done:on,writtenOn:on?todayIST():null});return}

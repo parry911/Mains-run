@@ -20,8 +20,9 @@ async function food(){
   paint();
   sv.addEventListener("click",async()=>{const t=ta.value.trim();if(!t)return;
     if(!DB){msg.textContent="Can't reach your saved data from this view. Try in the Claude app.";return}
-    sv.disabled=true;const next=entries.concat([{at:Date.now(),text:t}]);
-    try{await DB.doc("food/"+d).set({date:d,entries:next});entries=next;ta.value="";msg.textContent="Saved.";paint()}
+    sv.disabled=true;
+    try{let cur={};try{const s=await DB.doc("food/"+d).get();if(s&&s.exists){cur=s.data();entries=cur.entries||[]}}catch(x){}
+      const next=entries.concat([{at:Date.now(),text:t}]);await DB.doc("food/"+d).set(Object.assign({},cur,{date:d,entries:next}));entries=next;ta.value="";msg.textContent="Saved.";paint()}
     catch(e){msg.textContent="Didn't save. Try again."}finally{sv.disabled=false}});
   setTimeout(()=>ta.focus(),50);
 }

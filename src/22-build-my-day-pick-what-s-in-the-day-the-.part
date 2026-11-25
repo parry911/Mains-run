@@ -1,4 +1,4 @@
-/* ---------- build my day: pick what's in the day, the page lays it out ---------- */
+/* ---------- build my day: older saved days are still drawn from what was picked ---------- */
 const BUILD=[
  {k:"gurbani",label:"Gurbani",min:30},
  {k:"gym",label:"Gym",min:75,tick:"gym"},
@@ -32,68 +32,6 @@ function buildCustom(c){
     t=Math.max(t,p.e)});
   if(lights-t>=20)study(t,lights);
   return{segs:out,lights,late:false};
-}
-function openBuild(d){
-  if(!canWrite)return;
-  const T=TS,p=dayPlan(d,T),l=logs[d]||{},cu=l.custom,isT=d===todayIST();
-  const now5=Math.ceil(nowMins()/5)*5;
-  const fromI=el("input",{type:"time",id:"bmFrom",value:toTime(cu?cu.from:isT?now5:p.start.s),style:"width:auto"});
-  const lightsI=el("input",{type:"time",id:"bmLights",value:toTime(cu?cu.lights:(p.lights||1350)),style:"width:auto"});
-  const mxS=el("select",{id:"bmMax"},[[90,"1h 30m"],[120,"2h"],[150,"2h 30m"],[180,"3h"],[240,"4h"]].map(([v,t])=>el("option",{value:v,selected:(cu?cu.max||120:120)===v},t)));
-  const tt=testOn(d,T),paperDue=!!(tt&&!tt.written&&!tt.delhi);
-  const f0=fromTime(fromI.value);
-  let lastCu=null;for(let x=add(d,-1);x>=START;x=add(x,-1)){if((logs[x]||{}).custom){lastCu=logs[x].custom;break}}
-  const src=cu;
-  const rows=BUILD.map(b=>{
-    let prev=src&&src.items.find(x=>x.k===b.k);
-    if(!cu&&b.k==="paper")prev=null;
-    if(prev&&!cu&&prev.at!=null&&prev.at<f0&&b.k!=="gym"&&b.k!=="gurbani"&&b.k!=="news"&&b.k!=="shower")prev=null;
-    let on=b.k==="paper"&&!cu?paperDue:src?!!prev:(b.k==="paper"?paperDue:b.k==="lunch"?f0<b.at:b.k==="dinner"||b.k==="log");
-    let min=prev?prev.min:b.k==="paper"&&tt&&tt.half?90:b.min;
-    let at=prev?prev.at:b.at;
-    if(b.k==="paper"&&!prev&&tt&&tt.eve)at=1110;
-    const cid="bm-"+b.k,cb=el("input",{type:"checkbox",id:cid,checked:on});
-    const mi=el("input",{type:"number",min:"5",max:"600",step:"5",inputmode:"numeric",value:min,"aria-label":b.label+" minutes"});
-    const ti=b.last?el("span",{class:"note"},"at the end"):el("input",{type:"time",value:at!=null?toTime(at):"","aria-label":b.label+" at"});
-    return{b,cb,mi,ti,li:el("li",{},cb,el("label",{for:cid},b.label),mi,ti)}});
-  const sum=el("p",{class:"bmsum"});
-  const gather=()=>({from:fromTime(fromI.value),lights:fromTime(lightsI.value),max:+mxS.value,
-    items:rows.filter(r=>r.cb.checked).map(r=>{const o={k:r.b.k,min:Math.max(5,+r.mi.value||r.b.min)};if(!r.b.last&&r.ti.value)o.at=fromTime(r.ti.value);return o})});
-  const upd=()=>{const c=gather();if(c.from==null||c.lights==null){sum.textContent="";return}
-    const r=buildCustom(c),st=r.segs.filter(s=>s.k==="block"&&(s.role==="study"||s.role==="paper"||s.role==="news")).reduce((s,x)=>s+x.e-x.t,0);
-    sum.textContent="Study time: "+dur(st)+" · lights out "+hm(r.lights)};
-  [fromI,lightsI,mxS].forEach(x=>x.addEventListener("input",upd));
-  rows.forEach(r=>[r.cb,r.mi,r.ti].forEach(x=>x.addEventListener&&x.addEventListener("input",upd)));
-  upd();
-  const save=()=>{const c=gather();if(c.from==null||c.lights==null)return;closeSheet();
-    const patch={custom:c,slots:null,lightsAt:null};if(isT&&!p.start.set){Object.assign(patch,{start:c.from,startHow:"set",startAt:Date.now()});if(asleepDraft[d]!=null)patch.asleep=asleepDraft[d]}patchLog(d,patch)};
-  const btns=el("div",{class:"btns"});
-  if(cu)btns.append(el("button",{onclick:()=>{closeSheet();patchLog(d,{custom:null})}},"Back to auto plan"));
-  btns.append(el("button",{onclick:closeSheet},"Cancel"),el("button",{class:"primary",onclick:save},"Build it"));
-  openSheet([el("div",{},el("span",{class:"label"},nice(d)),el("h3",{},"Build my day")),
-    el("div",{class:"row"},el("label",{class:"note",for:"bmFrom"},"From"),fromI,el("label",{class:"note",for:"bmLights"},"Lights out"),lightsI),
-    el("ul",{class:"bm"},el("li",{},el("span"),el("span",{class:"hd"},"In today"),el("span",{class:"hd"},"Min"),el("span",{class:"hd"},"At (optional)")),rows.map(r=>r.li)),
-    el("div",{class:"row"},el("label",{class:"note",for:"bmMax"},"Longest study block"),mxS),
-    el("p",{class:"note",style:"margin:0"},"Anything with a time stays there; the rest goes in list order from your start. Gaps become study blocks."),
-    sum,btns],"Build my day");
-}
-function openReplan(d){
-  const T=TS,p=dayPlan(d,T),l=logs[d]||{},mins=nowMins();if(!p.segs)return;
-  const B=l.blocks||{},L=l.lost||{};
-  const cand=p.segs.filter(s=>s.k==="block"&&STUDY_ROLES[s.role]&&!B[s.id]&&!L[s.id]&&s.t<=mins+60);
-  const cur=p.segs.find(s=>s.k==="block"&&STUDY_ROLES[s.role]&&mins>=s.t&&mins<s.e),nextB=p.segs.find(s=>s.k==="block"&&STUDY_ROLES[s.role]&&s.t>mins);
-  const target=cur||nextB;
-  const lostSel=el("select",{id:"rpLost","aria-label":"Which block"},cand.map(s=>el("option",{value:s.id,selected:cur&&s.id===cur.id},s.name+" · "+hmS(s.t)+"–"+hmS(s.e))));
-  openSheet([el("div",{},el("span",{class:"label"},"Re-plan from now · "+hm(mins)),el("h3",{},"What happened?")),
-    el("div",{class:"opt"},el("h4",{},"Lost a block"),el("p",{},"Guests, an errand, a power cut, a nap that ran over. The block is marked lost; must-do work goes into your next blocks and the rest moves forward."),
-      cand.length?el("div",{class:"row"},lostSel,el("button",{class:"primary",onclick:()=>{const o=Object.assign({},l.lost,{[lostSel.value]:true});closeSheet();patchLog(d,{lost:o})}},"Mark it lost")):el("p",{},"No unlogged block right now.")),
-    el("div",{class:"opt"},el("h4",{},"Low focus"),el("p",{},(target?target.name+" ("+hmS(target.t)+"–"+hmS(target.e)+")":"The next block")+" becomes light work: CA notes or newspaper revision. The heavy topic moves to the next block. It doesn't count as a miss."),
-      target?el("div",{class:"row"},el("button",{class:"primary",onclick:()=>{const o=Object.assign({},l.light,{[target.id]:true});closeSheet();patchLog(d,{light:o})}},"Switch to light work")):null),
-    el("div",{class:"opt"},el("h4",{},"Nothing matches today"),el("p",{},"Pick what's left in your day (gym, sleep, meals, the paper) and the page builds today's timetable from now, filling the gaps with study blocks."),
-      el("div",{class:"row"},el("button",{class:"primary",onclick:()=>{closeSheet();openBuild(d)}},"Build my day"))),
-    el("div",{class:"opt"},el("h4",{},"Unwell, stopping for today"),el("p",{},"Everything you've logged stays. The rest of today turns off and open topics spread over the next prep days."),
-      el("div",{class:"row"},el("button",{class:"primary",onclick:()=>{closeSheet();patchLog(d,{stopAt:nowMins()})}},"Stop for today"))),
-    el("div",{class:"btns"},el("button",{onclick:closeSheet},"Close"))],"Re-plan from now");
 }
 function openDrop(tid){
   const T=TS,t=T.find(x=>x.id===tid),sf=shortfall(t,T),tk=ticks(tid),dr=drops(tid);
