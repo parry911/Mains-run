@@ -34,3 +34,9 @@ Live page version 1795624616-3cfc, 2551 lines. Parts are copied from reads at mi
 2. src/: split legacy into modules + tools/build.py that concatenates them back; first prove build(src) == legacy byte-for-byte.
 3. Rebuild changes (keep look and words): drop hidden UI (dayLine, openReplan, openBuild, SOS food()), keep buildCustom for old custom days; one pipeline for every timetable; field-level saves; log-with-topics on Plan-my-day rows.
 4. Tests for checklist + old-bug cases; trial artifact (calendar sync OFF, data copied); switch after Perry's OK.
+
+## Coaches (25 Nov 23:27 IST)
+- Nightly coach (trig_01V8mZsUjCR8yYtmPsXdDPS9) and Sunday review (trig_0136ApBajYzfefQ5heLbS2Ap) now also log hours
+  into logs/<date>.blocks (slot id from ai.segs, or "x<ms>" Other study), clear realH like the page does, ask on mismatches,
+  and note "Page issue: <date>: ..." in coach/memory notes; the Sunday review lists the week's page issues.
+- Until the switch, the old page's whole-doc saves can overwrite a coach-added block if a stale copy is open (Perry told).
