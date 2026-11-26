@@ -43,3 +43,8 @@ Live page version 1795624616-3cfc, 2551 lines. Parts are copied from reads at mi
 - 25 Nov 23:30: live page edited (edits_D): in-page chats count hours like the page (realH, else all blocks except nostudy;
   newspaper counts). Live version now 1795629511-837b; legacy/assemble.py reproduces it. Sunday review told newspaper counts.
   Trial republished 1795629609-ea82.
+
+## SWITCHED 26 Nov 08:40 IST
+- Live page d0f18cb9 now = dist/index.html, version 1795662653-677a (previous 1795629511-837b = legacy/index.html; restore = republish legacy).
+- Copied trial logs/2026-11-26 (Plan-my-day timetable + Study block 1 1.5 h) into real data before switching.
+- Trial artifact and the Claude planning doc deleted at Perry's request; plan kept in docs/rebuild-plan.md, trial build via tools/trial.py.
