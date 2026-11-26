@@ -427,3 +427,43 @@ def test_trial_copies_the_backup_into_its_own_database_once():
         assert "Planned 8h 30m" in app.text("#day")
         assert app.writes()[-1]["path"] == "plan/state"          # written last, so a cut-off copy reruns
         assert len([w for w in app.writes() if w["path"] == "plan/state"]) == 1
+
+
+# ---------- the chats know the day, and change it only when asked ----------
+
+def open_talk(app):
+    app.page.click("#sosBtn"); app.settle()
+    app.page.locator("#sosBody button.sos-choice", has_text="Talk & log").click(); app.settle(200)
+
+
+def say(app, text, reply):
+    app.page.evaluate("r=>window.__T.chatReplies.push(r)", reply)
+    app.page.fill("#sosText", text); app.page.click("#sosSend"); app.settle(900)
+
+
+def test_talk_and_log_plans_with_the_real_day_and_changes_only_when_asked():
+    new_plan = {"lights": "00:00", "summary": "Gym at 11, ST4 at 6:30 pm.", "slots": [
+        {"id": "g", "start": "05:00", "end": "05:30", "label": "Gurbani", "type": "break"},
+        {"id": "s1", "start": "05:30", "end": "08:00", "label": "Study block", "type": "study"},
+        {"start": "11:00", "end": "12:30", "label": "Gym", "type": "break"},
+        {"id": "s2", "start": "12:30", "end": "15:00", "label": "Study block", "type": "study"},
+        {"id": "p1", "start": "18:30", "end": "21:30", "label": "ST4 paper", "type": "paper"},
+        {"id": "din", "start": "21:30", "end": "22:15", "label": "Dinner", "type": "break"}]}
+    with tomorrow_app(at="08:20", replies=[new_plan]) as app:
+        open_talk(app)
+        say(app, "Should I go to gym today and keep the test in the evening? Don't change anything right now",
+            {"text": "Your paper sits at 2:30 today. Here's a plan: gym 11–12:30, paper 6:30–9:30 pm. Want me to apply it?"})
+        chat = app.page.evaluate("window.__T.chats[0]")
+        ctx = chat["msgs"][0]["content"]
+        assert "TODAY'S TIMETABLE" in ctx and "ST4 paper" in ctx and "14:30" in ctx.replace("2:30 pm", "14:30") or "2:30" in ctx
+        assert "HIS DAY RULES" in ctx
+        assert "change_today" in chat["tools"]
+        before = app.store("logs/" + TOMORROW)["ai"]
+        say(app, "Yes, do it", {"text": "Done.", "tools": [{"name": "change_today", "input": {"request": "gym 11 to 12:30, ST4 paper 6:30 to 9:30 pm"}}]})
+        res = app.page.evaluate("window.__T.toolResults")
+        assert res[-1]["name"] == "change_today" and res[-1]["result"]["done"] is True, res
+        after = app.store("logs/" + TOMORROW)["ai"]
+        assert any(s["type"] == "paper" and s["t"] == 1110 for s in after["segs"])
+        assert after["prev"]["segs"] == before["segs"]          # Undo last change brings the old plan back
+        assert "gym 11 to 12:30" in app.prompts()[-1]
+        assert app.errors == []

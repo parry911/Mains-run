@@ -132,6 +132,22 @@ function askCard(d,T,l){
     el("div",{class:"row"},go,aiOf(l)?el("button",{onclick:()=>{delete aiAsk[d];renderDay(TS)}},"Cancel"):null),msg);
 }
 function workHours(seg){return (seg.e-seg.t)/60}
+/* The Change box's work: one change to a Plan-my-day timetable, following his rules. The SOS chats call it too
+   (through window.MR) when he asks them to change today's plan, so a change made in a chat is the same as one typed here. */
+async function applyChange(d,req){
+  const l=logs[d]||{},B=l.blocks||{},p=dayPlan(d,TS),ai=p.ai;if(!ai)throw{code:"no_plan"};
+  const isToday=d===todayIST(),mins=nowMins(),now=isToday?mins:0,keep=ai.segs.filter(s=>B[s.id]);
+  const cur=ai.segs.map(s=>({id:s.id,start:t24(s.t),end:t24(s.e),label:s.label,type:s.type,note:s.note||undefined,done:!!B[s.id]||undefined}));
+  const prompt="You adjust Perry's study plan for today. Make exactly the change he asks for and only what it forces; keep everything else as it is. Keep his rules where the change allows.\n\nHIS RULES:\n"+bookText()+"\n\nTODAY:\n"+aiContext(d)+"\n\nCURRENT PLAN (lights out "+t24(p.lights)+"):\n"+JSON.stringify(cur)+"\n\n"+(isToday?"It is now "+t24(now)+".\n":"")+"HOW TO APPLY THE CHANGE:\n- Do exactly what he asks. You may remove, move or replace any slot, including ones that already ended, except slots marked done:true: those stay exactly as they are.\n- If he gives a new window (for example 'from 4 pm to 12:15 am'), the replanned part runs from that start to that end, and lights out is that end. Times after midnight are fine (write 00:15).\n- Removed slots that already ended are simply left out; don't fill that time.\n- Slots he didn't mention that ended before now and aren't done: keep them as they are.\n- If he tells you what he actually did (for example 'studied 12:30 to 2, slept till 4:30, studied 4:30 to 7:30'), rewrite that part of the day to match what really happened, with his real times, and add \"done\":true to every study slot he says he actually studied. If he says he studied less than the slot (for example '2 h 30 min from 4:30 to 7:30'), also add \"studied_min\" with the minutes (150). Never mark a slot done that he didn't say he did. Then plan from the end of what he describes, or from now if that is later, to lights out.\n- Keep studying blocks labelled exactly \"Study block\".\n\nHIS CHANGE: "+req+"\n\n"+OUT_SPEC+"\n- In this reply, slots may also carry \"done\":true and \"studied_min\":number, as described above.";
+  const v=await askAI(prompt);const c=cleanPlan(v,ai.segs[0].t,keep,ai.segs);
+  /* study he says he actually did is logged straight onto those blocks */
+  const nb=Object.assign({},B);let sn2=0,got=0;
+  c.segs.forEach(s=>{if(s.type==="study")sn2++;if(s.done&&isWork(s)&&!nb[s.id]){const full=s.e-s.t,m=s.sm!=null?Math.min(s.sm,full+120):full;if(m>0){const nm=s.type==="study"?"Study block "+sn2:s.label;nb[s.id]={name:nm,what:nm,t:s.t,e:s.e,hours:m/60,at:Date.now()};got+=m}}delete s.done;delete s.sm});
+  const patch={ai:Object.assign({},ai,{segs:c.segs,lights:c.lights,summary:c.summary||ai.summary,at:Date.now(),prev:{segs:ai.segs,lights:p.lights,summary:ai.summary||""}}),lightsAt:null};
+  if(got){patch.blocks=nb;patch.realH=null}
+  patchLog(d,patch);
+  return{summary:patch.ai.summary||"",loggedMin:got};
+}
 /* One timetable screen for every day, whichever way it was made. Tap a row to log what you covered or change its time. */
 function timetableView(d,p,T,l,isToday,mins){
   const ai=p.src==="ai"?p.ai:null,B=l.blocks||{},sec=el("section",{class:"plan"});
@@ -162,17 +178,7 @@ function timetableView(d,p,T,l,isToday,mins){
     const btn=el("button",{class:"primary",onclick:async()=>{
       const req=inp.value.trim();if(!req){msg.textContent="Type what to change first.";return}
       btn.disabled=true;btn.textContent="Changing…";msg.textContent="";
-      const now=isToday?mins:0,keep=ai.segs.filter(s=>B[s.id]);
-      const cur=ai.segs.map(s=>({id:s.id,start:t24(s.t),end:t24(s.e),label:s.label,type:s.type,note:s.note||undefined,done:!!B[s.id]||undefined}));
-      const prompt="You adjust Perry's study plan for today. Make exactly the change he asks for and only what it forces; keep everything else as it is. Keep his rules where the change allows.\n\nHIS RULES:\n"+bookText()+"\n\nTODAY:\n"+aiContext(d)+"\n\nCURRENT PLAN (lights out "+t24(p.lights)+"):\n"+JSON.stringify(cur)+"\n\n"+(isToday?"It is now "+t24(now)+".\n":"")+"HOW TO APPLY THE CHANGE:\n- Do exactly what he asks. You may remove, move or replace any slot, including ones that already ended, except slots marked done:true: those stay exactly as they are.\n- If he gives a new window (for example 'from 4 pm to 12:15 am'), the replanned part runs from that start to that end, and lights out is that end. Times after midnight are fine (write 00:15).\n- Removed slots that already ended are simply left out; don't fill that time.\n- Slots he didn't mention that ended before now and aren't done: keep them as they are.\n- If he tells you what he actually did (for example 'studied 12:30 to 2, slept till 4:30, studied 4:30 to 7:30'), rewrite that part of the day to match what really happened, with his real times, and add \"done\":true to every study slot he says he actually studied. If he says he studied less than the slot (for example '2 h 30 min from 4:30 to 7:30'), also add \"studied_min\" with the minutes (150). Never mark a slot done that he didn't say he did. Then plan from the end of what he describes, or from now if that is later, to lights out.\n- Keep studying blocks labelled exactly \"Study block\".\n\nHIS CHANGE: "+req+"\n\n"+OUT_SPEC+"\n- In this reply, slots may also carry \"done\":true and \"studied_min\":number, as described above.";
-      try{const v=await askAI(prompt);const c=cleanPlan(v,ai.segs[0].t,keep,ai.segs);
-        /* study he says he actually did is logged straight onto those blocks */
-        const nb=Object.assign({},B);let sn2=0,got=0;
-        c.segs.forEach(s=>{if(s.type==="study")sn2++;if(s.done&&isWork(s)&&!nb[s.id]){const full=s.e-s.t,m=s.sm!=null?Math.min(s.sm,full+120):full;if(m>0){const nm=s.type==="study"?"Study block "+sn2:s.label;nb[s.id]={name:nm,what:nm,t:s.t,e:s.e,hours:m/60,at:Date.now()};got+=m}}delete s.done;delete s.sm});
-        const patch={ai:Object.assign({},ai,{segs:c.segs,lights:c.lights,summary:c.summary||ai.summary,at:Date.now(),prev:{segs:ai.segs,lights:p.lights,summary:ai.summary||""}}),lightsAt:null};
-        if(got){patch.blocks=nb;patch.realH=null}
-        patchLog(d,patch);
-      }catch(e){btn.disabled=false;btn.textContent="Change";msg.textContent=aiErr(e)}
+      try{await applyChange(d,req)}catch(e){btn.disabled=false;btn.textContent="Change";msg.textContent=aiErr(e)}
     }},"Change");
     inp.addEventListener("keydown",e=>{if(e.key==="Enter")btn.click()});
     sec.append(el("div",{class:"row",style:"margin-top:14px;flex-wrap:nowrap"},inp,btn),el("p",{class:"note",style:"margin:6px 0 0"},"Tell it what you actually did and it logs those blocks, or what to change and it re-plans the rest. Tap a row to log topics or change its time."),msg);

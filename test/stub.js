@@ -45,9 +45,20 @@
   });
   const db = Object.freeze({ doc, collection });
   const user = Object.freeze({ isOwner: async () => window.__OWNER !== false, id: async () => "perry", name: async () => "Perry" });
-  const sample = Object.freeze({ json: async (prompt, opts) => { T.prompts.push(prompt);
+  /* chats: sample(messages, {tools, onText}) plays T.chatReplies in order; a reply may carry tool calls,
+     which run through the page's own tool code before the text comes back */
+  T.chatReplies = []; T.chats = []; T.toolResults = [];
+  const sampleFn = async (msgs, opts) => { T.chats.push({ msgs: clone(msgs), tools: (opts && opts.tools || []).map(t => t.name) });
+      const r = T.chatReplies.shift(); if (r === undefined) throw { code: "no_reply_queued" };
+      for (const c of (r.tools || [])) { const t = (opts.tools || []).find(x => x.name === c.name);
+        if (!t) { T.toolResults.push({ name: c.name, error: "not offered" }); continue; }
+        try { T.toolResults.push({ name: c.name, result: clone(await t.execute(c.input)) }) } catch (e) { T.toolResults.push({ name: c.name, error: String(e && (e.message || e.code) || e) }) } }
+      if (opts && opts.onText) opts.onText({ text: r.text || "" });
+      return { text: r.text || "" }; };
+  sampleFn.json = async (prompt, opts) => { T.prompts.push(prompt);
       const r = T.sampleReplies.shift(); if (r === undefined) throw { code: "no_reply_queued" };
-      return typeof r === "function" ? r(prompt) : clone(r); } });
+      return typeof r === "function" ? r(prompt) : clone(r); };
+  const sample = Object.freeze(sampleFn);
   let evN = 0;
   const mcp = Object.freeze({ callTool: async (server, tool, args) => { T.mcp.push({ server, tool, args: clone(args) });
       return { payload: { id: tool === "create_event" ? "ev" + (++evN) : args.eventId } }; } });

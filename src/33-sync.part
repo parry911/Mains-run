@@ -20,5 +20,11 @@ async function boot(){
 setView(wideMQ.matches?"log":"today");
 setInterval(()=>{renderNow();const fa=document.activeElement,typing=!!(fa&&$("day").contains(fa)&&/^(INPUT|SELECT|TEXTAREA)$/.test(fa.tagName)&&fa.type!=="checkbox");
   if(isShown("today")&&sel===todayIST()&&!document.querySelector("details.chg[open]")&&SH.hidden&&!logDirty&&!typing){const y=window.scrollY;renderDay(TS);window.scrollTo(0,y)}},60000);
+/* what the SOS chats (a separate script) may use: today's timetable as text, his day rules, and the Change box */
+function chatDayText(d){const p=dayPlan(d,TS);if(!p.segs)return"";const B=(logs[d]||{}).blocks||{},now=d===todayIST()?nowMins():-1;
+  return [nice(d)].concat(p.segs.map(s=>{const r=B[s.id];return rng(s.t,s.e)+"  "+(s.k==="break"?s.label:s.name)+(r?"  (logged "+hrs(+r.hours||0)+")":"")+(now>=s.t&&now<s.e?"  ← now":"")}),
+    [hm(p.lights)+"  Lights out"]).join("\n")}
+window.MR=Object.freeze({dayText:d=>{try{return chatDayText(d)}catch(e){return ""}},bookText:()=>bookText(),
+  hasPlan:d=>!!aiOf(logs[d]||{}),canWrite:()=>canWrite,applyChange:(d,req)=>applyChange(d,req)});
 boot();
 })();

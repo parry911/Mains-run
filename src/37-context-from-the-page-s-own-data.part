@@ -19,6 +19,10 @@ async function context(){
     const st=snaps[7]&&snaps[7].exists?snaps[7].data():{};
     const up=Object.keys(BASE).map(id=>({id,date:effDate(st,id)})).filter(x=>x.date&&x.date>=d).sort((a,b)=>a.date<b.date?-1:1);
     const nx=up[0],dl=up.find(x=>x.id[0]==="F");
+    const MR=window.MR,tt=MR?MR.dayText(d):"";
+    if(tt)lines.push("TODAY'S TIMETABLE ON HIS PAGE (what he sees now, with what he has logged):\n"+tt);
+    else lines.push("Today has no timetable on his page yet (he makes one with Plan my day on the Today tab).");
+    if(MR)lines.push("HIS DAY RULES (from the page; the planner follows these):\n"+String(MR.bookText()).slice(0,2500));
     if(nx)lines.push("Next paper: "+NAMES[nx.id]+" on "+nx.date+" ("+(dd(d,nx.date)===0?"today":dd(d,nx.date)+" day"+(dd(d,nx.date)===1?"":"s")+" away")+")."+(nx.id==="ST2"?" Its submission window closes 27 Nov, the absolute latest.":""));
     if(dl)lines.push("Next Delhi full-length test: "+NAMES[dl.id]+" on "+dl.date+" ("+dd(d,dl.date)+" days away). UPSC Prelims is around 24 May 2027.");
     const fd=snaps[8]&&snaps[8].exists?(snaps[8].data().entries||[]):[];if(fd.length)lines.push("Food logged today: "+fd.map(x=>x.text).join("; "));
